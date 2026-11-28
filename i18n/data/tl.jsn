@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Mga sheet na hindi ini-import:",
   "csv-mapping-title-required": "Piliin ang column na naglalaman ng mga pamagat ng kard.",
   "csv-mapping-list-required": "I-type ang pangalan ng listahan na paglalagyan ng bawat kard, o piliin ang column na naglalaman ng listahan.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Sa Vikunja, buksan ang Settings, piliin ang Data Export at i-download ang .zip file na ipinadala nito sa iyo, saka piliin ang file na iyon, o i-paste ang data.json na nasa loob nito. Ang mga Kanban bucket ay magiging mga listahan at ang mga gawain ay magiging mga kard, kasama ang kanilang mga etiketa, nakatalaga, petsa, paglalarawan, mga listahan ng gawain bilang tsek-listahan at mga komento; ang priyoridad, porsiyentong tapos at tapos ay magiging mga pasadyang field. Hindi ini-import ang mga kalakip."
 }

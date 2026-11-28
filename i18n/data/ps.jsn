@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "هغه پاڼې چې نه دننه کېږي:",
   "csv-mapping-title-required": "هغه ستنه وټاکئ چې د کارت سرلیکونه لري.",
   "csv-mapping-list-required": "د هغه لړليک نوم ولیکئ چې هر کارت پکې ځي، یا هغه ستنه وټاکئ چې لړليک لري.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "په Vikunja کې Settings پرانیزئ، Data Export وټاکئ او هغه .zip دوتنه ښکته کړئ چې تاسو ته یې لېږي، بیا هغه دوتنه وټاکئ، یا د هغې دننه data.json ولګوئ. د Kanban بکسونه په لړليکونو او دندې په کارتونو بدلېږي، د خپلو نښو، ګمارل شویو، نېټو، تشريح، د دندو لړليکونه د کتنليکونو په توګه او تبصرو سره؛ لومړیتوب، بشپړ شوی سلنه او بشپړ شو په ځانګړو ساحو بدلېږي. ضميمې نه دننه کېږي."
 }

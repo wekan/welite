@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Импортталмайтын парақтар:",
   "csv-mapping-title-required": "Карточка тақырыптары бар бағанды таңдаңыз.",
   "csv-mapping-list-required": "Барлық карточка түсетін тізім атауын теріңіз немесе тізімі бар бағанды таңдаңыз.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja-да Settings ашып, «Data Export» таңдаңыз және жіберілген .zip файлын жүктеп алыңыз, содан кейін сол файлды таңдаңыз немесе ішіндегі data.json-ды қойыңыз. Kanban шелектері тізімдерге, тапсырмалар карточкаларға айналады, олардың белгілері, жауаптылары, күндері, сипаттамасы, тексеру тізімі ретіндегі тапсырма тізімдері және пікірлері сақталады; басымдық, орындалу пайызы және орындалды белгісі теңшелетін өрістерге айналады. Тіркемелер импортталмайды."
 }

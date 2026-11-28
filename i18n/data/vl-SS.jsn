@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Werkbladen die niet geïmporteerd worden:",
   "csv-mapping-title-required": "Kies de kolom die de kaarttitels bevat.",
   "csv-mapping-list-required": "Typ de naam van de lijst waar elke kaart in komt, of kies de kolom die de lijst bevat.",
-  "import-board-instruction-planner": "Open in Microsoft Planner het plan, kies het ⋯-menu naast de naam en dan Exporteren als Excel (in de klassieke Planner: Plan exporteren naar Excel), en kies dat .xlsx-bestand. Buckets worden lijsten en taken worden kaarten, met hun toegewezen personen, datums, labels, checklist en beschrijving; Voortgang, Prioriteit en Voltooid door worden maatwerkvelden."
+  "import-board-instruction-planner": "Open in Microsoft Planner het plan, kies het ⋯-menu naast de naam en dan Exporteren als Excel (in de klassieke Planner: Plan exporteren naar Excel), en kies dat .xlsx-bestand. Buckets worden lijsten en taken worden kaarten, met hun toegewezen personen, datums, labels, checklist en beschrijving; Voortgang, Prioriteit en Voltooid door worden maatwerkvelden.",
+  "import-board-instruction-vikunja": "Open in Vikunja Settings, kies Data Export en download het .zip-bestand dat u toegestuurd krijgt, en kies dan dat bestand, of plak de data.json die erin zit. Kanban-buckets worden lijsten en taken worden kaarten, met hun labels, toegewezen personen, datums, beschrijving, takenlijsten als checklists en aantekeningen; prioriteit, percentage klaar en klaar worden maatwerkvelden. Bijlagen worden niet geïmporteerd."
 }

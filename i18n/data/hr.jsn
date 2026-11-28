@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Radni listovi koji se ne uvoze:",
   "csv-mapping-title-required": "Odaberite stupac koji sadrži naslove kartica.",
   "csv-mapping-list-required": "Upišite naziv popisa u koji idu sve kartice ili odaberite stupac koji sadrži popis.",
-  "import-board-instruction-planner": "U Microsoft Planneru otvorite izbornik plana i odaberite Export plan to Excel, a zatim odaberite tu .xlsx datoteku. Grupe postaju popisi, a zadaci kartice s dodijeljenim osobama, datumima, oznakama, kontrolnim popisom i opisom; Progress, Priority i Completed By postaju prilagođena polja."
+  "import-board-instruction-planner": "U Microsoft Planneru otvorite izbornik plana i odaberite Export plan to Excel, a zatim odaberite tu .xlsx datoteku. Grupe postaju popisi, a zadaci kartice s dodijeljenim osobama, datumima, oznakama, kontrolnim popisom i opisom; Progress, Priority i Completed By postaju prilagođena polja.",
+  "import-board-instruction-vikunja": "U aplikaciji Vikunja otvorite Settings, odaberite Data Export i preuzmite poslanu .zip datoteku, a zatim odaberite tu datoteku ili zalijepite data.json iz nje. Kanban grupe postaju popisi, a zadaci kartice s oznakama, dodijeljenim osobama, datumima, opisom, popisima zadataka kao kontrolnim popisima i komentarima; prioritet, postotak dovršenosti i stanje dovršenosti postaju prilagođena polja. Privitci se ne uvoze."
 }

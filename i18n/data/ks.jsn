@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "شیٹ یِم درآمد گژھان نہٕ:",
   "csv-mapping-title-required": "سُہ کالَم ژارِو یَتھ منٛز کارڈن ہٕندۍ عنوان چھِ۔",
   "csv-mapping-list-required": "تمہِ فہرستہِ ہُند ناو لیٚکھِو یَتھ منٛز پرٛتھ کارڈ گژھان چھُ، یا سُہ کالَم ژارِو یَتھ منٛز فہرست چھےٚ۔",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja منٛز Settings کھولِو، Data Export ژارِو تہٕ تم .zip فائل ڈاؤن لوڈ کریو یۄس سۄ تُہۍ سوزان چھےٚ، پتہٕ تتھ فائلہِ ژارِو، یا تمہِ منٛزٕ data.json پیسٹ کریو۔ Kanban بکٹ بنان فہرست تہٕ کامہٕ بنان کارڈ، تِہندۍ لیبل، ذمہ وار، تٲریخ، تفصیل، کامہٕ فہرستہٕ چیک لسٹن پٲٹھۍ تہٕ تبصرٕ سٕتۍ؛ ترجیح، فیصد مکمل تہٕ مکمل بنان مخصوص خانہٕ۔ منسلک فائل چھِ نہٕ درآمد گژھان۔"
 }

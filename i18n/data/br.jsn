@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Follennoù n'int ket enporzhiet:",
   "csv-mapping-title-required": "Dibabit ar bann a zalc'h titloù ar c'hartennoù.",
   "csv-mapping-list-required": "Skrivit anv ar roll ma'z a pep kartenn ennañ, pe dibabit ar bann a zalc'h ar roll.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "E Vikunja, digorit Settings, dibabit Data Export ha pellgargit ar restr .zip a gas deoc'h, ha dibabit ar restr-se goude, pe pegit an data.json a zo enni. Ar baolioù Kanban a zeu da vezañ rolloù hag an trevelloù a zeu da vezañ kartennoù, gant o zikedennoù, tud deverket, deiziadoù, deskrivadur, rolloù trevelloù evel liskadurien hag evezhiadennoù; ar briorelezh, an dregantad graet hag ar graet a zeu da vezañ maeziennoù personelaet. Ar stagadennoù n'int ket enporzhiet."
 }

@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Krataafa a wɔmfa mma mu:",
   "csv-mapping-title-required": "Paw kɔlɔm a ɛkura kaad din no.",
   "csv-mapping-list-required": "Kyerɛw nhwɛso a kaad biara kɔ mu no din, anaa paw kɔlɔm a ɛkura nhwɛso no.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Wɔ Vikunja mu, bue Settings, paw Data Export na twe .zip fael a ɛde bɛbrɛ wo no, afei paw saa fael no, anaa fa data.json a ɛwɔ mu no hyɛ mu. Kanban bokiti bɛyɛ nhwɛso na nnwuma bɛyɛ kaad, a wɔn nsɛnkyerɛnne, wɔn a wɔde adwuma ama wɔn, nna, nkyerɛkyerɛmu, adwuma nhwɛso sɛ nhwehwɛmu nhwɛso ne nsusuiɛ ka ho; nea ɛdi kan, ɔha nkyɛmu a wɔawie ne awie bɛyɛ wo ankasa mmeae. Wɔmfa nneɛma a wɔde aka ho mma mu."
 }

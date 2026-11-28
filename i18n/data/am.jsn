@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "የማይገቡ ሉሆች፦",
   "csv-mapping-title-required": "የካርድ ርዕሶችን የሚይዘውን አምድ ይምረጡ።",
   "csv-mapping-list-required": "ሁሉም ካርዶች የሚገቡበትን የዝርዝሩን ስም ይተይቡ፣ ወይም ዝርዝሩን የሚይዘውን አምድ ይምረጡ።",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "በVikunja ውስጥ Settings ን ይክፈቱ፣ Data Export ን ይምረጡ እና የሚልክልዎትን .zip ፋይል ያውርዱ፣ ከዚያም ያንን ፋይል ይምረጡ ወይም በውስጡ ያለውን data.json ይለጥፉ። የKanban ባልዲዎች ዝርዝሮች ይሆናሉ፣ ተግባራትም ከመለያዎቻቸው፣ ኃላፊዎቻቸው፣ ቀኖቻቸው፣ መግለጫቸው፣ የተግባር ዝርዝሮች እንደ የማረጋገጫ ዝርዝሮች እና አስተያየቶቻቸው ጋር ካርዶች ይሆናሉ፤ ቅድሚያ፣ የተጠናቀቀ መቶኛ እና ተጠናቋል ብጁ መስኮች ይሆናሉ። አባሪዎች አይገቡም።"
 }

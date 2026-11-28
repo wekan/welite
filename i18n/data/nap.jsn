@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Fuoglie ca nun se mpòrtano:",
   "csv-mapping-title-required": "Scigli 'a culonna ca tene 'e titole d''e carte.",
   "csv-mapping-list-required": "Scrive 'o nomme d''a lista addò vanno tutte 'e carte, o scigli 'a culonna ca tene 'a lista.",
-  "import-board-instruction-planner": "'N Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "'N Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Dint'a Vikunja, arape Settings, scigli Data Export e scarreca 'o file .zip ca te manna, po' scigli chillu file, o ncolla 'o data.json ca ce sta dinto. 'E bucket Kanban addeventano liste e 'e compite addeventano carte, cu etichette, assignate, date, descrizzione, liste 'e compite comme liste 'e cuntrollo e commiente; priorità, percentuale fatta e fatto addeventano campe perzunalizzate. 'E allegate nun se mpòrtano."
 }

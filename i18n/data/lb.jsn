@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Blieder, déi net importéiert ginn:",
   "csv-mapping-title-required": "Wielt d'Kolonn, déi d'Kaartentitelen enthält.",
   "csv-mapping-list-required": "Tippt den Numm vun der Lëscht, an déi all Kaart kënnt, oder wielt d'Kolonn, déi d'Lëscht enthält.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Maacht am Vikunja Settings op, wielt Data Export a luet den .zip-Fichier erof, deen et Iech schéckt, a wielt dann deen Fichier, oder füügt d'data.json dobannen an. Kanban-Bucketen gi Lëschten an Aufgabe gi Kaarten, mat hiren Etiketten, Zoustännegen, Datumer, Beschreiwung, Aufgabelëschten als Checklëschten a Kommentaren; Prioritéit, Prozent erleedegt an erleedegt gi eege Felder. Unhäng ginn net importéiert."
 }

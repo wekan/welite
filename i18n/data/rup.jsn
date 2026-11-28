@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Foiili tsi nu s-importã:",
   "csv-mapping-title-required": "Alãdzi coloana tsi tsãni titlurli a cãrtsãlor.",
   "csv-mapping-list-required": "Scrie numa a listãljei iu s-du tuti cãrtsãli, i alãdzi coloana tsi tsãni lista.",
-  "import-board-instruction-planner": "Tu Microsoft Planner, dishcljidi planlu, aleadzi meniul ⋯ ningã numa a lui, dupã Export as Excel (tu Planner clasic: Export plan to Excel), shi aleadzi atsel fishier .xlsx. Buckets s-fac listi shi huzmetsli s-fac cãrtsã, cu responsabilji, datili, etichetili, lista di verificari shi discriirea a lor; Progress, Priority shi Completed By s-fac cãmpuri personalizati."
+  "import-board-instruction-planner": "Tu Microsoft Planner, dishcljidi planlu, aleadzi meniul ⋯ ningã numa a lui, dupã Export as Excel (tu Planner clasic: Export plan to Excel), shi aleadzi atsel fishier .xlsx. Buckets s-fac listi shi huzmetsli s-fac cãrtsã, cu responsabilji, datili, etichetili, lista di verificari shi discriirea a lor; Progress, Priority shi Completed By s-fac cãmpuri personalizati.",
+  "import-board-instruction-vikunja": "Tu Vikunja, dishcljidi Settings, alãdzi Data Export shi discarcã fisierlu .zip tsi tsã-l pitreatsi, dupã atsea alãdzi atel fisier, i lipea data.json di nãuntru. Cãldãrli Kanban s-fac listi shi lucrurli s-fac cãrtsã, cu etichetili, responsabiljlji, datili, discriirea, listili di lucruri ca listi di verificari shi comentariili a lor; prioritatea, protsentul bitisit shi bitisit s-fac cãmpuri personalizati. Atashamentili nu s-importã."
 }

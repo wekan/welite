@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Rogue ndojeguerúiva:",
   "csv-mapping-title-required": "Eiporavo ytaguy oguerekóva kuatia'i réra.",
   "csv-mapping-list-required": "Ehai ysaja opaite kuatia'i oikehápe réra, térã eiporavo ytaguy oguerekóva ysaja.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja-pe, embojuruja Settings, eiporavo Data Export ha emboguejy .zip marandurenda ombou ndéve, upéi eiporavo upe marandurenda, térã emboja data.json oĩva ipype. Kanban bucket oiko ysaja ha tembiapo oiko kuatia'i, itechaukaha, mba'apoha, ára, ñemombe'u, tembiapo ysaja ysaja ñehesa'ỹijo ramo ha je'epy reheve; tenonderãite, porcentaje opáva ha opáma oiko tenda ñemomba'epyre. Mbojoapyha ndojeguerúi."
 }

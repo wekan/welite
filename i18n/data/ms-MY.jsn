@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Helaian yang tidak diimport:",
   "csv-mapping-title-required": "Pilih lajur yang mengandungi tajuk kad.",
   "csv-mapping-list-required": "Taip nama senarai yang akan menempatkan semua kad, atau pilih lajur yang mengandungi senarai.",
-  "import-board-instruction-planner": "Dalam Microsoft Planner, buka menu pelan dan pilih Export plan to Excel, kemudian pilih fail .xlsx tersebut. Baldi menjadi senarai dan tugasan menjadi kad berserta penerima tugasan, tarikh, label, senarai semak dan keterangannya; Progress, Priority dan Completed By menjadi medan tersuai."
+  "import-board-instruction-planner": "Dalam Microsoft Planner, buka menu pelan dan pilih Export plan to Excel, kemudian pilih fail .xlsx tersebut. Baldi menjadi senarai dan tugasan menjadi kad berserta penerima tugasan, tarikh, label, senarai semak dan keterangannya; Progress, Priority dan Completed By menjadi medan tersuai.",
+  "import-board-instruction-vikunja": "Dalam Vikunja, buka Settings, pilih Data Export dan muat turun fail .zip yang dihantar kepada anda, kemudian pilih fail tersebut atau tampalkan data.json di dalamnya. Baldi Kanban menjadi senarai dan tugasan menjadi kad berserta label, penerima tugasan, tarikh, keterangan, senarai tugasan sebagai senarai semak dan komen; keutamaan, peratus siap dan status selesai menjadi medan tersuai. Lampiran tidak diimport."
 }

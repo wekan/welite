@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Ɲɛ minnu tɛ don:",
   "csv-mapping-title-required": "Kolɔn min bɛ karti tɔgɔw mara, o sugandi.",
   "csv-mapping-list-required": "Karti bɛɛ bɛ don lisiti min kɔnɔ, o tɔgɔ sɛbɛn, walima kolɔn min bɛ lisiti mara, o sugandi.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja kɔnɔ, Settings da wuli, Data Export sugandi ka .zip fisiye min ci i ma jigin, o kɔ o fisiye sugandi, walima data.json min bɛ a kɔnɔ, o don. Kanban bɔɔrɔw bɛ kɛ lisitiw ye ani baaraw bɛ kɛ kartiw ye, ni u ka taamasiyɛnw, baarakɛlaw, donw, ɲɛfɔli, baara lisitiw i n'a fɔ lajɛli lisitiw ani hakilinaw ye; ɲɛfɛrɔ, kɛmɛsarada dafalen ani dafalen bɛ kɛ foro kɛrɛnkɛrɛnnenw ye. Nɔrɔlenw tɛ don."
 }

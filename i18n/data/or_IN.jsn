@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "ଆମଦାନି ହେଉନଥିବା ସିଟ୍:",
   "csv-mapping-title-required": "କାର୍ଡ ଆଖ୍ୟା ଧାରଣ କରୁଥିବା ସ୍ତମ୍ଭ ବାଛନ୍ତୁ।",
   "csv-mapping-list-required": "ସମସ୍ତ କାର୍ଡ ଯାଉଥିବା ତାଲିକାର ନାମ ଟାଇପ୍ କରନ୍ତୁ, କିମ୍ବା ତାଲିକା ଧାରଣ କରୁଥିବା ସ୍ତମ୍ଭ ବାଛନ୍ତୁ।",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja ରେ, Settings ଖୋଲନ୍ତୁ, Data Export ବାଛନ୍ତୁ ଏବଂ ଏହା ପଠାଉଥିବା .zip ଫାଇଲ୍ ଡାଉନଲୋଡ୍ କରନ୍ତୁ, ତାପରେ ସେହି ଫାଇଲ୍ ବାଛନ୍ତୁ, କିମ୍ବା ଏହା ଭିତରେ ଥିବା data.json ପେଷ୍ଟ କରନ୍ତୁ। Kanban ବକେଟଗୁଡ଼ିକ ତାଲିକା ଏବଂ କାର୍ଯ୍ୟଗୁଡ଼ିକ କାର୍ଡ ହୁଅନ୍ତି, ସେମାନଙ୍କ ଲେବଲ୍, ନ୍ୟସ୍ତ ବ୍ୟକ୍ତି, ତାରିଖ, ବର୍ଣ୍ଣନା, ଯାଞ୍ଚ ତାଲିକା ଭାବରେ କାର୍ଯ୍ୟ ତାଲିକା ଏବଂ ମନ୍ତବ୍ୟ ସହିତ; ପ୍ରାଥମିକତା, ସମାପ୍ତ ପ୍ରତିଶତ ଏବଂ ସମାପ୍ତ କଷ୍ଟମ୍ ଫିଲ୍ଡ ହୁଅନ୍ତି। ସଂଲଗ୍ନକ ଆମଦାନି ହୁଏ ନାହିଁ।"
 }

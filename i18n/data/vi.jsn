@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Các trang tính không được nhập:",
   "csv-mapping-title-required": "Chọn cột chứa tiêu đề thẻ.",
   "csv-mapping-list-required": "Nhập tên danh sách để đưa tất cả thẻ vào, hoặc chọn cột chứa danh sách.",
-  "import-board-instruction-planner": "Trong Microsoft Planner, mở trình đơn của kế hoạch và chọn Export plan to Excel, rồi chọn tệp .xlsx đó. Các nhóm trở thành danh sách, còn nhiệm vụ trở thành thẻ kèm người được giao, ngày tháng, nhãn, danh sách kiểm tra và mô tả; Progress, Priority và Completed By trở thành trường tùy chỉnh."
+  "import-board-instruction-planner": "Trong Microsoft Planner, mở trình đơn của kế hoạch và chọn Export plan to Excel, rồi chọn tệp .xlsx đó. Các nhóm trở thành danh sách, còn nhiệm vụ trở thành thẻ kèm người được giao, ngày tháng, nhãn, danh sách kiểm tra và mô tả; Progress, Priority và Completed By trở thành trường tùy chỉnh.",
+  "import-board-instruction-vikunja": "Trong Vikunja, mở Settings, chọn Data Export và tải xuống tệp .zip được gửi cho bạn, rồi chọn tệp đó hoặc dán data.json bên trong. Các nhóm Kanban trở thành danh sách, còn nhiệm vụ trở thành thẻ kèm nhãn, người được giao, ngày tháng, mô tả, danh sách nhiệm vụ dưới dạng danh sách kiểm tra và bình luận; mức ưu tiên, phần trăm hoàn thành và trạng thái hoàn thành trở thành trường tùy chỉnh. Tệp đính kèm không được nhập."
 }

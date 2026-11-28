@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "いんぽーとしない しーと:",
   "csv-mapping-title-required": "かーどめいが はいっている れつを えらんでください。",
   "csv-mapping-list-required": "すべての かーどを いれる りすとの なまえを にゅうりょくするか、りすとが はいっている れつを えらんでください。",
-  "import-board-instruction-planner": "Microsoft Planner で ぷらんの めにゅうを ひらき、Export plan to Excel を えらんで、できた .xlsx ふぁいるを えらびます。ばけっとは りすとに、たすくは たんとうしゃ、ひづけ、らべる、ちぇっくりすと、せつめいを ふくむ かあどに なります。Progress、Priority、Completed By は かすたむふぃいるどに なります。"
+  "import-board-instruction-planner": "Microsoft Planner で ぷらんの めにゅうを ひらき、Export plan to Excel を えらんで、できた .xlsx ふぁいるを えらびます。ばけっとは りすとに、たすくは たんとうしゃ、ひづけ、らべる、ちぇっくりすと、せつめいを ふくむ かあどに なります。Progress、Priority、Completed By は かすたむふぃいるどに なります。",
+  "import-board-instruction-vikunja": "Vikunja で Settings を ひらき、Data Export を えらんで、おくられてきた .zip ふぁいるを だうんろおどします。その ふぁいるを えらぶか、なかの data.json を はりつけてください。Kanban の ばけっとは りすとに、たすくは らべる、たんとうしゃ、ひづけ、せつめい、ちぇっくりすとに かわった たすくりすと、こめんとを ふくむ かあどに なります。ゆうせんど、かんりょうりつ、かんりょうじょうたいは かすたむふぃいるどに なります。てんぷふぁいるは いんぽおとされません。"
 }

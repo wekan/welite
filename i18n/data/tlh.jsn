@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "qemlu'be'bogh navmey:",
   "csv-mapping-title-required": "'echletHom pongmey ngaSbogh tut yIwIv.",
   "csv-mapping-list-required": "Hoch 'echletHom 'elbogh tetlh pong yIghItlh, pagh tetlh ngaSbogh tut yIwIv.",
-  "import-board-instruction-planner": "Microsoft PlannerDaq, nab yIpoSmoH, pongDaj retlh ⋯ DuHmey tetlh yIwIv, ghIq Export as Excel yIwIv (Planner qanDaq: Export plan to Excel), 'ej .xlsx teywI'vetlh yIwIv. Buckets tetlhmey moj 'ej Qu'mey 'echletHommey moj, Qu' Hevbogh lo'wI'pu', jajmey, permey, ghItlhHommey tetlh, QIjmeH De' je ghaj; Progress, Priority, Completed By je De' 'ay'mey cherbogh lo'wI' moj."
+  "import-board-instruction-planner": "Microsoft PlannerDaq, nab yIpoSmoH, pongDaj retlh ⋯ DuHmey tetlh yIwIv, ghIq Export as Excel yIwIv (Planner qanDaq: Export plan to Excel), 'ej .xlsx teywI'vetlh yIwIv. Buckets tetlhmey moj 'ej Qu'mey 'echletHommey moj, Qu' Hevbogh lo'wI'pu', jajmey, permey, ghItlhHommey tetlh, QIjmeH De' je ghaj; Progress, Priority, Completed By je De' 'ay'mey cherbogh lo'wI' moj.",
+  "import-board-instruction-vikunja": "VikunjaDaq, Settings yIpoSmoH, Data Export yIwIv 'ej ngeHbogh .zip De'wI' teywI' yISuq, vaj De'wI' teywI'vetlh yIwIv, pagh qoDDaq data.json yIlan. Kanban buckets tetlhmey moj 'ej Qu'mey 'echletHommey moj, permey, Qu' Hevbogh lo'wI'pu', jajmey, QIjmeH De', Qu' tetlhmey ta'meH tetlhmey rur QInHommey je ghaj; potlh patlh, rInpu'bogh vatlhvI' rInpu'ghach je De' 'ay'mey cherbogh lo'wI' moj. rarDochmey qemlu'be'."
 }

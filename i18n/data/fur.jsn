@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Sfueis che no vegnin impuartâts:",
   "csv-mapping-title-required": "Sielç la colone che e ten i titui des cjartis.",
   "csv-mapping-list-required": "Scrîf il non de liste dulà che a van dutis lis cjartis, o sielç la colone che e ten la liste.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "In Vikunja, vierç Settings, sielç Data Export e discjame il file .zip che ti mande, po sielç chel file, o tache il data.json che al è dentri. I bucket Kanban a deventin listis e lis ativitâts a deventin cjartis, cun etichetis, assegnâts, datis, descrizion, listis di ativitâts come listis di control e coments; prioritât, percentuâl fat e fat a deventin cjamps personalizâts. I alegâts no vegnin impuartâts."
 }

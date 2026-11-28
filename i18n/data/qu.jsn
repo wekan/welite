@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Mana yaykuchisqa raphikuna:",
   "csv-mapping-title-required": "Kartakunap sutinta hap'iq sayaqta akllay.",
   "csv-mapping-list-required": "Llapan kartakuna yaykunan sutisuyup sutinta qillqay, utaq sutisuyuta hap'iq sayaqta akllay.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja nisqapi, Settings kichay, Data Export akllay, apachimusqan .zip willañiqita uraykachiy, chaymanta chay willañiqita akllay, utaq ukhunpi kaq data.json nisqata k'askachiy. Kanban bucketkunaqa sutisuyukunam kanqa, llamk'aykunataq kartakunam kanqa, unanchankunawan, ruranapaq churasqankunawan, pachankunawan, willakuyninwan, llamk'ay sutisuyukuna qhawana sutisuyu hina, rimaykunawan; ñawpaqchay, tukusqa porcentaje, tukusqa ima sapaq pampakunam kanqa. Watasqakunaqa manam yaykunchu."
 }

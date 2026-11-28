@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Bláđit mat eai sisafievrriduvvo:",
   "csv-mapping-title-required": "Vállje čuoldda mas leat goarttaid namahusat.",
   "csv-mapping-list-required": "Čális dan listtu nama gosa buot goarttat mannet, dahje vállje čuoldda mas listu lea.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja:s, raba Settings, vállje Data Export ja viečča .zip-fiilla maid dat sádde dutnje, ja vállje dan fiilla, dahje liibme data.json mii lea dan siste. Kanban-behtet šaddet listtuin ja barggut goarttain, mearkkaiguin, ovddasvástideaddjiiguin, dáhtoniiguin, válddahusain, bargolisttuin dárkkistanlisttun ja kommeanttaiguin; vuoruhus, proseanta gárvvis ja gárvvis šaddet iešmearriduvvon giettiin. Mildosat eai sisafievrriduvvo."
 }

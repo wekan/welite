@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Ngā rau kāore e kawemaitia:",
   "csv-mapping-title-required": "Kōwhiria te tīwae e pupuri ana i ngā taitara kāri.",
   "csv-mapping-list-required": "Tuhia te ingoa o te rārangi ka haere ai ia kāri, kōwhiria rānei te tīwae e pupuri ana i te rārangi.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "I Vikunja, huakina Settings, kōwhiria Data Export, ka tikiake i te kōnae .zip ka tukuna mai ki a koe, kātahi ka kōwhiri i taua kōnae, whakapiri rānei i te data.json kei roto. Ka huri ngā peere Kanban hei rārangi, ā, ka huri ngā tūmahi hei kāri, me ō rātou tapanga, kaiwhiwhi mahi, rā, whakaahuatanga, rārangi tūmahi hei rārangi arowhai me ngā kōrero; ka huri te matatau, te ōrau kua oti me te kua oti hei āpure ritenga. Kāore e kawemaitia ngā āpitihanga."
 }

@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Laupepa e le faaulufale:",
   "csv-mapping-title-required": "Filifili le koluma o loo iai ulutala o pepa.",
   "csv-mapping-list-required": "Tusi le igoa o le lisi e alu i ai pepa uma, pe filifili le koluma o loo iai le lisi.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "I le Vikunja, tatala Settings, filifili Data Export ma sii mai le faila .zip e auina mai ia te oe, ona filifili lea o lena faila, pe faapipii le data.json i totonu. O buckets Kanban e avea ma lisi ma o galuega e avea ma pepa, faatasi ma a latou igoa faailoga, tagata tofia, aso, faamatalaga, lisi o galuega o ni lisi siaki ma manatu; o le faamuamua, pasene ua maea ma ua maea e avea ma fanua patino. E le faaulufale faapipii."
 }

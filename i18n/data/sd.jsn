@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "شيٽون جيڪي درآمد نه ٿيون ٿين:",
   "csv-mapping-title-required": "اهو ڪالم چونڊيو جنهن ۾ ڪارڊن جا عنوان آهن.",
   "csv-mapping-list-required": "ان فهرست جو نالو لکو جنهن ۾ هر ڪارڊ ويندو، يا اهو ڪالم چونڊيو جنهن ۾ فهرست آهي.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja ۾، Settings کوليو، Data Export چونڊيو ۽ اها .zip فائل ڊائونلوڊ ڪريو جيڪا اهو توهان کي موڪلي، پوءِ اها فائل چونڊيو، يا ان اندر data.json پيسٽ ڪريو. Kanban buckets فهرستون ۽ ڪم ڪارڊ بڻجن ٿا، انهن جي ليبلن، ذميوارن، تاريخن، وضاحت، چڪاس فهرستن طور ڪم فهرستن ۽ تبصرن سان؛ ترجيح، مڪمل سيڪڙو ۽ مڪمل ڪسٽم فيلڊون بڻجن ٿيون. منسلڪات درآمد نه ٿيون ٿين."
 }

@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Импортланмаған биттәр:",
   "csv-mapping-title-required": "Карточка исемдәрен үҙ эсенә алған бағананы һайлағыҙ.",
   "csv-mapping-list-required": "Бөтә карточкалар инә торған исемлектең исемен яҙығыҙ, йәки исемлекте үҙ эсенә алған бағананы һайлағыҙ.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja-ла Settings асығыҙ, Data Export һайлағыҙ һәм ул ебәргән .zip файлын йөкләгеҙ, һуңынан шул файлды һайлағыҙ йәки эсендәге data.json-ды ҡуйығыҙ. Kanban биҙрәләре исемлектәргә, бурыстар билдәләре, яуаплылары, көндәре, тасуирламаһы, тикшереү исемлеге булараҡ бурыс исемлектәре һәм аңлатмалары менән карточкаларға әйләнә; өҫтөнлөк, үтәлеш проценты һәм әҙерлек махсус ҡырҙарға әйләнә. Ҡушымталар импортланмай."
 }

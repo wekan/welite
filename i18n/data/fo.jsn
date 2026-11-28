@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Ark, sum ikki verða innflutt:",
   "csv-mapping-title-required": "Vel teigin, sum hevur kortheitini.",
   "csv-mapping-list-required": "Skriva navnið á listanum, sum øll kort fara í, ella vel teigin, sum hevur listan.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Í Vikunja, lat Settings upp, vel Data Export og tak .zip-fíluna niður, sum hon sendir tær, vel síðan ta fíluna, ella set data.json inni í henni inn. Kanban-spannir verða til listar og uppgávur verða til kort, við merkjum, ábyrgdarum, dagfestingum, lýsing, uppgávulistum sum kanningarlistum og viðmerkingum; raðfesting, prosent liðugt og liðugt verða til egin øki. Viðheft verða ikki innflutt."
 }

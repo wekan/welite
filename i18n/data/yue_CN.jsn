@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "唔會匯入嘅工作表：",
   "csv-mapping-title-required": "揀裝住卡片標題嘅欄。",
   "csv-mapping-list-required": "輸入所有卡片都放入去嘅清單名，或者揀裝住清單嘅欄。",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "喺 Vikunja 打開 Settings，揀「Data Export」，下載佢寄俾你嘅 .zip 檔，然後揀嗰個檔案，或者貼上入面嘅 data.json。Kanban buckets 會變成清單，任務會變成卡片，連埋標籤、負責人、日期、描述、任務清單做檢查清單同評論；優先次序、完成百分比同完成狀態會變成自訂欄位。附件唔會匯入。"
 }

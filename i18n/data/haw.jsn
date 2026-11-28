@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Nā pepa ʻaʻole e hoʻokomo ʻia:",
   "csv-mapping-title-required": "Koho i ke kolamu e paʻa ana nā poʻo inoa kāleka.",
   "csv-mapping-list-required": "Kikokiko i ka inoa o ka papa inoa no nā kāleka a pau, a i ʻole e koho i ke kolamu e paʻa ana ka papa inoa.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Ma Vikunja, wehe iā Settings, koho iā Data Export a hoʻoiho i ka faila .zip i hoʻouna ʻia iā ʻoe, a laila e koho i kēlā faila, a i ʻole e hoʻopili i ka data.json i loko. Lilo nā pūʻulu Kanban i mau papa inoa a nā hana i mau kāleka, me ko lākou mau lepili, poʻe i hāʻawi ʻia i ka hana, lā, wehewehe, papa hana ma ke ʻano he papa hōʻoia a me nā manaʻo; lilo ka makakoho, pākēneka i pau a me ke kūlana pau i mau kahua hoʻopilikino. ʻAʻole hoʻokomo ʻia nā mea pili."
 }

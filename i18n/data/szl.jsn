@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Arkusze, kere niy sōm importowane:",
   "csv-mapping-title-required": "Wybier kolumna, kerŏ trzimie titly kart.",
   "csv-mapping-list-required": "Napisz miano listy, do keryj idzie kożdŏ karta, abo wybier kolumna, kerŏ trzimie lista.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "W Vikunja ôtwōrz Settings, wybier Data Export i ściōngnij zbiōr .zip, kery ci przyśle, potym wybier tyn zbiōr abo wklej data.json ze postrzodka. Kubełki Kanban stŏwajōm sie listami, a zadania kartami, ze swojimi etyketami, ôdpowiedzialnymi, datumami, ôpisym, listami zadań jako listami kōntrolnymi i kōmyntŏrzami; priorytet, procynt zrobiōnego i zrobiōne stŏwajōm sie włŏsnymi polami. Przidŏwki niy sōm importowane."
 }

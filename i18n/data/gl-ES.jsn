@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Follas que non se importan:",
   "csv-mapping-title-required": "Escolla a columna que contén os títulos das tarxetas.",
   "csv-mapping-list-required": "Escriba o nome da lista á que irán todas as tarxetas ou escolla a columna que contén a lista.",
-  "import-board-instruction-planner": "En Microsoft Planner, abre o menú do plan e escolle Export plan to Excel; despois selecciona ese ficheiro .xlsx. Os grupos convértense en listas e as tarefas en tarxetas, coas persoas asignadas, datas, etiquetas, lista de verificación e descrición; Progress, Priority e Completed By convértense en campos personalizados."
+  "import-board-instruction-planner": "En Microsoft Planner, abre o menú do plan e escolle Export plan to Excel; despois selecciona ese ficheiro .xlsx. Os grupos convértense en listas e as tarefas en tarxetas, coas persoas asignadas, datas, etiquetas, lista de verificación e descrición; Progress, Priority e Completed By convértense en campos personalizados.",
+  "import-board-instruction-vikunja": "En Vikunja, abre Settings, escolle Data Export e descarga o ficheiro .zip que che envía; despois selecciona ese ficheiro ou pega o contido do data.json que contén. Os grupos Kanban convértense en listas e as tarefas en tarxetas, coas etiquetas, persoas asignadas, datas, descrición, listas de tarefas como listas de verificación e comentarios; a prioridade, a porcentaxe completada e o estado de finalización convértense en campos personalizados. Os anexos non se importan."
 }

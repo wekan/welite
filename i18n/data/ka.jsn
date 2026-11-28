@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "ფურცლები, რომლებიც არ შემოდის:",
   "csv-mapping-title-required": "აირჩიეთ სვეტი, რომელიც ბარათების სათაურებს შეიცავს.",
   "csv-mapping-list-required": "აკრიფეთ იმ სიის სახელი, რომელშიც ყველა ბარათი მოხვდება, ან აირჩიეთ სიის სვეტი.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja-ში გახსენით Settings, აირჩიეთ Data Export და ჩამოტვირთეთ გამოგზავნილი .zip ფაილი, შემდეგ აირჩიეთ ეს ფაილი ან ჩასვით მასში არსებული data.json. Kanban კალათები სიებად იქცევა, ამოცანები კი ბარათებად, მათი ნიშნებით, პასუხისმგებლებით, თარიღებით, აღწერით, ამოცანების სიებით საკონტროლო სიების სახით და კომენტარებით; პრიორიტეტი, შესრულების პროცენტი და შესრულება მომხმარებლის ველებად იქცევა. მიბმული ფაილები არ შემოდის."
 }

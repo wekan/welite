@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Fletët që nuk importohen:",
   "csv-mapping-title-required": "Zgjidhni kolonën që përmban titujt e kartave.",
   "csv-mapping-list-required": "Shkruani emrin e listës ku do të vendosen të gjitha kartat, ose zgjidhni kolonën që përmban listën.",
-  "import-board-instruction-planner": "Në Microsoft Planner, hapni menynë e planit dhe zgjidhni Export plan to Excel, pastaj zgjidhni atë skedar .xlsx. Grupet bëhen lista dhe detyrat bëhen karta, me personat e caktuar, datat, etiketat, listën e kontrollit dhe përshkrimin; Progress, Priority dhe Completed By bëhen fusha të personalizuara."
+  "import-board-instruction-planner": "Në Microsoft Planner, hapni menynë e planit dhe zgjidhni Export plan to Excel, pastaj zgjidhni atë skedar .xlsx. Grupet bëhen lista dhe detyrat bëhen karta, me personat e caktuar, datat, etiketat, listën e kontrollit dhe përshkrimin; Progress, Priority dhe Completed By bëhen fusha të personalizuara.",
+  "import-board-instruction-vikunja": "Në Vikunja, hapni Settings, zgjidhni Data Export dhe shkarkoni skedarin .zip që ju dërgohet, pastaj zgjidhni atë skedar ose ngjitni data.json brenda tij. Grupet kanban bëhen lista dhe detyrat bëhen karta, me etiketat, personat e caktuar, datat, përshkrimin, listat e detyrave si lista kontrolli dhe komentet; përparësia, përqindja e përfundimit dhe gjendja e përfunduar bëhen fusha të personalizuara. Bashkëngjitjet nuk importohen."
 }

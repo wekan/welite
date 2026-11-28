@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "不會匯入的工作表：",
   "csv-mapping-title-required": "選擇包含卡片標題的欄。",
   "csv-mapping-list-required": "輸入所有卡片都要放入的清單名稱，或選擇包含清單的欄。",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "在 Vikunja 中，開啟 Settings，選擇 Data Export 並下載寄給你的 .zip 檔案，然後選擇該檔案，或貼上其中的 data.json。看板群組會成為清單，任務會成為卡片，並保留標籤、承辦人、日期、描述、作為待辦清單的任務清單和留言；優先順序、完成百分比和完成狀態會成為自訂欄位。不匯入附件。"
 }

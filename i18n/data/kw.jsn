@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Folennow nag yns ynperthys:",
   "csv-mapping-title-required": "Dewisewgh an koloven a syns titlys an kartennow.",
   "csv-mapping-list-required": "Skrifewgh hanow an rol may ha pub karten ynni, po dewisewgh an koloven a syns an rol.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Yn Vikunja, egorewgh Settings, dewisewgh Data Export hag iskargewgh an restren .zip a dhannvon dhywgh, ena dewisewgh an restren na, po glusewgh an data.json ynni. Kelornow Kanban a dhe ha bos rolyow hag oberennow a dhe ha bos kartennow, gans aga labellow, apoyntysi, dedhyasow, deskrifans, rolyow oberennow avel rolyow checkya ha kampoellyansow; rakwir, kansrann gwrys ha gwrys a dhe ha bos gwelyow personel. Stagellow nyns yns ynperthys."
 }

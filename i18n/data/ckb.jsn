@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "ئەو پەڕانەی هاوردە ناکرێن:",
   "csv-mapping-title-required": "ئەو ستوونە هەڵبژێرە کە سەردێڕی کارتەکان لەخۆدەگرێت.",
   "csv-mapping-list-required": "ناوی ئەو لیستە بنووسە کە هەموو کارتێک دەچێتە ناوی، یان ئەو ستوونە هەڵبژێرە کە لیستەکە لەخۆدەگرێت.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "لە Vikunja، Settings بکەرەوە، Data Export هەڵبژێرە و ئەو فایلە .zip ـە دابگرە کە بۆت دەنێرێت، پاشان ئەو فایلە هەڵبژێرە، یان data.json ی ناوی بلکێنە. سەبەتەکانی Kanban دەبنە لیست و ئەرکەکان دەبنە کارت، لەگەڵ پێناسە، بەرپرس، بەروار، وەسف، لیستی ئەرکەکان وەک لیستی پشکنین و لێدوانەکانیان؛ پێشینەیی، ڕێژەی تەواوبوون و تەواوبوو دەبنە خانەی تایبەت. هاوپێچەکان هاوردە ناکرێن."
 }

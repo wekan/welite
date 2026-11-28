@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Xët yi duñu dugal:",
   "csv-mapping-title-required": "Tànnal kolon bi yor turu karta yi.",
   "csv-mapping-list-required": "Bindal turu limu bi karta yépp di dugg, walla tànnal kolon bi yor limu bi.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Ci Vikunja, ubbil Settings, tànnal Data Export te yeb fiise .zip bi mu la yónne, ba noppi tànnal fiise boobu, walla taf data.json bi nekk ci biir. Bucket yu Kanban dañuy nekk limu yi te liggéey yi dañuy nekk karta yi, ak seen etiket, ñi ñu jox, bis, melokaan, limu liggéey ni limu yu seetlu ak xalaat; njëkk, xaaju done ak done dañuy nekk wàll yu ñu def ci soxla. Takkaay yi duñu leen dugal."
 }

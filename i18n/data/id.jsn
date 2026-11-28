@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Lembar yang tidak diimpor:",
   "csv-mapping-title-required": "Pilih kolom yang memuat judul kartu.",
   "csv-mapping-list-required": "Ketik nama daftar yang akan menampung semua kartu, atau pilih kolom yang memuat daftar.",
-  "import-board-instruction-planner": "Di Microsoft Planner, buka menu rencana dan pilih Export plan to Excel, lalu pilih berkas .xlsx tersebut. Bucket menjadi daftar dan tugas menjadi kartu beserta penerima tugas, tanggal, label, daftar periksa, dan deskripsinya; Progress, Priority, dan Completed By menjadi bidang khusus."
+  "import-board-instruction-planner": "Di Microsoft Planner, buka menu rencana dan pilih Export plan to Excel, lalu pilih berkas .xlsx tersebut. Bucket menjadi daftar dan tugas menjadi kartu beserta penerima tugas, tanggal, label, daftar periksa, dan deskripsinya; Progress, Priority, dan Completed By menjadi bidang khusus.",
+  "import-board-instruction-vikunja": "Di Vikunja, buka Settings, pilih Data Export, dan unduh berkas .zip yang dikirimkan kepada Anda, lalu pilih berkas tersebut atau tempelkan data.json di dalamnya. Bucket Kanban menjadi daftar dan tugas menjadi kartu beserta label, penerima tugas, tanggal, deskripsi, daftar tugas sebagai daftar periksa, dan komentar; prioritas, persentase penyelesaian, dan status selesai menjadi bidang khusus. Lampiran tidak diimpor."
 }

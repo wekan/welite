@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Laskentataulukot, joita ei tuoda:",
   "csv-mapping-title-required": "Valitse korttien otsikot sisältävä sarake.",
   "csv-mapping-list-required": "Kirjoita sen listan nimi, johon kaikki kortit tulevat, tai valitse listan sisältävä sarake.",
-  "import-board-instruction-planner": "Avaa Microsoft Plannerissa suunnitelman valikko ja valitse Export plan to Excel. Valitse sitten kyseinen .xlsx-tiedosto. Säilöistä tulee listoja ja tehtävistä kortteja, joissa säilyvät vastuuhenkilöt, päivämäärät, tunnisteet, tarkistuslista ja kuvaus. Progress-, Priority- ja Completed By -tiedoista tulee mukautettuja kenttiä."
+  "import-board-instruction-planner": "Avaa Microsoft Plannerissa suunnitelman valikko ja valitse Export plan to Excel. Valitse sitten kyseinen .xlsx-tiedosto. Säilöistä tulee listoja ja tehtävistä kortteja, joissa säilyvät vastuuhenkilöt, päivämäärät, tunnisteet, tarkistuslista ja kuvaus. Progress-, Priority- ja Completed By -tiedoista tulee mukautettuja kenttiä.",
+  "import-board-instruction-vikunja": "Avaa Vikunjassa Settings, valitse Data Export ja lataa sinulle lähetetty .zip-tiedosto. Valitse kyseinen tiedosto tai liitä sen sisältämän data.json-tiedoston sisältö. Kanban-säilöistä tulee listoja ja tehtävistä kortteja, joissa säilyvät tunnisteet, vastuuhenkilöt, päivämäärät, kuvaus, tehtävälistat tarkistuslistoina ja kommentit. Prioriteetista, valmistumisprosentista ja valmistumistilasta tulee mukautettuja kenttiä. Liitteitä ei tuoda."
 }

@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Fulls que no s’importen:",
   "csv-mapping-title-required": "Trieu la columna que conté els títols de les fitxes.",
   "csv-mapping-list-required": "Escriviu el nom de la llista on aniran totes les fitxes o trieu la columna que conté la llista.",
-  "import-board-instruction-planner": "A Microsoft Planner, obriu el menú del pla i trieu Export plan to Excel; després seleccioneu aquest fitxer .xlsx. Els grups esdevenen llistes i les tasques esdevenen fitxes, amb les persones assignades, dates, etiquetes, llista de comprovació i descripció; Progress, Priority i Completed By esdevenen camps personalitzats."
+  "import-board-instruction-planner": "A Microsoft Planner, obriu el menú del pla i trieu Export plan to Excel; després seleccioneu aquest fitxer .xlsx. Els grups esdevenen llistes i les tasques esdevenen fitxes, amb les persones assignades, dates, etiquetes, llista de comprovació i descripció; Progress, Priority i Completed By esdevenen camps personalitzats.",
+  "import-board-instruction-vikunja": "A Vikunja, obriu Settings, trieu Data Export i descarregueu el fitxer .zip que us envia; després seleccioneu aquest fitxer o enganxeu el contingut del data.json que conté. Els grups Kanban esdevenen llistes i les tasques esdevenen fitxes, amb les etiquetes, persones assignades, dates, descripció, llistes de tasques com a llistes de comprovació i comentaris; la prioritat, el percentatge completat i l’estat de finalització esdevenen camps personalitzats. Els fitxers adjunts no s’importen."
 }

@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Lembar sing ora diimpor:",
   "csv-mapping-title-required": "Pilih kolom sing ngemot irah-irahan kertu.",
   "csv-mapping-list-required": "Ketik jeneng dhaptar sing dadi panggonan kabeh kertu, utawa pilih kolom sing ngemot dhaptar.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Ing Vikunja, bukak Settings, pilih Data Export lan undhuh berkas .zip sing dikirim, banjur pilih berkas kuwi, utawa tempelake data.json ing njerone. Ember Kanban dadi dhaptar lan tugas dadi kertu, kanthi label, wong sing ditugasi, tanggal, katrangan, dhaptar tugas minangka dhaptar priksa lan komentar; prioritas, persen rampung lan rampung dadi kolom kustom. Lampiran ora diimpor."
 }

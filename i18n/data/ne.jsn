@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "आयात नहुने पानाहरू:",
   "csv-mapping-title-required": "कार्डका शीर्षकहरू भएको स्तम्भ छान्नुहोस्।",
   "csv-mapping-list-required": "सबै कार्ड जाने सूचीको नाम लेख्नुहोस्, वा सूची भएको स्तम्भ छान्नुहोस्।",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja मा Settings खोलेर Data Export छान्नुहोस् र पठाइएको .zip फाइल डाउनलोड गर्नुहोस्। त्यसपछि फाइल छान्नुहोस्, वा भित्रको data.json टाँस्नुहोस्। कानबान बकेटहरू सूची र कार्यहरू कार्ड बन्छन्; लेबल, जिम्मेवार व्यक्ति, मिति, वर्णन, कार्यसूची जाँचसूचीका रूपमा र टिप्पणी कायम रहन्छन्। प्राथमिकता, पूरा भएको प्रतिशत र पूर्ण अवस्था अनुकूल क्षेत्र बन्छन्। संलग्नक आयात हुँदैनन्।"
 }

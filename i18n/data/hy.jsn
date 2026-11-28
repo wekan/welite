@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Թերթեր, որոնք չեն ներմուծվում՝",
   "csv-mapping-title-required": "Ընտրեք քարտերի անվանումները պարունակող սյունակը։",
   "csv-mapping-list-required": "Մուտքագրեք այն ցուցակի անունը, որտեղ կգնա յուրաքանչյուր քարտ, կամ ընտրեք ցուցակը պարունակող սյունակը։",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja-ում բացեք Settings, ընտրեք Data Export և ներբեռնեք ձեզ ուղարկված .zip ֆայլը, ապա ընտրեք այդ ֆայլը կամ տեղադրեք դրա ներսում գտնվող data.json-ը։ Kanban դույլերը դառնում են ցուցակներ, իսկ առաջադրանքները՝ քարտեր՝ իրենց պիտակներով, կատարողներով, ամսաթվերով, նկարագրությամբ, առաջադրանքների ցուցակները որպես ստուգաթերթիկներ և մեկնաբանություններով. առաջնահերթությունը, կատարման տոկոսը և կատարվածը դառնում են պատվերով դաշտեր։ Կցորդները չեն ներմուծվում։"
 }

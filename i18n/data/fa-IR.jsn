@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "کاربرگ‌هایی که وارد نمی‌شوند:",
   "csv-mapping-title-required": "ستون حاوی عنوان کارت‌ها را انتخاب کنید.",
   "csv-mapping-list-required": "نام لیستی را که همه کارت‌ها در آن قرار می‌گیرند بنویسید یا ستون حاوی لیست را انتخاب کنید.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "در Vikunja بخش Settings را باز کنید، Data Export را انتخاب کنید و فایل .zip ارسالی را دریافت کنید، سپس آن فایل را انتخاب کنید یا data.json داخل آن را بچسبانید. دسته‌های کانبان به لیست و وظیفه‌ها به کارت همراه با برچسب‌ها، افراد محول‌شده، تاریخ‌ها، توضیح، لیست وظیفه‌ها به‌عنوان چک‌لیست و نظرها تبدیل می‌شوند؛ اولویت، درصد تکمیل و وضعیت تکمیل به فیلدهای شخصی تبدیل می‌شوند. پیوست‌ها وارد نمی‌شوند."
 }

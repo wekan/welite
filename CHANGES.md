@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Vikunja ZIP and JSON imports preserve buckets, tasks, dates, labels,
+  checklists, comments, parent links and supported dependencies. The importer
+  refuses archives missing data.json and reports skipped attachments.
+
 - Export a board as a Microsoft Planner workbook from the export menu. The
   Tasks sheet includes buckets, dates, assignments, labels and checklist totals.
 

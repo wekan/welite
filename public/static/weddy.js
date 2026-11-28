@@ -921,12 +921,16 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       }
       var workbook = form.querySelector('.js-import-file');
       if (workbook && workbook.files.length) {
+        var file = workbook.files[0];
+        if (form.dataset.source === 'vikunja' && /[.]json$/i.test(file.name)) {
+          return file.text().then(function (data) { return callAsync('importBoard', JSON.parse(data), {}, 'vikunja'); });
+        }
         return new Promise(function (resolve, reject) {
           var reader = new FileReader();
           reader.onload = function () { resolve(reader.result.split(',')[1]); };
           reader.onerror = reject;
-          reader.readAsDataURL(workbook.files[0]);
-        }).then(function (data) { return callAsync('importBoard', data, {}, form.dataset.source); });
+          reader.readAsDataURL(file);
+        }).then(function (data) { return callAsync('importBoard', form.dataset.source === 'vikunja' ? { zipBase64: data } : data, {}, form.dataset.source); });
       }
       var files = form.querySelector('.js-import-many-files');
       if (files && files.files.length) {

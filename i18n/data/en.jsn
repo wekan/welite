@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Sheets that are not imported:",
   "csv-mapping-title-required": "Choose the column that holds the card titles.",
   "csv-mapping-list-required": "Type the name of the list every card goes into, or choose the column that holds the list.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan, choose the ⋯ menu next to its name, then Export as Excel (in classic Planner: Export plan to Excel), and choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan, choose the ⋯ menu next to its name, then Export as Excel (in classic Planner: Export plan to Excel), and choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "In Vikunja, open Settings, choose Data Export and download the .zip file it sends you, then choose that file, or paste the data.json inside it. Kanban buckets become lists and tasks become cards, with their labels, assignees, dates, description, task lists as checklists and comments; priority, percent done and done become custom fields. Attachments are not imported."
 }

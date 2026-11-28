@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Regneark som ikke importeres:",
   "csv-mapping-title-required": "Velg kolonnen som inneholder korttitlene.",
   "csv-mapping-list-required": "Skriv navnet på listen som alle kortene skal plasseres i, eller velg kolonnen som inneholder listen.",
-  "import-board-instruction-planner": "Åpne menyen til planen i Microsoft Planner, og velg Export plan to Excel. Velg deretter den .xlsx-filen. Buckets blir lister, og oppgaver blir kort med tildelte personer, datoer, etiketter, sjekkliste og beskrivelse; Progress, Priority og Completed By blir egendefinerte felt."
+  "import-board-instruction-planner": "Åpne menyen til planen i Microsoft Planner, og velg Export plan to Excel. Velg deretter den .xlsx-filen. Buckets blir lister, og oppgaver blir kort med tildelte personer, datoer, etiketter, sjekkliste og beskrivelse; Progress, Priority og Completed By blir egendefinerte felt.",
+  "import-board-instruction-vikunja": "Åpne Settings i Vikunja, velg Data Export, og last ned .zip-filen du får tilsendt. Velg deretter filen, eller lim inn data.json fra den. Kanban-buckets blir lister, og oppgaver blir kort med etiketter, tildelte personer, datoer, beskrivelse, oppgavelister som sjekklister og kommentarer; prioritet, fullføringsprosent og fullført blir egendefinerte felt. Vedlegg importeres ikke."
 }

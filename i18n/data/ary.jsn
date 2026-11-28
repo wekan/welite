@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "الأوراق اللي ما كتستوردش:",
   "csv-mapping-title-required": "ختار العمود اللي فيه العناوين ديال البطاقات.",
   "csv-mapping-list-required": "كتب السمية ديال القائمة اللي غادي يدخلو ليها كاع البطاقات، ولا ختار العمود اللي فيه القائمة.",
-  "import-board-instruction-planner": "ف Microsoft Planner، حل الخطة، ختار القائمة ⋯ اللي حدا السمية ديالها، من بعد Export as Excel (ف Planner الكلاسيكي: Export plan to Excel)، وختار داك الملف ‎.xlsx. الـ Buckets كيوليو قوائم والمهام كيوليو بطاقات، مع المكلّفين والتواريخ والعلامات ولائحة التحقق والوصف ديالهم؛ Progress وPriority وCompleted By كيوليو حقول مخصصة."
+  "import-board-instruction-planner": "ف Microsoft Planner، حل الخطة، ختار القائمة ⋯ اللي حدا السمية ديالها، من بعد Export as Excel (ف Planner الكلاسيكي: Export plan to Excel)، وختار داك الملف ‎.xlsx. الـ Buckets كيوليو قوائم والمهام كيوليو بطاقات، مع المكلّفين والتواريخ والعلامات ولائحة التحقق والوصف ديالهم؛ Progress وPriority وCompleted By كيوليو حقول مخصصة.",
+  "import-board-instruction-vikunja": "فVikunja، حل Settings، ختار Data Export وحمّل ملف .zip اللي كيصيفطو ليك، ومن بعد ختار داك الملف، ولا لصق data.json اللي فيه. السطولة ديال Kanban كيوليو قوائم والمهام كيوليو بطاقات، مع العلامات والمكلّفين والتواريخ والوصف وقوائم المهام بحال قوائم تدقيق والتعليقات ديالهم؛ الأولوية ونسبة الإنجاز ومدار كيوليو حقول مخصصة. المرفقات ما كتستوردش."
 }

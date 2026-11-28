@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Pepa e sega ni kauta mai:",
   "csv-mapping-title-required": "Digitaka na kolomu e taura na ulutaga ni kadi.",
   "csv-mapping-list-required": "Volia na yaca ni lisi e lako kina na kadi kece, se digitaka na kolomu e taura na lisi.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Ena Vikunja, dolava na Settings, digitaka na Data Export ka lavetaka mai na faile .zip e vakauta mai vei iko, oti digitaka na faile oqori, se biuta mai na data.json e tu kina. Na bucket ni Kanban e yaco me lisi ka na cakacaka e yaco me kadi, vata kei na nodra ivakatakilakila, dauvakayacori, siga, ivakamacala, lisi ni cakacaka me lisi ni vakadinadina kei na vakasama; na ka bibi, pasede sa oti kei na sa oti e yaco me tikina digitaki. Na ka e semati e sega ni kauta mai."
 }

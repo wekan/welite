@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Fogli che non vengono importati:",
   "csv-mapping-title-required": "Scegli la colonna che contiene i titoli delle schede.",
   "csv-mapping-list-required": "Digita il nome della lista in cui inserire tutte le schede, oppure scegli la colonna che contiene la lista.",
-  "import-board-instruction-planner": "In Microsoft Planner, apri il menu del piano e scegli Export plan to Excel, quindi seleziona il file .xlsx. I contenitori diventano liste e le attività diventano schede, con assegnatari, date, etichette, checklist e descrizioni; Progress, Priority e Completed By diventano campi personalizzati."
+  "import-board-instruction-planner": "In Microsoft Planner, apri il menu del piano e scegli Export plan to Excel, quindi seleziona il file .xlsx. I contenitori diventano liste e le attività diventano schede, con assegnatari, date, etichette, checklist e descrizioni; Progress, Priority e Completed By diventano campi personalizzati.",
+  "import-board-instruction-vikunja": "In Vikunja, apri Settings, scegli Data Export e scarica il file .zip ricevuto, quindi seleziona quel file oppure incolla il data.json al suo interno. I contenitori Kanban diventano liste e le attività diventano schede, con etichette, assegnatari, date, descrizioni, elenchi di attività come checklist e commenti; priorità, percentuale completata e stato di completamento diventano campi personalizzati. Gli allegati non vengono importati."
 }

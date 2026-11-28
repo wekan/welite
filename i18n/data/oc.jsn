@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Fuèlhs que son pas importats :",
   "csv-mapping-title-required": "Causissètz la colomna que conten los títols de las cartas.",
   "csv-mapping-list-required": "Picatz lo nom de la lista ont va cada carta, o causissètz la colomna que conten la lista.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Dins Vikunja, dobrissètz Settings, causissètz Data Export e telecargatz lo fichièr .zip que vos manda, puèi causissètz aquel fichièr, o pegatz lo data.json que conten. Los bucket Kanban venon de listas e las tascas venon de cartas, amb lors etiquetas, responsables, datas, descripcion, listas de tascas coma listas de verificacion e comentaris ; la prioritat, lo percentatge acabat e acabat venon de camps personalizats. Las pèças jonchas son pas importadas."
 }

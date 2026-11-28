@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Arkusze, które nie zostaną zaimportowane:",
   "csv-mapping-title-required": "Wybierz kolumnę zawierającą tytuły kart.",
   "csv-mapping-list-required": "Wpisz nazwę listy, do której trafią wszystkie karty, lub wybierz kolumnę zawierającą listę.",
-  "import-board-instruction-planner": "W Microsoft Planner otwórz menu planu i wybierz Export plan to Excel, a następnie wskaż ten plik .xlsx. Zasobniki stają się listami, a zadania kartami z przypisanymi osobami, datami, etykietami, listą kontrolną i opisem; Progress, Priority i Completed By stają się polami niestandardowymi."
+  "import-board-instruction-planner": "W Microsoft Planner otwórz menu planu i wybierz Export plan to Excel, a następnie wskaż ten plik .xlsx. Zasobniki stają się listami, a zadania kartami z przypisanymi osobami, datami, etykietami, listą kontrolną i opisem; Progress, Priority i Completed By stają się polami niestandardowymi.",
+  "import-board-instruction-vikunja": "W Vikunja otwórz Settings, wybierz Data Export i pobierz przesłany plik .zip, a następnie wskaż ten plik lub wklej znajdujący się w nim data.json. Zasobniki Kanban stają się listami, a zadania kartami z etykietami, przypisanymi osobami, datami, opisem, listami zadań jako listami kontrolnymi i komentarzami; priorytet, procent ukończenia i stan ukończenia stają się polami niestandardowymi. Załączniki nie są importowane."
 }

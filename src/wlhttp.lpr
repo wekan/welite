@@ -954,6 +954,7 @@ begin
   HTTPRouter.RegisterRoute('/import/csv', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/excel', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/planner', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/vikunja', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

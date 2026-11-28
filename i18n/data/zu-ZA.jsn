@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Amashidi angeke angeniswe:",
   "csv-mapping-title-required": "Khetha ikholomu enezihloko zamakhadi.",
   "csv-mapping-list-required": "Thayipha igama lohlu wonke amakhadi azofakwa kulo, noma ukhethe ikholomu enohlu.",
-  "import-board-instruction-planner": "Ku-Microsoft Planner, vula imenyu yohlelo bese ukhetha Export plan to Excel, bese ukhetha lelo fayela le-.xlsx. Amaqoqo aba izinhlu nemisebenzi iba amakhadi, nabantu ababelwe yona, izinsuku, amalebula, uhlu lokuhlola nencazelo; Progress, Priority no-Completed By kuba izinkambu zangokwezifiso."
+  "import-board-instruction-planner": "Ku-Microsoft Planner, vula imenyu yohlelo bese ukhetha Export plan to Excel, bese ukhetha lelo fayela le-.xlsx. Amaqoqo aba izinhlu nemisebenzi iba amakhadi, nabantu ababelwe yona, izinsuku, amalebula, uhlu lokuhlola nencazelo; Progress, Priority no-Completed By kuba izinkambu zangokwezifiso.",
+  "import-board-instruction-vikunja": "Ku-Vikunja, vula Settings, khetha Data Export bese ulanda ifayela le-.zip elithunyelwa kuwe, bese ukhetha lelo fayela, noma unamathisele i-data.json engaphakathi kwalo. Amaqoqo e-Kanban aba izinhlu nemisebenzi ibe amakhadi, namalebula, abantu ababelwe yona, izinsuku, incazelo, izinhlu zemisebenzi njengezinhlu zokuhlola namazwana; okubalulekile, iphesenti lokuqedwa nesimo sokuqediwe kuba izinkambu zangokwezifiso. Okunamathiselwe akungeniswa."
 }

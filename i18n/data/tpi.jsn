@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Ol sit i no kam insait:",
   "csv-mapping-title-required": "Makim kolum i holim ol nem bilong kat.",
   "csv-mapping-list-required": "Raitim nem bilong lis we olgeta kat i go insait, o makim kolum i holim lis.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Long Vikunja, opim Settings, makim Data Export na daunlodim fail .zip em i salim long yu, nau makim dispela fail, o pestim data.json i stap insait long em. Ol baket bilong Kanban i kamap ol lis na ol wok i kamap ol kat, wantaim ol mak, man i gat wok, de, stori, lis bilong wok olsem lis bilong sekim na ol tok bilong ol; samting i namba wan, pesen i pinis na pinis i kamap ol fil bilong yu yet. Ol samting i pas i no kam insait."
 }

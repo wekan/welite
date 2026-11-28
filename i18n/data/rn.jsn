@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Impapuro zitinjizwa:",
   "csv-mapping-title-required": "Hitamwo inkingi irimwo imitwe y'amakarata.",
   "csv-mapping-list-required": "Andika izina ry'urutonde amakarata yose yinjiramwo, canke uhitemwo inkingi irimwo urutonde.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Muri Vikunja, fungura Settings, hitamwo Data Export hanyuma upakurure idosiye .zip ikurungikira, hanyuma uhitemwo iyo dosiye, canke ushiremwo data.json iyirimwo. Ibitebo vya Kanban bihinduka intonde, ibikorwa bihinduka amakarata, hamwe n'ibimenyetso, abahawe ibikorwa, amatariki, insiguro, intonde z'ibikorwa nk'intonde zo kugenzura n'ivyiyumviro; ivy'imbere, ijana ry'ivyakozwe n'ivyaheze bihinduka imirima yihariye. Ivyometse ntivyinjizwa."
 }

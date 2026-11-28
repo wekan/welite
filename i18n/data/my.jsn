@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "မတင်သွင်းသော စာရွက်များ-",
   "csv-mapping-title-required": "ကတ်ခေါင်းစဉ်များကို ထိန်းထားသော ကော်လံကို ရွေးပါ။",
   "csv-mapping-list-required": "ကတ်တိုင်း ဝင်မည့် စာရင်း၏ အမည်ကို ရိုက်ထည့်ပါ၊ သို့မဟုတ် စာရင်းကို ထိန်းထားသော ကော်လံကို ရွေးပါ။",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja တွင် Settings ကို ဖွင့်ပြီး Data Export ကို ရွေးကာ ပို့ပေးသော .zip ဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပါ၊ ထို့နောက် ထိုဖိုင်ကို ရွေးပါ သို့မဟုတ် ၎င်းအတွင်းရှိ data.json ကို ကူးထည့်ပါ။ Kanban bucket များသည် စာရင်းများ ဖြစ်လာပြီး လုပ်ငန်းများသည် ၎င်းတို့၏ တံဆိပ်များ၊ တာဝန်ခံများ၊ ရက်စွဲများ၊ ဖော်ပြချက်၊ စစ်ဆေးရန်စာရင်းများအဖြစ် လုပ်ငန်းစာရင်းများနှင့် မှတ်ချက်များပါသော ကတ်များ ဖြစ်လာသည်။ ဦးစားပေးမှု၊ ပြီးဆုံးရာခိုင်နှုန်းနှင့် done တို့သည် စိတ်ကြိုက်အကွက်များ ဖြစ်လာသည်။ ပူးတွဲဖိုင်များကို မတင်သွင်းပါ။"
 }

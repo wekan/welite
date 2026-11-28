@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Folhas que não são importadas:",
   "csv-mapping-title-required": "Escolha a coluna que contém os títulos dos cartões.",
   "csv-mapping-list-required": "Escreva o nome da lista onde serão colocados todos os cartões, ou escolha a coluna que contém a lista.",
-  "import-board-instruction-planner": "No Microsoft Planner, abra o menu do plano e escolha Export plan to Excel; depois selecione esse ficheiro .xlsx. Os grupos tornam-se listas e as tarefas tornam-se cartões, com os seus responsáveis, datas, etiquetas, listas de verificação e descrições; Progress, Priority e Completed By tornam-se campos personalizados."
+  "import-board-instruction-planner": "No Microsoft Planner, abra o menu do plano e escolha Export plan to Excel; depois selecione esse ficheiro .xlsx. Os grupos tornam-se listas e as tarefas tornam-se cartões, com os seus responsáveis, datas, etiquetas, listas de verificação e descrições; Progress, Priority e Completed By tornam-se campos personalizados.",
+  "import-board-instruction-vikunja": "No Vikunja, abra Settings, escolha Data Export e descarregue o ficheiro .zip enviado; depois selecione esse ficheiro ou cole o data.json que contém. Os grupos Kanban tornam-se listas e as tarefas tornam-se cartões, com as suas etiquetas, responsáveis, datas, descrições, listas de tarefas como listas de verificação e comentários; a prioridade, a percentagem concluída e o estado concluído tornam-se campos personalizados. Os anexos não são importados."
 }

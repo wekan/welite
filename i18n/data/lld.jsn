@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Foi che ne vëgn nia importá:",
   "csv-mapping-title-required": "Tlü fora la colona che tëgn i tituli dles ciartes.",
   "csv-mapping-list-required": "Scrí l'inom dla lista olache dötes les ciartes va ite, o tlü fora la colona che tëgn la lista.",
-  "import-board-instruction-planner": "Te Microsoft Planner, giaurì l plan, cërn l menu ⋯ dlongia si inom, pona Export as Excel (tl Planner classich: Export plan to Excel), y cërn chël file .xlsx. I buckets devënta listes y i lëures devënta ciartes, cun si respunsabli, dates, etichetes, lista de control y descrizion; Progress, Priority y Completed By devënta ciamps persunalisei."
+  "import-board-instruction-planner": "Te Microsoft Planner, giaurì l plan, cërn l menu ⋯ dlongia si inom, pona Export as Excel (tl Planner classich: Export plan to Excel), y cërn chël file .xlsx. I buckets devënta listes y i lëures devënta ciartes, cun si respunsabli, dates, etichetes, lista de control y descrizion; Progress, Priority y Completed By devënta ciamps persunalisei.",
+  "import-board-instruction-vikunja": "Te Vikunja, daurí Settings, tlü fora Data Export y tira jö le documënt .zip che al te mana, spo tlü fora chël documënt, o incolé le data.json che é laite. I bucket Kanban dëventa listes y les lëures dëventa ciartes, cun so etichetes, respunsabli, dates, descrizion, listes de lëures sciöche listes de control y comënc; priorité, perzënt fat y fat dëventa ciamps persunalisei. Les injuntes ne vëgn nia importades."
 }

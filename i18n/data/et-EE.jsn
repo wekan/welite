@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Töölehed, mida ei impordita:",
   "csv-mapping-title-required": "Vali veerg, mis sisaldab kaartide pealkirju.",
   "csv-mapping-list-required": "Sisesta selle loetelu nimi, kuhu kõik kaardid lisatakse, või vali loetelu sisaldav veerg.",
-  "import-board-instruction-planner": "Avage rakenduses Microsoft Planner plaani menüü ja valige Export plan to Excel, seejärel valige see .xlsx-fail. Rühmad muutuvad loeteludeks ja ülesanded kaartideks koos vastutajate, kuupäevade, siltide, kontrollnimekirja ja kirjeldusega; Progress, Priority ja Completed By muutuvad kohandatud väljadeks."
+  "import-board-instruction-planner": "Avage rakenduses Microsoft Planner plaani menüü ja valige Export plan to Excel, seejärel valige see .xlsx-fail. Rühmad muutuvad loeteludeks ja ülesanded kaartideks koos vastutajate, kuupäevade, siltide, kontrollnimekirja ja kirjeldusega; Progress, Priority ja Completed By muutuvad kohandatud väljadeks.",
+  "import-board-instruction-vikunja": "Avage rakenduses Vikunja Settings, valige Data Export ja laadige alla teile saadetud .zip-fail, seejärel valige see fail või kleepige selles oleva data.json sisu. Kanbani rühmad muutuvad loeteludeks ja ülesanded kaartideks koos siltide, vastutajate, kuupäevade, kirjelduse, kontrollnimekirjadeks muutuvate ülesandeloetelude ja kommentaaridega; prioriteet, valmiduse protsent ja lõpetamise olek muutuvad kohandatud väljadeks. Manuseid ei impordita."
 }

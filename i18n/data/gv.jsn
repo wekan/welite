@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Leggyn nagh vel currit stiagh:",
   "csv-mapping-title-required": "Reih y cholloo ta cummal ard-enmyn ny kaartyn.",
   "csv-mapping-list-required": "Screeu ennym y rolley ta dy chooilley chaart goll stiagh ayn, ny reih y cholloo ta cummal y rolley.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Ayns Vikunja, foshil Settings, reih Data Export as laad neose y coadan .zip t'eh cur dhyt, eisht reih y coadan shen, ny greimee y data.json t'ayn. Ta buckets Kanban jannoo rolleeyn as ta gnyn jannoo kaartyn, lesh ny lipaidyn, feallee currit daue, laaghyn, coontey, rolleeyn gnyn myr rolleeyn scrutaghey as cooishyn oc; ta toshiaght, cronney jeant as jeant jannoo magheryn cliaghtit. Cha nel coyrtyn currit stiagh."
 }

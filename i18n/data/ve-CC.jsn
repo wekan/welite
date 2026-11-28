@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Foji che no i vien inportà:",
   "csv-mapping-title-required": "Sielgi ła cołona che ła tien i tìtołi de łe schede.",
   "csv-mapping-list-required": "Scrivi el nome de ła lista indove che va tute łe schede, o sielgi ła cołona che ła tien ła lista.",
-  "import-board-instruction-planner": "In Microsoft Planner, verzi el pian, sielzi el menù ⋯ rente al so nome, po Export as Excel (inte'l Planner clàsego: Export plan to Excel), e sielzi quel file .xlsx. I bucket i deventa liste e i conpiti i deventa schede, co i so asegnatari, date, etichete, lista de controło e descrision; Progress, Priority e Completed By i deventa canpi personałizà."
+  "import-board-instruction-planner": "In Microsoft Planner, verzi el pian, sielzi el menù ⋯ rente al so nome, po Export as Excel (inte'l Planner clàsego: Export plan to Excel), e sielzi quel file .xlsx. I bucket i deventa liste e i conpiti i deventa schede, co i so asegnatari, date, etichete, lista de controło e descrision; Progress, Priority e Completed By i deventa canpi personałizà.",
+  "import-board-instruction-vikunja": "In Vikunja, verzi Settings, siegli Data Export e scarga el file .zip che el te manda, dopo siegli cuel file, o incoła el data.json che ghe ze drento. I bucket Kanban i deventa liste e i compiti i deventa schede, co łe so etichete, assegnatari, date, descrision, liste de compiti come liste de controło e comenti; priorità, persentuałe fata e fato i deventa canpi personałizà. I ałegati no i vien inportà."
 }

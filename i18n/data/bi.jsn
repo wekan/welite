@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Ol sit we oli no karem i kam:",
   "csv-mapping-title-required": "Jusum kolum we i holem nem blong ol kad.",
   "csv-mapping-list-required": "Raetem nem blong lis we evri kad i go long hem, o jusum kolum we i holem lis.",
-  "import-board-instruction-planner": "Long Microsoft Planner, openem menyu blong plan mo jusum Export plan to Excel, afta jusum fael .xlsx ia. Ol bakit oli kam ol lis mo ol wok oli kam ol kad, wetem ol man we oli givim wok long olgeta, ol deit, ol mak, jeklis mo diskripsen; Progress, Priority mo Completed By oli kam ol spesel fil."
+  "import-board-instruction-planner": "Long Microsoft Planner, openem menyu blong plan mo jusum Export plan to Excel, afta jusum fael .xlsx ia. Ol bakit oli kam ol lis mo ol wok oli kam ol kad, wetem ol man we oli givim wok long olgeta, ol deit, ol mak, jeklis mo diskripsen; Progress, Priority mo Completed By oli kam ol spesel fil.",
+  "import-board-instruction-vikunja": "Long Vikunja, openem Settings, jusum Data Export mo daonlodem fael .zip we i sendem long yu, afta jusum fael ia, o pestem data.json we i stap insaed. Ol baket blong Kanban oli kam ol lis mo ol wok oli kam ol kad, wetem mak, man we i gat wok, deit, stori, lis blong wok olsem jeklis mo toktok blong olgeta; praeoriti, pesen we i finis mo finis oli kam ol fil blong yu. Ol atajmen oli no kam."
 }

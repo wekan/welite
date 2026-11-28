@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Lumbaran nyang h'an geuimpor:",
   "csv-mapping-title-required": "Pileh kolom nyang meuisi judul kad.",
   "csv-mapping-list-required": "Tuléh nan dapeuta nyang bandum kad jak keunan, atawa pileh kolom nyang meuisi dapeuta.",
-  "import-board-instruction-planner": "Bak Microsoft Planner, peuhah rencana, pileh meunu ⋯ bak sisi nan jih, laju Export as Excel (bak Planner klasik: Export plan to Excel), ngön pileh fail .xlsx nyan. Bucket jeuet keu dapeuta ngön tugaih jeuet keu kad, ngön ureueng nyang geubri buet, tanggai, label, checklist ngön deskripsi jih; Progress, Priority ngön Completed By jeuet keu ruang khusuih."
+  "import-board-instruction-planner": "Bak Microsoft Planner, peuhah rencana, pileh meunu ⋯ bak sisi nan jih, laju Export as Excel (bak Planner klasik: Export plan to Excel), ngön pileh fail .xlsx nyan. Bucket jeuet keu dapeuta ngön tugaih jeuet keu kad, ngön ureueng nyang geubri buet, tanggai, label, checklist ngön deskripsi jih; Progress, Priority ngön Completed By jeuet keu ruang khusuih.",
+  "import-board-instruction-vikunja": "Bak Vikunja, buka Settings, pileh Data Export ngon unduh file .zip nyang geukirém u droeneueh, lheuh nyan pileh file nyan, atawa tempel data.json nyang na lam jih. Ember Kanban jeuet keu dapeuta ngon tugaih jeuet keu kad, ngon label, ureueng geutugaih, tanggal, deskripsi, dapeuta tugaih sibagoe checklist ngon komen jih; prioritas, persen leusoe ngon leusoe jeuet keu ruang khusus. Lampiran h'an geuimpor."
 }

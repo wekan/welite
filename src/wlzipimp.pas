@@ -8,6 +8,7 @@ uses Classes, fpjson;
 function ZipAttachmentName(const Value: string; Used: TStringList): string;
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
 function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings = nil; Date1904: PBoolean = nil): TJSONArray;
+function ReadZipMember(const Bytes:RawByteString; const Name:string; out Content:RawByteString):Boolean;
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
 function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
 
@@ -295,6 +296,23 @@ begin
       if Result.Count=0 then raise EConvertError.Create('Missing workbook sheets');
     except Result.Free; raise; end;
   finally Shared.Free; Reader.Free; Archive.Free; end;
+end;
+
+function ReadZipMember(const Bytes:RawByteString; const Name:string; out Content:RawByteString):Boolean;
+var Archive:TUnZipper; Reader:TBoardZipReader;
+begin
+  if (Length(Bytes)=0) or (Length(Bytes)>MaxArchive) then raise EConvertError.Create('Invalid ZIP size');
+  Archive:=TUnZipper.Create;
+  Reader:=TBoardZipReader.Create(Bytes);
+  try
+    Reader.Markdown:=True;
+    Archive.OnOpenInputStream:=@Reader.OpenInput;
+    Archive.OnCloseInputStream:=@Reader.CloseInput;
+    Archive.OnCreateStream:=@Reader.CreateEntry;
+    Archive.OnDoneStream:=@Reader.FinishEntry;
+    Archive.UnZipAllFiles;
+    Result:=Reader.ReadEntry(Name,Content);
+  finally Reader.Free; Archive.Free; end;
 end;
 
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;

@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Delovni listi, ki niso uvoženi:",
   "csv-mapping-title-required": "Izberite stolpec z naslovi kartic.",
   "csv-mapping-list-required": "Vnesite ime seznama, kamor gredo vse kartice, ali izberite stolpec, ki vsebuje seznam.",
-  "import-board-instruction-planner": "V Microsoft Plannerju odprite meni načrta in izberite Export plan to Excel, nato izberite nastalo datoteko .xlsx. Skupine postanejo seznami, naloge pa kartice z dodeljenimi osebami, datumi, oznakami, kontrolnim seznamom in opisom; Progress, Priority in Completed By postanejo polja po meri."
+  "import-board-instruction-planner": "V Microsoft Plannerju odprite meni načrta in izberite Export plan to Excel, nato izberite nastalo datoteko .xlsx. Skupine postanejo seznami, naloge pa kartice z dodeljenimi osebami, datumi, oznakami, kontrolnim seznamom in opisom; Progress, Priority in Completed By postanejo polja po meri.",
+  "import-board-instruction-vikunja": "V aplikaciji Vikunja odprite Settings, izberite Data Export in prenesite poslano datoteko .zip, nato izberite to datoteko ali prilepite data.json iz nje. Skupine Kanban postanejo seznami, naloge pa kartice z oznakami, dodeljenimi osebami, datumi, opisom, seznami nalog kot kontrolnimi seznami in komentarji; prednost, odstotek dokončanosti in stanje dokončanosti postanejo polja po meri. Priloge se ne uvozijo."
 }

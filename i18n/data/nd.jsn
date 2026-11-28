@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Amashidi angangeniswayo:",
   "csv-mapping-title-required": "Khetha ikholamu ephethe izihloko zamakhadi.",
   "csv-mapping-list-required": "Bhala ibizo lohlu lapho wonke amakhadi aya khona, loba ukhethe ikholamu ephethe uluhlu.",
-  "import-board-instruction-planner": "Ku-Microsoft Planner, vula uhlelo, ukhethe imenyu ethi ⋯ eduze kwebizo lalo, bese ukhetha Export as Excel (ku-Planner endala: Export plan to Excel), ukhethe lelo fayela le-.xlsx. Ama-Bucket aba yizinhlu lemisebenzi iba ngamakhadi, kanye labanikwe umsebenzi, izinsuku, amalebula, uluhlu lokuhlola lencazelo yawo; i-Progress, i-Priority le-Completed By kuba yizikhala zakho."
+  "import-board-instruction-planner": "Ku-Microsoft Planner, vula uhlelo, ukhethe imenyu ethi ⋯ eduze kwebizo lalo, bese ukhetha Export as Excel (ku-Planner endala: Export plan to Excel), ukhethe lelo fayela le-.xlsx. Ama-Bucket aba yizinhlu lemisebenzi iba ngamakhadi, kanye labanikwe umsebenzi, izinsuku, amalebula, uluhlu lokuhlola lencazelo yawo; i-Progress, i-Priority le-Completed By kuba yizikhala zakho.",
+  "import-board-instruction-vikunja": "KuVikunja, vula Settings, khetha Data Export ulande ifayili ye-.zip ekuthumelela yona, ubusukhetha leyo fayili, loba unamathisele i-data.json ephakathi kwayo. Amabhakede eKanban aba yizinhlu lemisebenzi iba ngamakhadi, lamalebula awo, abanikwe umsebenzi, amalanga, incazelo, izinhlu zemisebenzi njengezinhlu zokuhlola lamazwana; okuqakathekileyo, iphesenti eliqediweyo lokuqediweyo kuba yizikhala zakho. Okunamathiselweyo kakungeniswa."
 }

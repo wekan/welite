@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Folioj, kiuj ne estas importitaj:",
   "csv-mapping-title-required": "Elektu la kolumnon, kiu enhavas la kartotitolojn.",
   "csv-mapping-list-required": "Tajpu la nomon de la listo, en kiun ĉiuj kartoj iros, aŭ elektu la kolumnon, kiu enhavas la liston.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "En Vikunja, malfermu Settings, elektu Data Export kaj elŝutu la .zip-dosieron senditan al vi, poste elektu tiun dosieron, aŭ algluu la dosieron data.json en ĝi. Kanban-ujoj fariĝas listoj kaj taskoj fariĝas kartoj kun siaj etikedoj, asignitoj, datoj, priskribo, taskolistoj kiel kontrollistoj kaj komentoj; prioritato, procento finita kaj finita stato fariĝas propraj kampoj. Aldonaĵoj ne estas importitaj."
 }

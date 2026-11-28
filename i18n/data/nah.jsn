@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Amatl tlen amo mocalaquiah:",
   "csv-mapping-title-required": "Xicpehpena tlaquetzalli tlen quipia amatlapaltin intocayo.",
   "csv-mapping-list-required": "Xictlahcuilo itocayo tocatlahtolli campa calaquiz nochi amatlapalli, noso xicpehpena tlaquetzalli tlen quipia tocatlahtolli.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Ipan Vikunja, xictlapo Settings, xicpehpena Data Export ihuan xictemohui .zip tlanamactli tlen mitztitlania, satepan xicpehpena inon tlanamactli, noso xictlali data.json tlen quipia. Kanban caxitl mocuepah tocatlahtoltin ihuan tequitl mocuepah amatlapaltin, ica inmachiohuan, tlanahuatiltin, tonalli, tlahtolli, tequitl itocatlahtol quen tlanextiliztocatlahtoltin ihuan tlahtolpehualiztli; achtopayotl, quezqui ipan ciento otlan ihuan otlan mocuepah monemac tlaltin. Tlanamictilli amo mocalaquiah."
 }

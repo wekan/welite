@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Matlhare a a sa tsenngweng:",
   "csv-mapping-title-required": "Tlhopha kholomo e e nang le ditlhogo tsa dikarata.",
   "csv-mapping-list-required": "Kwala leina la lenaane le karata nngwe le nngwe e yang mo go lona, kgotsa tlhopha kholomo e e nang le lenaane.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Mo Vikunja, bula Settings, tlhopha Data Export mme o folose faele ya .zip e e go e romelang, go tswa foo o tlhophe faele eo, kgotsa o kgomaretse data.json e e mo teng ga yona. Mabekere a Kanban a nna manaane mme ditiro di nna dikarata, le ditshwao tsa tsona, baabelwa, matlha, tlhaloso, manaane a ditiro jaaka manaane a tlhatlhobo le ditshwaelo; botlhokwa, phesente e e weditsweng le go wediwa di nna mafelo a a rulagantsweng. Tse di tshwaraganeng ga di tsenngwe."
 }

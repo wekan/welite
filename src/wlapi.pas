@@ -6620,6 +6620,350 @@ begin
   finally Workbook.Free; end;
 end;
 
+type EVikunjaMissingData=class(EConvertError);
+
+function VikunjaImport(const Source:TJSONData):TJSONObject;
+const PriorityNames:array[1..5] of string=('Low','Medium','High','Urgent','DO NOW');
+var Data,Owned,Projects,Views,Buckets,Placements,Tasks,Relations,ParentRows,Entries:TJSONData;
+  Project,View,Bucket,Task,Entry,Card,Board,Authors,Comment:TJSONObject;
+  Lanes,Lists,Cards,Labels,Definitions,Fields,Tags,Checks,Items,Comments,People:TJSONArray;
+  Losses,RelationsSeen:TStringList; Parents:TJSONObject;
+  TaskListRe,CheckItemRe,CheckedRe,HtmlTagRe,BreakRe,SuppressedRe:TRegExpr;
+  Input:RawByteString;
+  I,J,K,TaskCount,ProjectCount,ValidProjects,Priority:Integer;
+  Id,Name,Title,Lane,ViewId,ListId,DefaultList,DoneList,TaskId,Text,Path,Author,CheckId,ItemText:string;
+  Percent:Double; Done,Archive,ExplicitView:Boolean;
+
+  function Obj(Value:TJSONData):TJSONObject;
+  begin
+    Result:=nil;
+    if Value is TJSONObject then Result:=TJSONObject(Value);
+  end;
+
+  function Ref(Entry:TJSONObject; const Field:string):string;
+  var Value:TJSONData;
+  begin
+    Result:='';
+    if Entry=nil then Exit;
+    Value:=Entry.Find(Field);
+    if (Value<>nil) and (Value.JSONType in [jtNumber,jtString]) then Result:=Value.AsString;
+  end;
+
+  function ArrayOf(Entry:TJSONObject; const Field:string):TJSONArray;
+  var Value:TJSONData;
+  begin
+    Result:=nil;
+    if Entry=nil then Exit;
+    Value:=Entry.Find(Field);
+    if Value is TJSONArray then Result:=TJSONArray(Value);
+  end;
+
+  function TextOf(Entry:TJSONObject; const Field:string):string;
+  begin
+    Result:='';
+    if Entry<>nil then Result:=Entry.Get(Field,'');
+  end;
+
+  function Person(Entry:TJSONObject):string;
+  begin
+    Result:=Trim(TextOf(Entry,'username'));
+    if Result='' then Result:=Trim(TextOf(Entry,'name'));
+  end;
+
+  function PlainText(const Value:string):string;
+  begin
+    Result:=SuppressedRe.Replace(Value,'',False);
+    Result:=BreakRe.Replace(Result,#10,False);
+    Result:=HtmlTagRe.Replace(Result,'',False);
+    Result:=StringReplace(Result,'&nbsp;',' ',[rfReplaceAll]);
+    Result:=StringReplace(Result,'&lt;','<',[rfReplaceAll]);
+    Result:=StringReplace(Result,'&gt;','>',[rfReplaceAll]);
+    Result:=StringReplace(Result,'&quot;','"',[rfReplaceAll]);
+    Result:=StringReplace(Result,'&#39;',#39,[rfReplaceAll]);
+    Result:=Trim(StringReplace(Result,'&amp;','&',[rfReplaceAll]));
+  end;
+
+  procedure AddDate(ToEntry,FromEntry:TJSONObject;const Target,Field:string);
+  var Value:string; At:TDateTime;
+  begin
+    Value:=TextOf(FromEntry,Field);
+    if (Value<>'') and not AnsiStartsStr('0001-01-01',Value) and TryISO8601ToDate(Value,At,True) then
+      ToEntry.Add(Target,Value);
+  end;
+
+  procedure AddNamed(Rows:TJSONArray; const Id,Field,Caption,Kind:string);
+  var N:Integer; Item:TJSONObject;
+  begin
+    for N:=0 to Rows.Count-1 do if Rows.Objects[N].Get('_id','')=Id then Exit;
+    Item:=TJSONObject.Create(['_id',Id,Field,Caption,'sort',Rows.Count]);
+    if Kind<>'' then Item.Add('type',Kind);
+    if Rows=Labels then Item.Add('color','blue');
+    Rows.Add(Item);
+  end;
+
+  procedure AddField(const Key,Kind:string; Value:TJSONData);
+  var Field:TJSONObject;
+  begin
+    AddNamed(Definitions,Key,'name',Key,Kind);
+    Field:=TJSONObject.Create(['_id',Key]); Fields.Add(Field); Field.Add('value',Value);
+  end;
+
+  procedure ReadRelations(Related:TJSONObject);
+  var N,R:Integer; Kind,Inverse,Target,Pair,ReversePair,Key:string; Targets,Dependencies:TJSONArray;
+  begin
+    if Related=nil then Exit;
+    Dependencies:=TJSONArray.Create; Card.Add('cardDependencies',Dependencies);
+    for N:=0 to Related.Count-1 do
+    begin
+      Key:=Related.Names[N];
+      Targets:=ArrayOf(Related,Key);
+      if (Targets=nil) or (Targets.Count=0) then Continue;
+      if Key='parenttask' then Continue;
+      if Key='subtask' then
+      begin
+        for R:=0 to Targets.Count-1 do
+        begin
+          Target:=Ref(Obj(Targets.Items[R]),'id');
+          if (Target='') or ('task:'+Target=TaskId) then Continue;
+          Target:='task:'+Target;
+          if Parents.Find(Target)=nil then Parents.Add(Target,TaskId);
+        end;
+        Continue;
+      end;
+      case Key of
+        'blocking': begin Kind:='blocks'; Inverse:='is-blocked-by'; end;
+        'blocked': begin Kind:='is-blocked-by'; Inverse:='blocks'; end;
+        'related': begin Kind:='related-to'; Inverse:=Kind; end;
+        'duplicateof': begin Kind:='duplicates'; Inverse:='is-duplicated-by'; end;
+        'duplicates': begin Kind:='is-duplicated-by'; Inverse:='duplicates'; end;
+        else begin Losses.Add(Path+'/related_tasks/'+Key+': unsupported relation'); Continue; end;
+      end;
+      for R:=0 to Targets.Count-1 do
+      begin
+        Target:=Ref(Obj(Targets.Items[R]),'id');
+        if (Target='') or ('task:'+Target=TaskId) then Continue;
+        Target:='task:'+Target;
+        Pair:=Kind+':'+IntToStr(Length(TaskId))+':'+TaskId+Target;
+        ReversePair:=Inverse+':'+IntToStr(Length(Target))+':'+Target+TaskId;
+        if (RelationsSeen.IndexOf(Pair)>=0) or (RelationsSeen.IndexOf(ReversePair)>=0) then Continue;
+        RelationsSeen.Add(Pair);
+        Dependencies.Add(TJSONObject.Create(['cardId',Target,'type',Kind]));
+      end;
+    end;
+  end;
+
+  procedure ReadDescription(const Html:string);
+  var Fragment,Titles:string; ItemCount:Integer;
+  begin
+    Titles:=TaskListRe.Replace(Html,'',False);
+    Card.Add('description',PlainText(Titles));
+    if TaskListRe.Exec(Html) then
+      repeat
+        Fragment:=TaskListRe.Match[1];
+        CheckId:='';
+        ItemCount:=0;
+        if CheckItemRe.Exec(Fragment) then
+          repeat
+            ItemText:=PlainText(CheckItemRe.Match[2]);
+            if ItemText='' then Continue;
+            if CheckId='' then
+            begin
+              CheckId:=TaskId+':check:'+IntToStr(Checks.Count);
+              Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',TaskId,'title','Checklist','sort',Checks.Count]));
+            end;
+            Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(ItemCount),'checklistId',CheckId,
+              'title',ItemText,'isFinished',CheckedRe.Exec(CheckItemRe.Match[1]),'sort',ItemCount]));
+            Inc(ItemCount);
+          until not CheckItemRe.ExecNext;
+      until not TaskListRe.ExecNext;
+  end;
+
+begin
+  Owned:=nil; Losses:=TStringList.Create; Parents:=TJSONObject.Create;
+  RelationsSeen:=TStringList.Create; RelationsSeen.CaseSensitive:=True; RelationsSeen.Sorted:=True;
+  TaskListRe:=TRegExpr.Create('(?is)<ul[^>]*data-type[ ]*=[ ]*["'']taskList["''][^>]*>(.*?)</ul>');
+  CheckItemRe:=TRegExpr.Create('(?is)<li([^>]*)>(.*?)</li>');
+  CheckedRe:=TRegExpr.Create('(?i)data-checked[ ]*=[ ]*["'']true["'']');
+  HtmlTagRe:=TRegExpr.Create('(?s)<[^>]+>');
+  BreakRe:=TRegExpr.Create('(?i)<br[^>]*>|</(?:p|li|div|h[1-6])>');
+  SuppressedRe:=TRegExpr.Create('(?is)<(?:script|style)(?:[ ][^>]*)?>.*?</(?:script|style)>');
+  try
+    Data:=Source;
+    if Obj(Data)<>nil then
+    begin
+      Text:=TextOf(Obj(Data),'zipBase64');
+      if Text<>'' then
+      begin
+        if not ReadZipMember(DecodeStringBase64(Text,True),'data.json',Input) then
+          raise EVikunjaMissingData.Create('Vikunja ZIP has no data.json');
+        Owned:=GetJSON(Input,True); Data:=Owned;
+      end
+      else Data:=Obj(Data).Find('data');
+    end;
+    if Data is TJSONString then
+    begin
+      Text:=Data.AsString;
+      FreeAndNil(Owned);
+      Owned:=GetJSON(Text,True); Data:=Owned;
+    end;
+    if not (Data is TJSONArray) or (Data.Count=0) then raise EConvertError.Create('Invalid Vikunja data.json');
+    Projects:=Data; TaskCount:=0; ProjectCount:=0; ValidProjects:=0; Title:='';
+    for I:=0 to Projects.Count-1 do
+    begin
+      Project:=Obj(Projects.Items[I]);
+      if (Project=nil) or (Ref(Project,'id')='-1') then Continue;
+      Tasks:=ArrayOf(Project,'tasks');
+      if (Tasks=nil) and (ArrayOf(Project,'buckets')=nil) then Continue;
+      Inc(ValidProjects);
+      if Title='' then Title:=Trim(Project.Get('title',''));
+      if Tasks<>nil then
+      begin
+        if Tasks.Count>0 then Inc(ProjectCount);
+        Inc(TaskCount,Tasks.Count);
+      end;
+    end;
+    if ValidProjects=0 then raise EConvertError.Create('No Vikunja projects');
+    if TaskCount>20000 then raise EConvertError.Create('Too many Vikunja tasks');
+    if Title='' then Title:='Imported Vikunja';
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+      Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      for I:=0 to Projects.Count-1 do
+      begin
+        Project:=Obj(Projects.Items[I]); if (Project=nil) or (Ref(Project,'id')='-1') then Continue;
+        Tasks:=ArrayOf(Project,'tasks');
+        if (Tasks=nil) and (ArrayOf(Project,'buckets')=nil) then Continue;
+        if (ProjectCount>0) and ((Tasks=nil) or (Tasks.Count=0)) then Continue;
+        Lane:='project-'+IntToStr(I);
+        Name:='Default';
+        if ProjectCount>1 then Name:=Project.Get('title',Lane);
+        AddNamed(Lanes,Lane,'title',Name,'');
+        Archive:=Project.Get('is_archived',False);
+        Views:=ArrayOf(Project,'views'); ViewId:=''; DefaultList:=''; DoneList:=''; ExplicitView:=False;
+        if Views<>nil then
+          for J:=0 to Views.Count-1 do
+          begin
+            View:=Obj(Views.Items[J]);
+            if TextOf(View,'view_kind')<>'kanban' then Continue;
+            ViewId:=Ref(View,'id'); DefaultList:=Ref(View,'default_bucket_id'); DoneList:=Ref(View,'done_bucket_id');
+            ExplicitView:=True;
+            Break;
+          end;
+        Buckets:=ArrayOf(Project,'buckets');
+        if Buckets<>nil then
+          for J:=0 to Buckets.Count-1 do
+          begin
+            Bucket:=Obj(Buckets.Items[J]);
+            if (Bucket=nil) or (ExplicitView and (Ref(Bucket,'project_view_id')<>ViewId)) then Continue;
+            Id:=Ref(Bucket,'id'); if Id='' then Continue;
+            if DefaultList='' then DefaultList:=Id;
+            AddNamed(Lists,Lane+':bucket:'+Id,'title',Bucket.Get('title','No bucket'),'');
+          end;
+        if Tasks=nil then Continue;
+        Placements:=ArrayOf(Project,'task_buckets');
+        for J:=0 to Tasks.Count-1 do
+        begin
+          Task:=Obj(Tasks.Items[J]); if Task=nil then Continue;
+          Path:='/projects/'+IntToStr(I)+'/tasks/'+IntToStr(J);
+          Id:=Ref(Task,'id');
+          if Id='' then TaskId:=Lane+':row:'+IntToStr(J) else TaskId:='task:'+Id;
+          Done:=Task.Get('done',False);
+          ListId:=DefaultList; if Done and (DoneList<>'') then ListId:=DoneList;
+          if Placements<>nil then
+            for K:=0 to Placements.Count-1 do
+            begin
+              Entry:=Obj(Placements.Items[K]);
+              if (Ref(Entry,'task_id')<>Id) or (ExplicitView and (Ref(Entry,'project_view_id')<>ViewId)) then Continue;
+              Text:=Ref(Entry,'bucket_id');
+              if Text<>'' then ListId:=Text;
+              Break;
+            end;
+          Text:=Lane+':bucket:'+ListId;
+          Name:='No bucket';
+          if Done and (ListId='') then begin Text:=Lane+':done'; Name:='Done'; end;
+          AddNamed(Lists,Text,'title',Name,'');
+          Name:=Trim(Task.Get('title','')); if Name='' then Name:='Imported task';
+          Card:=TJSONObject.Create(['_id',TaskId,'title',Name,'listId',Text,'swimlaneId',Lane,'archived',Archive,'sort',J]);
+          Cards.Add(Card);
+          ReadDescription(Task.Get('description',''));
+          AddDate(Card,Task,'dueAt','due_date'); AddDate(Card,Task,'startAt','start_date');
+          AddDate(Card,Task,'createdAt','created'); AddDate(Card,Task,'modifiedAt','updated');
+          AddDate(Card,Task,'endAt','end_date');
+          if Done and (Card.Find('endAt')=nil) then AddDate(Card,Task,'endAt','done_at');
+          Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+          Priority:=Task.Get('priority',0);
+          if (Priority>=Low(PriorityNames)) and (Priority<=High(PriorityNames)) then
+            AddField('Priority','text',TJSONString.Create(PriorityNames[Priority]))
+          else if Priority<>0 then Losses.Add(Path+'/priority: unsupported priority');
+          Percent:=Task.Get('percent_done',0.0);
+          if (Percent>0) and not IsNan(Percent) then AddField('Percent Done','number',TJSONIntegerNumber.Create(Round(Min(1.0,Percent)*100)));
+          if Done then AddField('Done','checkbox',TJSONBoolean.Create(True));
+          Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+          Entries:=ArrayOf(Task,'labels');
+          if Entries<>nil then
+            for K:=0 to Entries.Count-1 do
+            begin
+              Name:=Trim(TextOf(Obj(Entries.Items[K]),'title'));
+              if Name='' then Continue;
+              AddNamed(Labels,Name,'name',Name,''); Tags.Add(Name);
+            end;
+          People:=TJSONArray.Create; Card.Add('assignees',People);
+          Entries:=ArrayOf(Task,'assignees');
+          if Entries<>nil then
+            for K:=0 to Entries.Count-1 do
+            begin
+              Author:=ImportAuthorIdentity(Authors,Person(Obj(Entries.Items[K])));
+              if Author<>'' then People.Add(Author);
+            end;
+          Card.Add('requestedBy',Person(Obj(Task.Find('created_by'))));
+          Relations:=Task.Find('related_tasks');
+          ReadRelations(Obj(Relations));
+          ParentRows:=ArrayOf(Obj(Relations),'parenttask');
+          if (ParentRows<>nil) and (ParentRows.Count>0) then
+          begin
+            Text:=Ref(Obj(ParentRows.Items[0]),'id');
+            if (Text<>'') and (Text<>Id) then Card.Add('parentId','task:'+Text);
+            if ParentRows.Count>1 then Losses.Add(Path+'/related_tasks: only one parent kept');
+          end;
+          Entries:=ArrayOf(Task,'comments');
+          if Entries<>nil then
+            for K:=0 to Entries.Count-1 do
+            begin
+              Entry:=Obj(Entries.Items[K]); if Entry=nil then Continue;
+              Text:=PlainText(Entry.Get('comment','')); if Text='' then Continue;
+              Comment:=TJSONObject.Create(['_id',TaskId+':comment:'+IntToStr(K),'cardId',TaskId,'text',Text]);
+              Comments.Add(Comment);
+              Author:=ImportAuthorIdentity(Authors,Person(Obj(Entry.Find('author'))));
+              if Author<>'' then Comment.Add('userId',Author);
+              AddDate(Comment,Entry,'createdAt','created');
+            end;
+          Entries:=ArrayOf(Task,'attachments');
+          if (Entries<>nil) and (Entries.Count>0) then Losses.Add(Path+'/attachments: attachment records skipped');
+        end;
+      end;
+      for I:=0 to Cards.Count-1 do
+      begin
+        Card:=Cards.Objects[I];
+        Text:=Parents.Get(Card.Get('_id',''),'');
+        if (Text<>'') and (Card.Find('parentId')=nil) then Card.Add('parentId',Text);
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except Result.Free; raise; end;
+  finally
+    SuppressedRe.Free; BreakRe.Free; HtmlTagRe.Free; CheckedRe.Free; CheckItemRe.Free; TaskListRe.Free;
+    Owned.Free; RelationsSeen.Free; Parents.Free; Losses.Free;
+  end;
+end;
+
 function PlannerImport(const Source:TJSONData):TJSONObject;
 const DateInputs:array[0..3] of string=('Created Date','Start Date','Due Date','Completed Date');
   DateTargets:array[0..3] of string=('createdAt','startAt','dueAt','endAt');
@@ -8247,7 +8591,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='excel') or (FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner') or (FormatName='vikunja');
 end;
 
 const ImportRecoveryType='import-completed-with-warnings';
@@ -9104,6 +9448,7 @@ begin
             else if SourceFormat='focalboard' then Body:=FocalboardImport(Value)
             else if SourceFormat='todoist' then Body:=TodoistImport(Value)
             else if SourceFormat='planner' then Body:=PlannerImport(Value)
+            else if SourceFormat='vikunja' then Body:=VikunjaImport(Value)
             else if SourceFormat='csv' then Body:=CsvMappedBoard(Value,nil)
             else if SourceFormat='wekan' then
             begin
@@ -9115,7 +9460,10 @@ begin
           finally SourceDocument.Free; end;
         end
         else Body:=ExactObject(aRequest.Content);
-      except raise EConvertError.Create('Invalid board export');end;
+      except
+        on E:EVikunjaMissingData do raise;
+        else raise EConvertError.Create('Invalid board export');
+      end;
       Value:=Body.Find('board');
       if not (Value is TJSONObject) then raise EConvertError.Create('Missing board export');
       Input:=TJSONObject(Value);
@@ -9360,6 +9708,12 @@ begin
         raise Exception.Create('Board import failed');
       Committed:=True;
     except
+      on E:EVikunjaMissingData do
+      begin
+        if MethodActor<>'' then SendJson(aResponse,'{"error":"invalid-import-format","reason":"Vikunja ZIP has no data.json"}',400)
+        else SendError(aResponse,400,'Vikunja ZIP has no data.json');
+        Exit;
+      end;
       on E:EConvertError do
       begin
         if not Quiet then

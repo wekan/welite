@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "ഇറക്കുമതി ചെയ്യാത്ത ഷീറ്റുകൾ:",
   "csv-mapping-title-required": "കാർഡ് തലക്കെട്ടുകളുള്ള കോളം തിരഞ്ഞെടുക്കുക.",
   "csv-mapping-list-required": "എല്ലാ കാർഡുകളും പോകേണ്ട പട്ടികയുടെ പേര് നൽകുക, അല്ലെങ്കിൽ പട്ടികയുള്ള കോളം തിരഞ്ഞെടുക്കുക.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja-യിൽ Settings തുറന്ന് Data Export തിരഞ്ഞെടുക്കുക; അത് അയയ്ക്കുന്ന .zip ഫയൽ ഡൗൺലോഡ് ചെയ്ത് ആ ഫയൽ തിരഞ്ഞെടുക്കുക, അല്ലെങ്കിൽ അതിനുള്ളിലെ data.json ഒട്ടിക്കുക. Kanban ബക്കറ്റുകൾ പട്ടികകളും ജോലികൾ കാർഡുകളുമാകും; ലേബലുകൾ, ചുമതലപ്പെട്ടവർ, തീയതികൾ, വിവരണം, പരിശോധനാ പട്ടികകളാകുന്ന ജോലിപ്പട്ടികകൾ, കമന്റുകൾ എന്നിവ കൂടെ വരും. മുൻഗണന, പൂർത്തിയായ ശതമാനം, പൂർത്തിയായ നില എന്നിവ ഇഷ്ട ഫീൽഡുകളാകും. അറ്റാച്ച്‌മെന്റുകൾ ഇറക്കുമതി ചെയ്യില്ല."
 }

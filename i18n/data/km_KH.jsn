@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "សន្លឹកដែលមិនត្រូវបាននាំចូល៖",
   "csv-mapping-title-required": "ជ្រើសរើសជួរឈរដែលផ្ទុកចំណងជើងកាត។",
   "csv-mapping-list-required": "វាយឈ្មោះបញ្ជីដែលកាតទាំងអស់ចូលទៅ ឬជ្រើសរើសជួរឈរដែលផ្ទុកបញ្ជី។",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "នៅក្នុង Vikunja បើក Settings ជ្រើសរើស Data Export ហើយទាញយកឯកសារ .zip ដែលវាផ្ញើមកអ្នក រួចជ្រើសរើសឯកសារនោះ ឬបិទភ្ជាប់ data.json នៅខាងក្នុងវា។ ធុង Kanban ក្លាយជាបញ្ជី ហើយកិច្ចការក្លាយជាកាត ជាមួយស្លាក អ្នកទទួលខុសត្រូវ កាលបរិច្ឆេទ ការពិពណ៌នា បញ្ជីកិច្ចការជាបញ្ជីត្រួតពិនិត្យ និងមតិយោបល់របស់វា។ អាទិភាព ភាគរយបានធ្វើរួច និងបានធ្វើរួចក្លាយជាវាលផ្ទាល់ខ្លួន។ ឯកសារភ្ជាប់មិនត្រូវបាននាំចូលទេ។"
 }

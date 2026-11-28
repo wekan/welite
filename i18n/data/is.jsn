@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Vinnublöð sem eru ekki flutt inn:",
   "csv-mapping-title-required": "Veldu dálkinn sem inniheldur heiti spjaldanna.",
   "csv-mapping-list-required": "Sláðu inn heiti listans sem öll spjöldin fara á eða veldu dálkinn sem inniheldur listann.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Í Vikunja skaltu opna Settings, velja Data Export og sækja .zip-skrána sem þú færð, og velja síðan þá skrá eða líma inn data.json úr henni. Kanban-flokkar verða að listum og verkefni að spjöldum með merkjum, ábyrgðaraðilum, dagsetningum, lýsingu, verkefnalistum sem gátlistum og athugasemdum; forgangur, lokið hlutfall og lokastaða verða að sérsniðnum reitum. Viðhengi eru ekki flutt inn."
 }

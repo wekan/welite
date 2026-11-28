@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "ⵜⵉⵙⵏⵉⵡⵉⵏ ⵏⵏⴰ ⵓⵔ ⵜⵜⵓⵙⴽⵛⴰⵎⵏⵜ:",
   "csv-mapping-title-required": "ⴼⵔⵏ ⵜⴰⴳⵊⴷⵉⵜ ⵏⵏⴰ ⵉⴳⴰⵏ ⵉⵣⵡⵍⴰ ⵏ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ.",
   "csv-mapping-list-required": "ⴰⵔⵓ ⵉⵙⵎ ⵏ ⵜⵍⴳⴰⵎⵜ ⵏⵏⴰ ⴳ ⵔⴰⴷ ⴽⵛⵎⵏⵜ ⴽⵓⵍⵍⵓ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ, ⵏⵖ ⴼⵔⵏ ⵜⴰⴳⵊⴷⵉⵜ ⵏⵏⴰ ⵉⴳⴰⵏ ⵜⴰⵍⴳⴰⵎⵜ.",
-  "import-board-instruction-planner": "ⴳ Microsoft Planner, ⵕⵥⵎ ⴰⵖⴰⵡⴰⵙ, ⴼⵔⵏ ⴰⵎⵓⵖ ⵏ ⋯ ⵜⵉⴳⵎⵉ ⵏ ⵉⵙⵎ ⵏⵏⵙ, ⵙ ⴷⴼⴼⵉⵔ Export as Excel (ⴳ Planner ⴰⴽⴱⵓⵔ: Export plan to Excel), ⴷ ⴼⵔⵏ ⴰⴼⴰⵢⵍⵓ .xlsx ⴰⵏⵏ. Buckets ⴰⴷ ⴳⵏ ⵜⵉⵍⴳⴰⵎⵉⵏ, ⵜⵉⵡⵓⵔⵉⵡⵉⵏ ⴰⴷ ⴳⵏⵜ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ, ⵙ ⵉⵎⵙⵡⵓⵔⵉⵢⵏ, ⵉⵙⵓⴽⴰⴷ, ⵉⵔⵛⵓⵎⵏ, ⵜⴰⵍⴳⴰⵎⵜ ⵏ ⵜⵎⵏⵥⵉⵜ ⴷ ⵓⴳⵍⴰⵎ ⵏⵏⵙⵏⵜ; Progress, Priority ⴷ Completed By ⴰⴷ ⴳⵏ ⵉⴳⵔⴰⵏ ⵉⵥⵍⵉⵏ."
+  "import-board-instruction-planner": "ⴳ Microsoft Planner, ⵕⵥⵎ ⴰⵖⴰⵡⴰⵙ, ⴼⵔⵏ ⴰⵎⵓⵖ ⵏ ⋯ ⵜⵉⴳⵎⵉ ⵏ ⵉⵙⵎ ⵏⵏⵙ, ⵙ ⴷⴼⴼⵉⵔ Export as Excel (ⴳ Planner ⴰⴽⴱⵓⵔ: Export plan to Excel), ⴷ ⴼⵔⵏ ⴰⴼⴰⵢⵍⵓ .xlsx ⴰⵏⵏ. Buckets ⴰⴷ ⴳⵏ ⵜⵉⵍⴳⴰⵎⵉⵏ, ⵜⵉⵡⵓⵔⵉⵡⵉⵏ ⴰⴷ ⴳⵏⵜ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ, ⵙ ⵉⵎⵙⵡⵓⵔⵉⵢⵏ, ⵉⵙⵓⴽⴰⴷ, ⵉⵔⵛⵓⵎⵏ, ⵜⴰⵍⴳⴰⵎⵜ ⵏ ⵜⵎⵏⵥⵉⵜ ⴷ ⵓⴳⵍⴰⵎ ⵏⵏⵙⵏⵜ; Progress, Priority ⴷ Completed By ⴰⴷ ⴳⵏ ⵉⴳⵔⴰⵏ ⵉⵥⵍⵉⵏ.",
+  "import-board-instruction-vikunja": "ⴳ Vikunja, ⵕⵥⵎ Settings, ⴼⵔⵏ Data Export ⴷ ⴰⴳⵎ ⴰⴼⴰⵢⵍⵓ .zip ⵏⵏⴰ ⴰⴽ ⵉⵜⵜⴰⵣⵏ, ⵙ ⵜⴼⵔⵏⴷ ⴰⴼⴰⵢⵍⵓ ⴰⴷ, ⵏⵖ ⵙⵏⵜⴹ data.json ⵉⵍⵍⴰⵏ ⴳⵉⵙ. ⵉⵙⵓⴳⵓⵔⵏ Kanban ⴰⴷ ⴳⵏ ⵜⵉⵍⴳⴰⵎⵉⵏ, ⵜⵉⵡⵓⵔⵉⵡⵉⵏ ⴰⴷ ⴳⵏⵜ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ, ⵙ ⵉⵔⵛⵓⵎⵏ, ⵉⵎⵙⵡⵓⵔⵉⵢⵏ, ⵉⵙⵓⴽⴰⴷ, ⴰⴳⵍⴰⵎ, ⵜⵉⵍⴳⴰⵎⵉⵏ ⵏ ⵜⵡⵓⵔⵉⵡⵉⵏ ⴰⵎ ⵜⵉⵍⴳⴰⵎⵉⵏ ⵏ ⵜⵎⵏⵥⵉⵜ ⴷ ⵉⵖⴼⴰⵡⴰⵍⵏ ⵏⵏⵙⵏⵜ; ⵜⴰⵣⵡⴰⵔⵜ, ⴰⴼⵎⵉⴹ ⵉⵜⵜⵓⵙⵎⴷⵏ ⴷ done ⴰⴷ ⴳⵏ ⵉⴳⵔⴰⵏ ⵉⵥⵍⵉⵏ. ⵜⵉⵙⵉⵡⴰⵢ ⵢⵔⵏⴰⵏ ⵓⵔ ⵜⵜⵓⵙⴽⵛⴰⵎⵏⵜ."
 }

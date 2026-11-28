@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Jan apanitäki uka hojanaka:",
   "csv-mapping-title-required": "Tarjeta sutinak katxaruki uka columna ajlliña.",
   "csv-mapping-list-required": "Taqi tarjetanakax mantki uka lista sutip qillqaña, jan ukax lista katxaruki uka columna ajlliña.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja ukan, Settings jist'araña, Data Export ajlliña ukat apayanktam uka .zip qillqat apaqaña, ukat uka qillqat ajlliña, jan ukax manqhapan data.json qillqaqaña. Kanban buckets ukanakax listanakaruw tuku, lurawinakax tarjetanakaruw tuku chimpunakapamp, lurayirinakapamp, urunakapamp, qhanañchäwipamp, lurawi listanakax uñakipañ listanakjama amuyt'awinakapamp chika; nayrïr lurañ, porcentaje tukuyata ukat tukuyatax pachpa camponakaruw tuku. Chikachatanakax janiw apanitäkiti."
 }

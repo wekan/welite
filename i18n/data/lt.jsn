@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Neimportuojami lapai:",
   "csv-mapping-title-required": "Pasirinkite stulpelį su kortelių pavadinimais.",
   "csv-mapping-list-required": "Įveskite sąrašo, į kurį bus įtrauktos visos kortelės, pavadinimą arba pasirinkite stulpelį su sąrašu.",
-  "import-board-instruction-planner": "Programoje Microsoft Planner atverkite plano meniu ir pasirinkite Export plan to Excel, tada pasirinkite šį .xlsx failą. Grupės tampa sąrašais, o užduotys — kortelėmis su atsakingais asmenimis, datomis, žymomis, kontroliniu sąrašu ir aprašu; Progress, Priority ir Completed By tampa pasirinktiniais laukais."
+  "import-board-instruction-planner": "Programoje Microsoft Planner atverkite plano meniu ir pasirinkite Export plan to Excel, tada pasirinkite šį .xlsx failą. Grupės tampa sąrašais, o užduotys — kortelėmis su atsakingais asmenimis, datomis, žymomis, kontroliniu sąrašu ir aprašu; Progress, Priority ir Completed By tampa pasirinktiniais laukais.",
+  "import-board-instruction-vikunja": "Programoje Vikunja atverkite Settings, pasirinkite Data Export ir atsisiųskite jums atsiųstą .zip failą, tada pasirinkite šį failą arba įklijuokite jame esančio data.json turinį. Kanban grupės tampa sąrašais, o užduotys — kortelėmis su žymomis, atsakingais asmenimis, datomis, aprašu, užduočių sąrašais kaip kontroliniais sąrašais ir komentarais; prioritetas, užbaigimo procentas ir užbaigimo būsena tampa pasirinktiniais laukais. Priedai neimportuojami."
 }

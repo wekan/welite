@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Waraqaawwan hin galfamne:",
   "csv-mapping-title-required": "Tarjaa maqaawwan kaardii qabu filadhu.",
   "csv-mapping-list-required": "Maqaa tarree kaardiin hundi itti galu barreessi, ykn tarjaa tarree qabu filadhu.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja keessatti, Settings banadhu, Data Export filadhuu faayilii .zip inni siif ergu buusi, achiis faayilii sana filadhu, ykn data.json keessa jiru itti maxxansi. Qodaawwan Kanban tarreewwan ta'u, hojiiwwan immoo kaardiiwwan asxaa, warra itti kennaman, guyyaa, ibsa, tarreewwan hojii akka tarree qorannootti fi yaadota isaanii wajjin ta'u; dursi, dhibbeentaan raawwatame fi raawwatame dirreewwan dhuunfaa ta'u. Maxxansoonni hin galfaman."
 }

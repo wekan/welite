@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Mpempe akwụkwọ a na-agaghị ebubata:",
   "csv-mapping-title-required": "Họrọ kọlụm nwere aha kaadị.",
   "csv-mapping-list-required": "Dee aha ndepụta kaadị niile ga-abanye na ya, ma ọ bụ họrọ kọlụm nwere ndepụta.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Na Vikunja, mepee Ntọala, họrọ Mbupụ data wee budata faịlụ .zip ọ na-ezigara gị, họrọzie faịlụ ahụ, ma ọ bụ tapawa data.json dị n’ime ya. Nkewa Kanban na-aghọ ndepụta, ọrụ na-aghọkwa kaadị nwere akara, ndị e kenyere, ụbọchị, nkọwa, ndepụta ọrụ dịka ndepụta nyocha na ozi nkọwa; mkpa, pasent emechara na ọnọdụ emechara na-aghọ oghere ahaziri. A naghị ebubata mgbakwunye."
 }

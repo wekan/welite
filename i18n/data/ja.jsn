@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "インポートしないシート:",
   "csv-mapping-title-required": "カード名が入っている列を選択してください。",
   "csv-mapping-list-required": "すべてのカードを入れるリストの名前を入力するか、リストが入っている列を選択してください。",
-  "import-board-instruction-planner": "Microsoft Planner でプランのメニューを開き、Export plan to Excel を選択して、出力された .xlsx ファイルを選びます。バケットはリストに、タスクは担当者、日付、ラベル、チェックリスト、説明を含むカードに変換されます。Progress、Priority、Completed By はカスタムフィールドになります。"
+  "import-board-instruction-planner": "Microsoft Planner でプランのメニューを開き、Export plan to Excel を選択して、出力された .xlsx ファイルを選びます。バケットはリストに、タスクは担当者、日付、ラベル、チェックリスト、説明を含むカードに変換されます。Progress、Priority、Completed By はカスタムフィールドになります。",
+  "import-board-instruction-vikunja": "Vikunja で Settings を開き、Data Export を選択して、送られてきた .zip ファイルをダウンロードします。そのファイルを選ぶか、中の data.json を貼り付けてください。Kanban のバケットはリストに、タスクはラベル、担当者、日付、説明、チェックリストに変換されたタスクリスト、コメントを含むカードに変換されます。優先度、完了率、完了状態はカスタムフィールドになります。添付ファイルはインポートされません。"
 }

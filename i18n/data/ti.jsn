@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "ዘይኣትዉ ሉሓት፦",
   "csv-mapping-title-required": "ኣርእስታት ካርድ ዝሕዝ ዓምዲ ምረጽ።",
   "csv-mapping-list-required": "ስም ናይቲ ኩሉ ካርድ ዝኣትዎ ዝርዝር ጽሓፍ፡ ወይ ነቲ ዝርዝር ዝሕዝ ዓምዲ ምረጽ።",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "ኣብ Vikunja፡ Settings ክፈት፡ Data Export ምረጽ እሞ ዝሰደደልካ .zip ፋይል ኣውርድ፡ ድሕሪኡ ነቲ ፋይል ምረጽ፡ ወይ ኣብ ውሽጡ ዘሎ data.json ለጥፍ። Kanban buckets ዝርዝራት ይኾኑ፡ ዕማማት ድማ ምስ ምልክታቶም፡ ዝተመደቡ፡ ዕለታት፡ መግለጺ፡ ዝርዝራት ዕማማት ከም ዝርዝራት መረጋገጺን ርእይቶታትን ካርድታት ይኾኑ፤ ቀዳምነት፡ ሚእታዊ ዝተወድአን ዝተወድአን ብሕታውያን ዓውድታት ይኾኑ። መተሓሓዝቲ ኣይኣትዉን።"
 }

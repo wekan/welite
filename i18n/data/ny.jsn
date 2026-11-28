@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "Masamba omwe salowetsedwa:",
   "csv-mapping-title-required": "Sankhani mzati womwe uli ndi mitu ya makhadi.",
   "csv-mapping-list-required": "Lembani dzina la mndandanda womwe khadi lililonse limalowamo, kapena sankhani mzati womwe uli ndi mndandanda.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Mu Vikunja, tsegulani Settings, sankhani Data Export ndipo tsitsani fayilo ya .zip yomwe ikutumizirani, kenako sankhani fayiloyo, kapena matani data.json yomwe ili mkati mwake. Ma bucket a Kanban amakhala mindandanda ndipo ntchito zimakhala makhadi, pamodzi ndi zilembo, owaperekera ntchito, masiku, kufotokoza, mindandanda ya ntchito ngati mindandanda yowunika ndi ndemanga; zofunika kwambiri, peresenti yomalizidwa ndi chomalizidwa zimakhala malo apadera. Zolumikizidwa sizilowetsedwa."
 }

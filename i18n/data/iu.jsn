@@ -2369,5 +2369,6 @@
   "csv-mapping-skipped-sheets": "ᐃᓯᖅᑎᑕᐅᖏᑦᑐᑦ ᒪᒃᐱᒐᑦ:",
   "csv-mapping-title-required": "ᐊᓪᓚᖅᓯᒪᔪᑦ ᑕᐃᒎᓯᖏᑦ ᐱᑕᖃᖅᑎᑦᑐᖅ ᑐᑉᐱᒃ ᓂᕈᐊᕐᓗᒍ.",
   "csv-mapping-list-required": "ᑎᑎᖅᑲᓕᐊᖅ ᐊᓪᓚᖅᓯᒪᔪᓕᒫᑦ ᐃᓯᕐᕕᒋᓂᐊᖅᑕᖓᑦ ᐊᑎᖓ ᑎᑎᕋᕐᓗᒍ, ᐅᕝᕙᓘᓐᓃᑦ ᑎᑎᖅᑲᓕᐊᖅ ᐱᑕᖃᖅᑎᑦᑐᖅ ᑐᑉᐱᒃ ᓂᕈᐊᕐᓗᒍ.",
-  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
+  "import-board-instruction-vikunja": "Vikunja-ᒥ, Settings ᒪᑐᐃᕐᓗᒍ, Data Export ᓂᕈᐊᕐᓗᒍ .zip ᑎᑎᖅᑲᖅ ᑐᓂᔭᐅᔪᖅ ᐱᓗᒍ, ᑕᐃᑲᓂ ᑎᑎᖅᑲᖅ ᓂᕈᐊᕐᓗᒍ, ᐅᕝᕙᓘᓐᓃᑦ ᐃᓗᐊᓂ data.json ᐃᓕᓪᓗᒍ. Kanban ᐃᖅᕿᓯᐅᑏᑦ ᑎᑎᖅᑲᓕᐊᙳᖅᐸᒃᑐᑦ ᐱᓕᕆᐊᓪᓗ ᐊᓪᓚᖅᓯᒪᔪᙳᖅᐸᒃᑐᑦ, ᓇᓗᓇᐃᒃᑯᑕᖏᑦ, ᐱᓕᕆᐊᖃᖅᑐᖏᑦ, ᐅᓪᓗᖏᑦ, ᐅᓂᒃᑳᖓ, ᐱᓕᕆᐊᑦ ᑎᑎᖅᑲᓕᐊᖏᑦ ᓇᓗᓇᐃᖅᓯᕕᙳᖅᑐᑎᒃ ᐅᖃᐅᓯᖏᓪᓗ ᐱᑕᖃᑦᑕᐅᖅᑐᑦ; ᓯᕗᓪᓕᐅᑎᑕᐅᓂᖓ, ᐱᔭᕇᖅᓯᒪᓂᖓ ᐳᓴᓐᑎᓂᒃ ᐱᔭᕇᖅᓯᒪᓂᖓᓗ ᐃᓚᒋᐊᖅᓯᒪᔪᓂᒃ ᐃᓂᙳᖅᐸᒃᑐᑦ. ᐱᑕᖃᑏᑦ ᐃᓯᖅᑎᑕᐅᖏᑦᑐᑦ."
 }

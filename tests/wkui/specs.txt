@@ -570,3 +570,6 @@ import-export-format-audit.e2e.js: excel: empty imports fail without creating a 
 import-export-format-audit.e2e.js: Excel: a WeKan export workbook in Finnish with a sheet per board imports as several boards
 import-export-format-audit.e2e.js: Microsoft Planner: an exported plan imports through the page
 import-export-format-audit.e2e.js: Microsoft Planner: the export menu link returns a Planner workbook and refuses an unrelated user
+import-export-format-audit.e2e.js: Vikunja: an export .zip imports through the page with its buckets, checklist, comment, fields and parent
+import-export-format-audit.e2e.js: Vikunja: a pasted data.json imports, and a broken one or an unrelated zip is refused
+import-export-format-audit.e2e.js: Hawaiian vikunja import instructions render without an English fallback
