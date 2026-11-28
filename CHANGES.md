@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Selected checklists and loose items can move together. A list-only
+  destination creates one card for them, and items already inside a selected
+  checklist move with their checklist once. Shared Chromium coverage exercises
+  the method and dragging with and without handles.
+
 - Card-only selections can move between boards. Comments, checklists, items,
   and attachment references move with the cards. Destination card numbers,
   labels matched by name, and board membership are applied in the same transaction.

@@ -491,3 +491,5 @@ time-history.e2e.js: move dialog records reason and one reversible position
 time-history.e2e.js: = REST time corrections, move reasons, retained activity and report authors in en
 weddy-specs/29-checklist-item-cross-drag.e2e.js
 weddy-specs/30-checklist-text-selection.e2e.js
+structural-selection.e2e.js: mixed checklist and loose item create one card
+structural-selection.e2e.js: mixed checklist drag across swimlanes
