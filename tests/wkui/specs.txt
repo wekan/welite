@@ -510,3 +510,6 @@ import-export-format-audit.e2e.js: zenkit: import adapter fixture text through t
 import-export-format-audit.e2e.js: zenkit: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: zenkit: comments, checklists and card fields survive a UI import
 import-export-format-audit.e2e.js: zenkit: API entries import stages, checklists, fields and hierarchy
+import-export-format-audit.e2e.js: jira: import adapter fixture text through the UI
+import-export-format-audit.e2e.js: jira: malformed JSON and wrong document shapes are rejected
+import-export-format-audit.e2e.js: jira: comments, checklists and card fields survive a UI import

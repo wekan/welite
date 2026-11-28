@@ -5013,10 +5013,171 @@ begin
   except Result.Free; raise; end;
 end;
 
+function JiraImport(const Source: TJSONData): TJSONObject;
+var Board, Authors, Issue, JiraFields, Card, Names, Entry, Person, Part, Field: TJSONObject;
+  Lists, Cards, Labels, Comments, Checks, Items, Definitions, Tags, Fields: TJSONArray;
+  Issues, Data, Value: TJSONData; I,J: Integer;
+  Id, ListId, Name, Title, Key, Kind, Text, Author, CheckId, SubtaskTitle: string;
+  function Obj(Data: TJSONData; const Key: string): TJSONObject;
+  var V: TJSONData;
+  begin
+    Result:=nil;
+    if not (Data is TJSONObject) then Exit;
+    V:=TJSONObject(Data).Find(Key);
+    if V is TJSONObject then Result:=TJSONObject(V);
+  end;
+  function Str(Data: TJSONObject; const Key: string): string;
+  begin
+    Result:='';
+    if Data<>nil then Result:=Data.Get(Key,'');
+  end;
+  function RichText(Value: TJSONData; Depth: Integer): string;
+  var Content: TJSONData; Node: TJSONObject; NodeType: string; K: Integer;
+  begin
+    Result:='';
+    if Depth>64 then raise EConvertError.Create('Jira rich text nesting is too deep');
+    if Value is TJSONString then Exit(Value.AsString);
+    if not (Value is TJSONObject) then Exit;
+    Node:=TJSONObject(Value); NodeType:=Node.Get('type','');
+    if NodeType='text' then Exit(Node.Get('text',''));
+    if NodeType='hardBreak' then Exit(LineEnding);
+    Content:=Node.Find('content');
+    if not (Content is TJSONArray) then Exit;
+    for K:=0 to Content.Count-1 do
+    begin
+      if (K>0) and ((NodeType='doc') or (NodeType='bulletList') or (NodeType='orderedList')) then Result:=Result+LineEnding;
+      Result:=Result+RichText(Content.Items[K],Depth+1);
+    end;
+  end;
+  procedure AddNamed(Rows: TJSONArray; const Id, NameKey, Name, Kind: string);
+  var K: Integer; Added: TJSONObject;
+  begin
+    for K:=0 to Rows.Count-1 do if Rows.Objects[K].Get('_id','')=Id then Exit;
+    Added:=TJSONObject.Create(['_id',Id,NameKey,Name,'sort',Rows.Count]);
+    if Kind<>'' then Added.Add('type',Kind);
+    Rows.Add(Added);
+  end;
+  procedure AddTag(const Name: string);
+  begin
+    if Name='' then Exit;
+    AddNamed(Labels,Name,'name',Name,'');
+    Tags.Add(Name);
+  end;
+  procedure AddDate(FromRow, ToRow: TJSONObject; const SourceKey, TargetKey: string);
+  var DateText: string; Offset: Integer;
+  begin
+    DateText:=Str(FromRow,SourceKey);
+    if DateText='' then Exit;
+    Offset:=Length(DateText)-4;
+    if (Offset>10) and (DateText[Offset] in ['+','-']) and (Pos(':',Copy(DateText,Offset,MaxInt))=0) then
+      Insert(':',DateText,Offset+3);
+    ToRow.Add(TargetKey,DateText);
+  end;
+begin
+  Issues:=Source;
+  Names:=Obj(Source,'names');
+  if Source is TJSONObject then Issues:=TJSONObject(Source).Find('issues');
+  if not (Issues is TJSONArray) then raise EConvertError.Create('Invalid Jira issue export');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create; Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+    Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+    Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+    Title:='';
+    for I:=0 to Issues.Count-1 do
+    begin
+      if not (Issues.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Jira issue');
+      Issue:=TJSONObject(Issues.Items[I]); JiraFields:=Obj(Issue,'fields');
+      Id:=Issue.Get('id',Issue.Get('key',''));
+      if (Id='') or (Trim(Str(JiraFields,'summary'))='') then raise EConvertError.Create('Invalid Jira issue identity');
+      if Title='' then Title:=Str(Obj(JiraFields,'project'),'name');
+      Name:=Str(Obj(JiraFields,'status'),'name');
+      if Name='' then Name:='Issues';
+      ListId:=Name; AddNamed(Lists,ListId,'title',Name,'');
+      Card:=TJSONObject.Create(['_id',Id,'title',JiraFields.Get('summary',''),'listId',ListId,'sort',I,
+        'description',RichText(JiraFields.Find('description'),0),
+        'dueComplete',Str(Obj(Obj(JiraFields,'status'),'statusCategory'),'key')='done']);
+      Cards.Add(Card);
+      AddDate(JiraFields,Card,'duedate','dueAt'); AddDate(JiraFields,Card,'created','createdAt');
+      AddDate(JiraFields,Card,'updated','modifiedAt'); AddDate(JiraFields,Card,'resolutiondate','endAt');
+      Person:=Obj(JiraFields,'reporter');
+      Author:=ImportAuthorIdentity(Authors,Str(Person,'displayName'));
+      if Author<>'' then Card.Add('userId',Author);
+      Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+      Data:=JiraFields.Find('labels');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+        if Data.Items[J] is TJSONString then AddTag(Data.Items[J].AsString);
+      Name:=Str(Obj(JiraFields,'priority'),'name');
+      if Name<>'' then AddTag('priority:'+Name);
+      for Key in ['components','fixVersions'] do
+      begin
+        Data:=JiraFields.Find(Key);
+        if not (Data is TJSONArray) then Continue;
+        for J:=0 to Data.Count-1 do
+        begin
+          if not (Data.Items[J] is TJSONObject) then Continue;
+          Name:=Str(TJSONObject(Data.Items[J]),'name');
+          if (Name<>'') and (Key='fixVersions') then Name:='version:'+Name;
+          AddTag(Name);
+        end;
+      end;
+      Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+      for J:=0 to JiraFields.Count-1 do
+      begin
+        Key:=JiraFields.Names[J]; Value:=JiraFields.Items[J];
+        if not AnsiStartsStr('customfield_',Key) then Continue;
+        if Value is TJSONObject then Value:=TJSONObject(Value).Find('value');
+        if (Value=nil) or not (Value.JSONType in [jtString,jtNumber,jtBoolean]) then Continue;
+        Name:=Str(Names,Key); if Name='' then Name:=Key;
+        Kind:='text';
+        if Value.JSONType=jtNumber then Kind:='number';
+        if Value.JSONType=jtBoolean then Kind:='checkbox';
+        AddNamed(Definitions,Key,'name',Name,Kind);
+        Field:=TJSONObject.Create(['_id',Key]); Fields.Add(Field); Field.Add('value',Value.Clone);
+      end;
+      Data:=Obj(JiraFields,'comment');
+      if Data<>nil then Data:=TJSONObject(Data).Find('comments');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Data.Items[J]); Text:=RichText(Entry.Find('body'),0);
+        if Text='' then Continue;
+        Name:=Str(Obj(Entry,'author'),'displayName');
+        if Name<>'' then Text:=Name+': '+Text;
+        Part:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Text]);
+        Comments.Add(Part); AddDate(Entry,Part,'created','createdAt');
+      end;
+      Data:=JiraFields.Find('subtasks');
+      if (Data is TJSONArray) and (Data.Count>0) then
+      begin
+        CheckId:=Id+':subtasks';
+        Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',Id,'title','Subtasks','sort',0]));
+        for J:=0 to Data.Count-1 do
+        begin
+          if not (Data.Items[J] is TJSONObject) then Continue;
+          Entry:=TJSONObject(Data.Items[J]); Part:=Obj(Entry,'fields');
+          SubtaskTitle:=Str(Part,'summary'); Name:=Entry.Get('key','');
+          if Name<>'' then SubtaskTitle:='['+Name+'] '+SubtaskTitle;
+          Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(J),'checklistId',CheckId,'title',SubtaskTitle,
+            'sort',J,'isFinished',Str(Obj(Obj(Part,'status'),'statusCategory'),'key')='done']));
+        end;
+      end;
+    end;
+    if Title='' then Title:='Jira issues';
+    Board.Add('title',Title);
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira');
 end;
 
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
@@ -5779,6 +5940,7 @@ begin
             else if SourceFormat='asana' then Body:=AsanaImport(Value)
             else if SourceFormat='openproject' then Body:=OpenProjectImport(Value)
             else if SourceFormat='zenkit' then Body:=ZenkitImport(Value)
+            else if SourceFormat='jira' then Body:=JiraImport(Value)
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end

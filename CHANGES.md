@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Jira JSON imports issues by status, converts rich-text documents to text,
+  and preserves dates, labels, comments, custom values and subtask completion.
+
 - Zenkit JSON and API entry imports preserve stages, cards, parent links,
   checklist completion, custom values, and embedded comments with authors.
 
