@@ -4234,13 +4234,20 @@ function CardDecorations(Value:TJSONData;const Key:string):TJSONArray; forward;
 
 // Kanboard JSON projects use numeric string IDs and Unix-second dates.
 function KanboardImport(const Source: TJSONObject): TJSONObject;
-var Meta, Board, Task, Entry, Card: TJSONObject; Columns, Lanes, Tasks, Lists, Swimlanes, Cards, Labels, Tags,
-  Comments, Checklists, Items, Children: TJSONArray; I,J: Integer; Id, CheckId, LabelId, Text: string; Hours: Double;
+var Meta, Board, Task, Entry, Card, Authors, Comment: TJSONObject; Columns, Lanes, Tasks, Lists, Swimlanes, Cards, Labels, Tags,
+  Comments, Checklists, Items, Children: TJSONArray; I,J: Integer; Id, CheckId, LabelId, Text, Author: string; Hours: Double;
   procedure DateOf(const Input, Field: string);
   var Seconds: Int64;
   begin
     if TryStrToInt64(Task.Get(Input,''),Seconds) and (Seconds>0) and (Seconds<=253402300799) then
       Card.Add(Field,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',UnixToDateTime(Seconds)));
+  end;
+  function AuthorFor(const Name: string): string;
+  begin
+    Result:=Authors.Get(Name,'');
+    if (Name='') or (Result<>'') then Exit;
+    Result:='author-'+IntToStr(Authors.Count);
+    Authors.Add(Name,Result);
   end;
   function LabelFor(const Name: string): string;
   var K: Integer;
@@ -4265,6 +4272,7 @@ begin
   Result:=TJSONObject.Create;
   try
     Board:=TJSONObject.Create(['title',Meta.Get('name','')]); Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
     Lists:=TJSONArray.Create; Board.Add('lists',Lists);
     Swimlanes:=TJSONArray.Create; Board.Add('swimlanes',Swimlanes);
     Cards:=TJSONArray.Create; Board.Add('cards',Cards);
@@ -4288,6 +4296,8 @@ begin
       Card:=TJSONObject.Create(['_id',Id,'title',Task.Get('title',''),'description',Task.Get('description',''),
         'listId',Task.Get('column_id',''),'swimlaneId',Task.Get('swimlane_id',''),'sort',I,'archived',Task.Get('is_active','1')='0']);
       Cards.Add(Card);
+      Author:=AuthorFor(Task.Get('creator_username',''));
+      if Author<>'' then Card.Add('userId',Author);
       Text:=MapImportColor('kanboard',Task.Get('color_id',''));
       if Task.Get('color_id','')='deep_orange' then Text:='crimson';
       if Text<>'' then Card.Add('color',Text);
@@ -4309,7 +4319,13 @@ begin
       end;
       Children:=OptionalArray(Task,'comments');
       if Children<>nil then for J:=0 to Children.Count-1 do
-        Comments.Add(TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Children.Objects[J].Get('comment','')]));
+      begin
+        Entry:=Children.Objects[J];
+        Comment:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Entry.Get('comment','')]);
+        Comments.Add(Comment);
+        Author:=AuthorFor(Entry.Get('username',''));
+        if Author<>'' then Comment.Add('userId',Author);
+      end;
       Children:=OptionalArray(Task,'subtasks');
       if (Children<>nil) and (Children.Count>0) then
       begin
@@ -4365,6 +4381,20 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         MemberMap.Add(SourceId,Target.AsString);
       end;
     finally Source.Free;end;
+  end;
+  procedure CreateImportedAuthors;
+  var Authors: TJSONObject; K: Integer; Id: string;
+  begin
+    if SourceFormat<>'kanboard' then Exit;
+    Authors:=Body.Objects['importedAuthors'];
+    for K:=0 to Authors.Count-1 do
+    begin
+      Id:=NewId;
+      MemberMap.Add(Authors.Items[K].AsString,Id);
+      Sql:=Sql+'INSERT INTO users(id,username,createdAt,modifiedAt,profile_json,loginDisabled,isAdmin) VALUES('+
+        QuotedStr(Id)+','+QuotedStr('imported-'+Id)+','+Stamp+','+Stamp+',json_object(''fullname'','+
+        QuotedStr(Authors.Names[K])+'),1,0); ';
+    end;
   end;
   procedure ImportInactiveMembers;
   var Members,Entry:TJSONData;LocalId:string;K:Integer;
@@ -4856,6 +4886,10 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       Sql:=Sql+'INSERT INTO card_comments(id,boardId,cardId,userId,text,parentId,createdAt,modifiedAt) VALUES('+
         Id+','+Board+','+CardKey+','+QuotedStr(ImportedAuthor(Entry))+','+QuotedStr(Text(Entry,'text'))+','+QuotedStr(Parent)+','+
         ImportedDate(Entry,'createdAt',Stamp)+','+ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
+      if SourceFormat='kanboard' then
+        Sql:=Sql+'INSERT INTO activities(id,activityType,boardId,cardId,userId,createdAt,modifiedAt,data_json) VALUES('+
+          QuotedStr(NewId)+',''addComment'','+Board+','+CardKey+','+QuotedStr(ImportedAuthor(Entry))+','+
+          ImportedDate(Entry,'createdAt',Stamp)+','+Stamp+',json_object(''commentId'','+Id+')); ';
     end;
     if Arrays[7]<>nil then for K:=0 to Arrays[7].Count-1 do
     begin
@@ -5120,6 +5154,7 @@ begin
         ',''private'','+QuotedStr(Name)+','+ImportedDate(Input,'createdAt',Stamp,True)+','+
         ImportedDate(Input,'modifiedAt',Stamp,True)+'); '+
         'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
+      CreateImportedAuthors;
       ImportInactiveMembers;
       end
       else

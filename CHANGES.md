@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Kanboard imports keep named card and comment authors as sign-in-disabled
+  accounts and record imported comment activity. The shared browser test also
+  covers checklist completion, card fields and label preservation.
+
 - The board import menu accepts pasted Kanboard JSON. The importer maps
   lists, swimlanes, tasks, dates, labels and subtasks into WeLite. The shared
   Chromium fixture verifies the imported card and its visible content.
