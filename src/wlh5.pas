@@ -2898,8 +2898,10 @@ var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards, CanExp
       E(Words.Text('auto-archive-days','Archive cards after this many days without activity'))+
       '</label><input id="auto-archive-days" class="js-auto-archive-days" type="number" name="days" min="1" max="3650" '+
       'placeholder="'+HtmlAttr(Words.Text('auto-archive-off','Off'))+'" value="'+HtmlAttr(BoardAutoArchiveDays(Db,BoardId))+
-      '" aria-describedby="auto-archive-hint"><p id="auto-archive-hint">'+
-      E(Words.Text('auto-archive-hint','Leave empty to turn it off.'))+'</p><button type="submit">'+
+      '" aria-describedby="auto-archive-hint"><p id="auto-archive-hint" class="quiet">'+
+      E(Words.Text('auto-archive-hint','Leave empty to turn it off.'))+'</p>'+
+      '<p class="warning js-auto-archive-error" role="alert" hidden>'+E(Words.Text('server-error','Server Error'))+
+      '</p><button type="submit">'+
       E(Words.Text('save','Save'))+'</button></form></li>';
   end;
   // WeKan's restoreArchivedCardToListPopup (#6772): the card's list is gone,
@@ -3035,7 +3037,7 @@ begin
     Result := Result + '<a class="member add-member js-manage-board-members" href="#" title="' +
       HtmlAttr(Words.Text('add-members', 'Add Members')) + '" aria-label="' + HtmlAttr(Words.Text('add-members', 'Add Members')) +
       '"><i class="fa fa-plus"></i></a>';
-  Result := Result + '</div></div><h3><a class="board-header-btn js-open-board-menu" href="#" title="' +
+  Result := Result + '</div></div><h3><a class="board-header-btn js-open-board-menu js-board-info-on-my-boards" href="#" title="' +
     HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) + '">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '</a></h3>' +
     // The board's activities, for a board admin, put on the page when opened.
@@ -3044,7 +3046,7 @@ begin
       E(Words.Text('activities', 'Activities')) + '</h3><div class="activities js-sidebar-activities is-hidden"><template class="js-stamp-on-open">' +
       ActivityRows(Db, Words, BoardId, '', 50, PlainLinks, PlainSource) + '</template></div>', '') +
     '</div></div>' +
-    '<template class="js-pop-over-template" data-pop="board-menu" data-title="' + HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) +
+    '<template class="js-pop-over-template" data-pop="board-menu" data-popup="boardInfoOnMyBoardsPopup" data-title="' + HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '"><div class="header"><span class="header-title">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div>' +
     '<div class="content"><ul class="pop-over-list"><li><a class="js-open-archives" href="#"><i class="fa fa-archive"></i> ' +

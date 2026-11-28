@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The Board Settings menu saves the localized inactivity archive setting
+  when it changes. Clearing the field or entering an out-of-range value
+  turns the setting off.
+
 - Inactivity archiving saves the board setting and archives qualifying card
   groups through single SQLite transactions. The hourly job writes activity
   with the archive update and handles repeat runs without duplicate activity.

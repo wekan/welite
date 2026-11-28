@@ -560,3 +560,4 @@ import-export-format-audit.e2e.js: Org mode: headings import with their keyword,
 import-export-format-audit.e2e.js: Hawaiian orgmode import instructions render without an English fallback
 import-export-format-audit.e2e.js: Focalboard: a board.jsonl imports with its lists, labels, description, checklist and comments
 import-export-format-audit.e2e.js: Todoist: a project template imports with its sections, labels, description, sub-tasks and notes
+auto-archive-setting.e2e.js

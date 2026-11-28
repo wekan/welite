@@ -268,6 +268,7 @@ Next, after this goal:
   404 because they are missing. The assigned-only tests expect a 403 from
   each implemented route. The rules-history REST button test passed this run
   after failing once in three earlier runs.
+  Inactivity archive settings pass the shared browser audit on WeLite.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the remaining import format audit cases (Kanboard, Deck, GitHub, GitLab, Gitea, Forgejo, Asana, OpenProject, Zenkit and Jira fixture and invalid input cases pass, as do Kanri board and backup imports, Markdown multi-file and Obsidian Kanban imports, WeKan JSON creation dates, the Trello ZIP round trip, Pivotal Tracker, Redmine, ClickUp, TickTick, Linear, Quire and MeisterTask CSV, Tasks.org and Super Productivity backups, Nullboard NBX, monday.com, Wrike, Teamwork.com and Businessmap XLSX, OPML and Org mode outlines, todo.txt, Taskwarrior, Focalboard JSONL, Todoist CSV, and Recovery entries for imports with warnings),
