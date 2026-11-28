@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine منٛز پراجیکٹُک Issues کھولِو، فہرستہِ ہٕندِس بُنہٕ Also available in: CSV ژارِو، کالَم ژارِو (All columns، Description سٕتۍ) تہٕ برآمد کریو، پتہٕ CSV پیسٹ کریو۔ Redmine چھُ کالَمن تُہٕنٛزِ زبانہِ منٛز ناو دِوان، تیٚلہِ برآمد کرنہٕ برونٛہہ My account منٛز پنٕنۍ زبان انگریزی کریو۔ پرٛتھ حالت بنان فہرست تہٕ مسلہٕ بنان کارڈ، ٹریکر لیبلس پٲٹھۍ، ذمہ وار، مصنف، تٲریخ، والدٕ کام تہٕ متعلق مسلن سٕتۍ؛ ترجیح، زمرٕ، ہدف ورژن، اندازٕ وقت، % Done تہٕ مخصوص خانہٕ بنان مخصوص خانہٕ۔",
   "import-board-instruction-orgmode": "Org mode فائل پیسٹ کریو، یِتھہٕ پٲٹھۍ Emacs، Orgzly یا Beorg لیکھان چھِ۔ پؠٹھِمہِ سطحٕچ سرخیہٕ بنان فہرست تہٕ دۄیمہِ سطحٕچ سرخیہٕ بنان کارڈ۔ TODO تہٕ DONE، ترجیحات، ٹیگ، SCHEDULED، DEADLINE تہٕ CLOSED چھِ رَٹنہٕ یِوان، تہٕ چیک باکس تہٕ گٔہرۍ سرخیہٕ بنان چیک لسٹ۔",
   "import-board-instruction-focalboard": ".boardarchive فائل کھولیو تہٕ بورڈُک board.jsonl چسپاں کریو، ورژن ہٕنٛدِ سطرِ سۭتۍ یا تمہِ بغیر۔ بورڈ منظرُک گروپ بناونُک وصف چھُ فہرست بناوان، باقی انتخابی اوصاف چھِ لیبل بنان، متن تہٕ نشان تراون والؠن خانن ہٕنٛدۍ بلاک چھِ تفصیل تہٕ چیک لسٹ بنان، تہٕ تبصرے چھِ محفوظ روزان۔ تصویرٕ تہٕ منسلک فائل چھِ نہٕ درآمد گژھان۔",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "کُس کالَم کُس چھُ؟",
+  "csv-mapping-description": "فائلہِ ہُند سُہ کالَم ژارِو یَتھ منٛز پرٛتھ کارڈ خانہٕ چھُ۔ انتخاب آیہِ کالَمن ہٕندۍ ناوٕ پؠٹھٕ کرنہٕ؛ غلط انتخاب بدلٲوِو، تہٕ یُس خانہٕ فائلہِ منٛز نہٕ چھُ تمہِ خٲطرٕ (فائلہِ منٛز نہٕ) ژارِو۔",
+  "csv-mapping-not-in-file": "(فائلہِ منٛز نہٕ)",
+  "csv-mapping-column-number": "کالَم __number__",
+  "csv-mapping-list-missing": "فائلہِ منٛز چھُ نہٕ فہرستہِ خٲطرٕ کانٛہہ کالَم۔ پؠٹھہٕ اکھ ژارِو، یا تمہِ اَکہِ فہرستہِ ہُند ناو لیٚکھِو یَتھ منٛز پرٛتھ کارڈ گژھان چھُ۔",
+  "csv-mapping-list-name": "پرٛتھ کارڈس خٲطرٕ فہرست",
+  "csv-mapping-custom-fields": "باقی کالَم یِم متنی مخصوص خانن پٲٹھۍ درآمد کرُن:",
+  "csv-mapping-boards": "پرٛتھ شیٹ بنان پنُن بورڈ:",
+  "csv-mapping-skipped-sheets": "شیٹ یِم درآمد گژھان نہٕ:",
+  "csv-mapping-title-required": "سُہ کالَم ژارِو یَتھ منٛز کارڈن ہٕندۍ عنوان چھِ۔",
+  "csv-mapping-list-required": "تمہِ فہرستہِ ہُند ناو لیٚکھِو یَتھ منٛز پرٛتھ کارڈ گژھان چھُ، یا سُہ کالَم ژارِو یَتھ منٛز فہرست چھےٚ۔"
 }

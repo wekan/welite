@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "En Redmine, ubre as Issues d'o prochecto, tría Also available in: CSV en o baixo d'a lista, eslei as columnas (All columns, con Description) y exporta, dimpués apega o CSV. Redmine nombra as columnas en a tuya luenga, asinas que meteba a tuya luenga en anglés en My account antes d'exportar. Cada estau se torna una lista y as incidencias se tornan tarchetas, con o tracker como etiqueta, asignau, autor, calendatas, tarea pai y incidencias relacionadas; prioridat, categoría, versión obchectivo, tiempo estimau, % Done y campos personalizaus se tornan campos personalizaus.",
   "import-board-instruction-orgmode": "Apega un fichero Org mode, tal como lo escriben Emacs, Orgzly u Beorg. Os titols d'o primer nivel se tornan listas y os d'o segundo nivel se tornan tarchetas. TODO y DONE, prioridatz, etiquetas, SCHEDULED, DEADLINE y CLOSED se conservan, y as caixetas de verificación y os titols mas fondos se tornan listas de comprebación.",
   "import-board-instruction-focalboard": "Descomprime o fichero .boardarchive y apega o conteniu d’o board.jsonl d’o tablero, con u sin a linia de versión. A propiedat d’agrupación d’a vista d’o tablero se convierte en listas, as atras propiedatz de selección en etiquetas, os bloques de texto y de caixetas de verificación en a descripción y una lista de comprebación, y os comentarios se conservan. As imachens y os adchuntos no s’importan.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Quala columna ye quala?",
+  "csv-mapping-description": "Tría a columna d'o fichero que tiene cada campo d'a tarcheta. As opcions s'han feito a partir d'os nombres d'as columnas; cambia as que sigan erronias, y tría (no ye en o fichero) pa un campo que o fichero no tiene.",
+  "csv-mapping-not-in-file": "(no ye en o fichero)",
+  "csv-mapping-column-number": "Columna __number__",
+  "csv-mapping-list-missing": "O fichero no tiene columna pa la lista. Tría-ne una d'alto, u escribe o nombre d'a sola lista an que van todas as tarchetas.",
+  "csv-mapping-list-name": "Lista pa todas as tarchetas",
+  "csv-mapping-custom-fields": "Atras columnas a importar como campos personalizaus de texto:",
+  "csv-mapping-boards": "Cada fuella se torna un tablero propio:",
+  "csv-mapping-skipped-sheets": "Fuellas que no s'importan:",
+  "csv-mapping-title-required": "Tría a columna que tiene os titols d'as tarchetas.",
+  "csv-mapping-list-required": "Escribe o nombre d'a lista an que van todas as tarchetas, u tría a columna que tiene a lista."
 }

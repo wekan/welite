@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-д төслийн Issues-ийг нээж, жагсаалтын доод хэсгээс Also available in: CSV-г сонгож, баганаа сонгоод (All columns, Description-тай) экспортлоод CSV-г буулгана уу. Redmine баганыг таны хэлээр нэрлэдэг тул экспортлохоос өмнө My account-д хэлээ англи болгоно уу. Төлөв бүр жагсаалт, асуудлууд шошго болсон трекер, хариуцагч, зохиогч, огноо, эцэг даалгавар, холбоотой асуудлуудтайгаа карт болно; тэргүүлэх зэрэг, ангилал, зорилтот хувилбар, тооцоолсон цаг, % Done болон тусгай талбарууд тусгай талбар болно.",
   "import-board-instruction-orgmode": "Emacs, Orgzly эсвэл Beorg-ийн бичсэн Org mode файлыг буулгана уу. Дээд түвшний гарчгууд жагсаалт, хоёрдугаар түвшний гарчгууд карт болно. TODO ба DONE, тэргүүлэх зэрэг, шошго, SCHEDULED, DEADLINE, CLOSED хадгалагдаж, чагтын нүднүүд болон илүү гүн гарчгууд шалгах хуудас болно.",
   "import-board-instruction-focalboard": ".boardarchive файлыг задалж, самбарын board.jsonl файлын агуулгыг хувилбарын мөртэй эсвэл мөргүйгээр буулгана уу. Самбарын харагдацын бүлэглэх шинж нь жагсаалт, бусад сонгох шинжүүд нь шошго, текст болон чагтлах нүдний блокууд нь тайлбар ба шалгах жагсаалт болно. Сэтгэгдлүүд хадгалагдана. Зураг болон хавсралтыг импортлохгүй.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Аль багана юу вэ?",
+  "csv-mapping-description": "Картын талбар бүрийг агуулсан файлын баганыг сонгоно уу. Сонголтыг баганын нэрээр хийсэн; буруу байгааг нь өөрчилж, файлд байхгүй талбарт (файлд байхгүй)-г сонгоно уу.",
+  "csv-mapping-not-in-file": "(файлд байхгүй)",
+  "csv-mapping-column-number": "Багана __number__",
+  "csv-mapping-list-missing": "Файлд жагсаалтын багана алга. Дээрээс нэгийг сонгох, эсвэл бүх карт орох ганц жагсаалтын нэрийг бичнэ үү.",
+  "csv-mapping-list-name": "Бүх картын жагсаалт",
+  "csv-mapping-custom-fields": "Текст тусгай талбар болгон импортлох бусад баганууд:",
+  "csv-mapping-boards": "Хуудас бүр тусдаа самбар болно:",
+  "csv-mapping-skipped-sheets": "Импортлогдохгүй хуудсууд:",
+  "csv-mapping-title-required": "Картын гарчгийг агуулсан баганыг сонгоно уу.",
+  "csv-mapping-list-required": "Бүх карт орох жагсаалтын нэрийг бичих, эсвэл жагсаалтыг агуулсан баганыг сонгоно уу."
 }

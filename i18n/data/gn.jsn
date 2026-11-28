@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-pe, embojuruja tembiaporã Issues, eiporavo Also available in: CSV ysaja ipype, eiporavo ytaguy (All columns, Description reheve) ha emosẽ, upéi emboja CSV. Redmine ombohéra ytaguy nde ñe'ẽme, upévare emoĩ nde ñe'ẽ inglyesñe'ẽ My account-pe emosẽ mboyve. Peteĩteĩ teko oiko ysaja ha apañuãi oiko kuatia'i, tracker techaukaha ramo, mba'apoha, apohára, ára, tembiapo ru ha apañuãi ojoajúva reheve; tenonderãite, mba'ekuéra aty, target version, aravo ojeporu va'erã, % Done ha tenda ñemomba'epyre oiko tenda ñemomba'epyre.",
   "import-board-instruction-orgmode": "Emboja peteĩ Org mode marandurenda, Emacs, Orgzly térã Beorg ohaiháicha. Myakãha yvatevéva oiko ysaja ha myakãha mokõiha oiko kuatia'i. TODO ha DONE, tenonderãite, techaukaha, SCHEDULED, DEADLINE ha CLOSED oñeñongatu, ha checkbox ha myakãha ipypukuvéva oiko ysaja ñehesa'ỹijo.",
   "import-board-instruction-focalboard": "Eipe'a .boardarchive ryru ha emboja tablero board.jsonl, iversión tairenda reheve térã hese'ỹ. Tablero jehecha mba'erekópe oñembyatýva aty rupi oiko ysajakuéraramo, ambue mba'ereko ojeporavóva oiko techaukaháramo, jehaipy ha ta'ãngarenda oñemongurusúva aty oiko ñemombe'u ha ysaja ñehesa'ỹijóramo, ha je'ekuéra oñeñongatu. Ta'ãngakuéra ha joapykuéra ndojeguerúi.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Mba'e ytaguypa mba'épa?",
+  "csv-mapping-description": "Eiporavo marandurenda ytaguy oguerekóva peteĩteĩ kuatia'i tenda. Jeporavo ojejapo ytaguy hérakuéragui; emoambue umi ivaíva, ha eiporavo (ndaipóri marandurendápe) peteĩ tenda marandurenda ndoguerekóivape g̃uarã.",
+  "csv-mapping-not-in-file": "(ndaipóri marandurendápe)",
+  "csv-mapping-column-number": "Ytaguy __number__",
+  "csv-mapping-list-missing": "Marandurenda ndoguerekói ytaguy ysajarã. Eiporavo peteĩ yvate, térã ehai ysaja peteĩnte opaite kuatia'i oikehápe réra.",
+  "csv-mapping-list-name": "Ysaja opaite kuatia'ípe g̃uarã",
+  "csv-mapping-custom-fields": "Ambue ytaguy ojegueru hag̃ua moñe'ẽrã tenda ñemomba'epyre ramo:",
+  "csv-mapping-boards": "Peteĩteĩ rogue oiko ipeteĩcha:",
+  "csv-mapping-skipped-sheets": "Rogue ndojeguerúiva:",
+  "csv-mapping-title-required": "Eiporavo ytaguy oguerekóva kuatia'i réra.",
+  "csv-mapping-list-required": "Ehai ysaja opaite kuatia'i oikehápe réra, térã eiporavo ytaguy oguerekóva ysaja."
 }

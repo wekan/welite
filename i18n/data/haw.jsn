@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ma Redmine, wehe iā Issues o ka papahana, koho iā Also available in: CSV ma lalo o ka papa inoa, koho i nā kolamu (All columns, me Description) a hoʻopuka, a laila e hoʻopili i ka CSV. Hoʻopaʻa ʻo Redmine i nā inoa kolamu ma kāu ʻōlelo, no laila e koho i ka ʻōlelo Pelekānia ma My account ma mua o ka hoʻopuka ʻana. Lilo kēlā me kēia kūlana i papa inoa a nā pilikia i mau kāleka, me ka tracker ma ke ʻano he lepili, ka mea i hāʻawi ʻia i ka hana, mea kākau, lā, hana makua a me nā pilikia pili; lilo ka makakoho, māhele, mana i manaʻo ʻia, manawa i koho ʻia, % Done a me nā kahua hoʻopilikino i mau kahua hoʻopilikino.",
   "import-board-instruction-orgmode": "Hoʻopili i ka faila Org mode i kākau ʻia e Emacs, Orgzly a i ʻole Beorg. Lilo nā poʻo inoa ma ka pae luna i mau papa inoa a nā poʻo inoa ma ka pae ʻelua i mau kāleka. Mālama ʻia ʻo TODO a me DONE, nā makakoho, nā lepili, SCHEDULED, DEADLINE a me CLOSED; lilo nā pahu kaha a me nā poʻo inoa ma nā pae hohonu aʻe i mau papa hōʻoia.",
   "import-board-instruction-focalboard": "E wehe i ka waihona .boardarchive mai ka zip a kāpili i ka ʻike o ka board.jsonl o ka papa, me ka laina mana a i ʻole me ka ʻole o ia laina. Lilo ke ʻano hōʻuluʻulu o ka nānā papa i mau papa inoa, nā ʻano koho ʻē aʻe i mau lepili, nā ʻāpana kikokikona me nā pahu kaha i ka wehewehena a me ka papa nānā, a mālama ʻia nā manaʻo. ʻAʻole hoʻokomo ʻia nā kiʻi me nā waihona hoʻopili.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ʻO wai ke kolamu no kēlā me kēia kahua?",
+  "csv-mapping-description": "Koho i ke kolamu o ka faila e paʻa ana kēlā me kēia kahua kāleka. Ua koho ʻia nā kolamu ma muli o ko lākou mau inoa; e hoʻololi i nā koho hewa, a e koho (ʻaʻole ma ka faila) no ke kahua ʻaʻole i loko o ka faila.",
+  "csv-mapping-not-in-file": "(ʻaʻole ma ka faila)",
+  "csv-mapping-column-number": "Kolamu __number__",
+  "csv-mapping-list-missing": "ʻAʻohe kolamu o ka faila no ka papa inoa. E koho i kekahi ma luna, a i ʻole e kikokiko i ka inoa o ka papa inoa hoʻokahi no nā kāleka a pau.",
+  "csv-mapping-list-name": "Papa inoa no nā kāleka a pau",
+  "csv-mapping-custom-fields": "Nā kolamu ʻē aʻe e hoʻokomo ma ke ʻano he mau kahua hoʻopilikino kikokikona:",
+  "csv-mapping-boards": "Lilo kēlā me kēia pepa i papa nona iho:",
+  "csv-mapping-skipped-sheets": "Nā pepa ʻaʻole e hoʻokomo ʻia:",
+  "csv-mapping-title-required": "Koho i ke kolamu e paʻa ana nā poʻo inoa kāleka.",
+  "csv-mapping-list-required": "Kikokiko i ka inoa o ka papa inoa no nā kāleka a pau, a i ʻole e koho i ke kolamu e paʻa ana ka papa inoa."
 }

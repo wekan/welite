@@ -803,6 +803,62 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     event.preventDefault();
     openPopOver(el.dataset.pop || 'board-zip-import');
   });
+  function csvMappingPreview(form, text) {
+    return callAsync('csvImportPreview', text).then(function (preview) {
+      var mapping = form.parentElement.querySelector('.js-csv-mapping');
+      var fields = mapping.querySelectorAll('select[data-field]');
+      var extras = mapping.querySelector('.js-csv-extra-fields');
+      mapping.csvRows = preview.rows;
+      preview.rows[0].forEach(function (name, index) {
+        var title = name || String(index + 1);
+        fields.forEach(function (field) {
+          field.add(new Option(title, index));
+          if (preview.columns[field.dataset.field] === index) field.value = String(index);
+        });
+        var label = document.createElement('label');
+        var input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = String(index);
+        label.append(input, title);
+        extras.append(label);
+      });
+      mapping.querySelector('.js-csv-mapping-list-missing').hidden = mapping.querySelector('#csv-map-list').value !== '';
+      form.hidden = true;
+      mapping.hidden = false;
+    });
+  }
+  up.on('change', '.js-csv-mapping #csv-map-list', function (event, select) {
+    select.form.querySelector('.js-csv-mapping-list-missing').hidden = select.value !== '';
+  });
+  up.on('submit', '.js-csv-mapping', function (event, form) {
+    event.preventDefault();
+    var submit = form.querySelector('.js-csv-mapping-import');
+    if (submit.disabled) return;
+    var warning = form.querySelector('.js-csv-mapping-error');
+    var columns = {};
+    form.querySelectorAll('select[data-field]').forEach(function (field) {
+      if (field.value !== '') columns[field.dataset.field] = Number(field.value);
+    });
+    var listName = form.querySelector('.js-csv-map-list-name').value.trim();
+    var detail = columns.title === undefined ? warning.dataset.titleRequired :
+      columns.list === undefined && !listName ? warning.dataset.listRequired : '';
+    warning.hidden = !detail;
+    warning.textContent = detail;
+    if (detail) return;
+    var customFieldColumns = Array.from(form.querySelectorAll('.js-csv-extra-fields input:checked'), function (input) {
+      return Number(input.value);
+    });
+    submit.disabled = true;
+    callAsync('importBoard', form.csvRows, { csvMapping: { columns: columns, listName: listName, customFieldColumns: customFieldColumns } }, 'csv')
+      .then(function (board) {
+        if (!board || !board._id) throw new Error('Missing board');
+        window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
+      }).catch(function () {
+        warning.textContent = warning.dataset.importFailed;
+        warning.hidden = false;
+        submit.disabled = false;
+      });
+  });
   up.on('submit', '.js-external-board-import', function (event, form) {
     event.preventDefault();
     var submit = form.querySelector('button[type="submit"]');
@@ -810,6 +866,15 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     if (submit.disabled) return;
     submit.disabled = true;
     warning.hidden = true;
+    if (form.dataset.source === 'csv') {
+      var csvFile = form.querySelector('.js-csv-import-file').files[0];
+      var csvText = csvFile ? csvFile.text() : Promise.resolve(form.querySelector('textarea').value);
+      csvText.then(function (text) { return csvMappingPreview(form, text); }).catch(function () {
+        warning.hidden = false;
+        submit.disabled = false;
+      });
+      return;
+    }
     var zip = form.querySelector('.js-import-zip-file');
     var zipFile = zip && zip.files[0];
     Promise.resolve().then(function () {

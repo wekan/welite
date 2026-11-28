@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "En Redmine, abre las Issues del proyecto, elige Also available in: CSV al final de la lista, selecciona las columnas (All columns, con Description) y exporta; después pega el CSV. Redmine nombra las columnas en tu idioma, así que selecciona English en My account antes de exportar. Cada estado se convierte en una lista y las incidencias en tarjetas, con el tipo de seguimiento como etiqueta, persona asignada, autor, fechas, tarea superior e incidencias relacionadas; la prioridad, categoría, versión prevista, tiempo estimado, % Done y campos personalizados se convierten en campos personalizados.",
   "import-board-instruction-orgmode": "Pega un archivo Org mode escrito por Emacs, Orgzly o Beorg. Los encabezados de primer nivel se convierten en listas y los de segundo nivel en tarjetas. Se conservan TODO y DONE, las prioridades, las etiquetas, SCHEDULED, DEADLINE y CLOSED; las casillas y los encabezados más profundos se convierten en listas de tareas.",
   "import-board-instruction-focalboard": "Descomprima el archivo .boardarchive y pegue el contenido del archivo board.jsonl del tablero, con o sin su línea de versión. La propiedad de agrupación de la vista del tablero se convierte en listas, las demás propiedades de selección se convierten en etiquetas, los bloques de texto y casillas de verificación se convierten en la descripción y una lista de tareas, y se conservan los comentarios. Las imágenes y los archivos adjuntos no se importan.",
-  "import-board-instruction-todoist": "En Todoist, abre el menú del proyecto y elige Exportar como plantilla; después pega el archivo CSV. Las secciones se convierten en listas, las tareas en tarjetas, las subtareas en una lista de tareas, las notas en comentarios y @labels y las prioridades de p1 a p3 en etiquetas."
+  "import-board-instruction-todoist": "En Todoist, abre el menú del proyecto y elige Exportar como plantilla; después pega el archivo CSV. Las secciones se convierten en listas, las tareas en tarjetas, las subtareas en una lista de tareas, las notas en comentarios y @labels y las prioridades de p1 a p3 en etiquetas.",
+  "csv-mapping-title": "¿Qué columna corresponde a cada campo?",
+  "csv-mapping-description": "Elige la columna del archivo que contiene cada campo de la tarjeta. Las opciones se eligieron a partir de los nombres de las columnas; corrige las incorrectas y elige (no está en el archivo) para un campo que el archivo no contiene.",
+  "csv-mapping-not-in-file": "(no está en el archivo)",
+  "csv-mapping-column-number": "Columna __number__",
+  "csv-mapping-list-missing": "El archivo no tiene una columna para la lista. Elige una arriba, o escribe el nombre de la única lista donde se colocarán todas las tarjetas.",
+  "csv-mapping-list-name": "Lista para todas las tarjetas",
+  "csv-mapping-custom-fields": "Otras columnas que se importarán como campos personalizados de texto:",
+  "csv-mapping-boards": "Cada hoja se convierte en un tablero independiente:",
+  "csv-mapping-skipped-sheets": "Hojas que no se importan:",
+  "csv-mapping-title-required": "Elige la columna que contiene los títulos de las tarjetas.",
+  "csv-mapping-list-required": "Escribe el nombre de la lista donde se colocarán todas las tarjetas, o elige la columna que contiene la lista."
 }

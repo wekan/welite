@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine でプロジェクトの Issues を開き、一覧の下部にある Also available in: CSV を選択し、列を選んで（All columns、Description を含む）エクスポートして、その CSV を貼り付けます。Redmine は使用言語で列名を付けるため、エクスポート前に My account で言語を English に設定してください。各ステータスはリストに、課題はラベルに変換されたトラッカー、担当者、作成者、日付、親タスク、関連する課題を含むカードになります。優先度、カテゴリ、対象バージョン、予定工数、% Done、カスタムフィールドはカスタムフィールドになります。",
   "import-board-instruction-orgmode": "Emacs、Orgzly、Beorgなどが作成したOrg modeファイルを貼り付けてください。最上位の見出しはリスト、2階層目の見出しはカードになります。TODOとDONE、優先度、タグ、SCHEDULED、DEADLINE、CLOSEDは保持され、チェックボックスとさらに深い見出しはチェックリストになります。",
   "import-board-instruction-focalboard": ".boardarchive ファイルを解凍し、ボードの board.jsonl の内容を貼り付けてください。バージョン行はあってもなくてもかまいません。ボードビューのグループ化プロパティはリストに、その他の選択プロパティはラベルに、テキストとチェックボックスのブロックは詳細とチェックリストに変換され、コメントは保持されます。画像と添付ファイルはインポートされません。",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "各列はどのフィールドですか？",
+  "csv-mapping-description": "各カードフィールドに対応するファイルの列を選択してください。列名に基づいて選択済みです。誤りがあれば修正し、ファイルにないフィールドは「ファイルにない」を選択してください。",
+  "csv-mapping-not-in-file": "（ファイルにない）",
+  "csv-mapping-column-number": "列 __number__",
+  "csv-mapping-list-missing": "ファイルにリストの列がありません。上で列を選択するか、すべてのカードを入れる単一のリストの名前を入力してください。",
+  "csv-mapping-list-name": "すべてのカードを入れるリスト",
+  "csv-mapping-custom-fields": "テキスト型のカスタムフィールドとしてインポートするその他の列:",
+  "csv-mapping-boards": "各シートを個別のボードにします:",
+  "csv-mapping-skipped-sheets": "インポートしないシート:",
+  "csv-mapping-title-required": "カード名が入っている列を選択してください。",
+  "csv-mapping-list-required": "すべてのカードを入れるリストの名前を入力するか、リストが入っている列を選択してください。"
 }

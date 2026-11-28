@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ayns Redmine, foshil Issues y halloo, reih Also available in: CSV ec bun y rolley, reih ny collooyn (All columns, lesh Description) as cur magh, eisht greimee y CSV. Ta Redmine genmys ny collooyn ayns dty chengey, myr shen soie dty chengey gys Baarle ayns My account roish cur magh. Ta dy chooilley stayd jannoo rolley as ta cooishyn jannoo kaartyn, lesh y tracker myr lipaid, fer currit da, ughtar, laaghyn, gnyn ayr as cooishyn kianglt; ta toshiaght, rheynn, lhieggan kione, traa smooinit, % Done as magheryn cliaghtit jannoo magheryn cliaghtit.",
   "import-board-instruction-orgmode": "Coip stiagh coadan Org mode, myr ta Emacs, Orgzly ny Beorg screeu eh. Ta kione-screeuyn ard-cheim çheet dy ve rolley as ta kione-screeuyn y nah cheim çheet dy ve kaartyn. Ta TODO as DONE, tosheeaghtyn, cowraghyn, SCHEDULED, DEADLINE as CLOSED er nyn reayll, as ta kishteeyn check as kione-screeuyn s'diuney çheet dy ve rolley scrutee.",
   "import-board-instruction-focalboard": "Fosh y coadan .boardarchive as cur stiagh board.jsonl y voayrd, lesh ny gyn e linney lhieggan. Ta tro yn çhilley boayrd son possaney cheet dy ve rolleeyn, ta troyn reih elley cheet dy ve lipaidyn, ta blockyn teks as kishtaghyn cowraghey cheet dy ve coontey as rolley scrutaghey, as ta cooishyn freilt. Cha nel jallooyn as ceanglaghyn er nyn gur stiagh.",
-  "import-board-instruction-todoist": "Ayns Todoist, fosyl menu y halee as reih Export as a template, eisht coip stiagh yn coadan CSV. Ta ayrnyn çheet dy ve rolley, obbraghyn dy ve kaartyn, fo-obbraghyn dy ve rolley scrutee, noteyn dy ve cooishyn, as @labels as tosheeaghtyn p1 gys p3 dy ve cowraghyn."
+  "import-board-instruction-todoist": "Ayns Todoist, fosyl menu y halee as reih Export as a template, eisht coip stiagh yn coadan CSV. Ta ayrnyn çheet dy ve rolley, obbraghyn dy ve kaartyn, fo-obbraghyn dy ve rolley scrutee, noteyn dy ve cooishyn, as @labels as tosheeaghtyn p1 gys p3 dy ve cowraghyn.",
+  "csv-mapping-title": "Cre'n cholloo ta cre?",
+  "csv-mapping-description": "Reih colloo y choadan ta cummal dy chooilley vagher kaart. Va ny reihyn jeant veih enmyn ny collooyn; caghlaa ny t'ayns aggair, as reih (cha nel ayns y coadan) son magher nagh vel ayns y coadan.",
+  "csv-mapping-not-in-file": "(cha nel ayns y coadan)",
+  "csv-mapping-column-number": "Colloo __number__",
+  "csv-mapping-list-missing": "Cha nel colloo son y rolley ayns y coadan. Reih fer heose, ny screeu ennym yn un rolley ta dy chooilley chaart goll stiagh ayn.",
+  "csv-mapping-list-name": "Rolley son dy chooilley chaart",
+  "csv-mapping-custom-fields": "Collooyn elley dy chur stiagh myr magheryn cliaghtit teks:",
+  "csv-mapping-boards": "Ta dy chooilley leg jannoo boayrd echey hene:",
+  "csv-mapping-skipped-sheets": "Leggyn nagh vel currit stiagh:",
+  "csv-mapping-title-required": "Reih y cholloo ta cummal ard-enmyn ny kaartyn.",
+  "csv-mapping-list-required": "Screeu ennym y rolley ta dy chooilley chaart goll stiagh ayn, ny reih y cholloo ta cummal y rolley."
 }

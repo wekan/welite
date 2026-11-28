@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-ում բացեք նախագծի Issues-ը, ցուցակի ներքևում ընտրեք Also available in: CSV, ընտրեք սյունակները (All columns, Description-ով) և արտահանեք, ապա տեղադրեք CSV-ն։ Redmine-ը սյունակներն անվանում է ձեր լեզվով, ուստի արտահանելուց առաջ My account-ում ձեր լեզուն դարձրեք անգլերեն։ Յուրաքանչյուր կարգավիճակ դառնում է ցուցակ, իսկ խնդիրները՝ քարտեր՝ tracker-ը որպես պիտակ, կատարողով, հեղինակով, ամսաթվերով, ծնող առաջադրանքով և կապված խնդիրներով. առաջնահերթությունը, կատեգորիան, թիրախային տարբերակը, գնահատված ժամանակը, % Done-ը և պատվերով դաշտերը դառնում են պատվերով դաշտեր։",
   "import-board-instruction-orgmode": "Տեղադրեք Org mode ֆայլ, ինչպես այն գրում են Emacs-ը, Orgzly-ն կամ Beorg-ը։ Վերին մակարդակի վերնագրերը դառնում են ցուցակներ, իսկ երկրորդ մակարդակի վերնագրերը՝ քարտեր։ TODO-ն և DONE-ը, առաջնահերթությունները, պիտակները, SCHEDULED-ը, DEADLINE-ը և CLOSED-ը պահպանվում են, իսկ նշավանդակներն ու ավելի խորը վերնագրերը դառնում են ստուգաթերթիկներ։",
   "import-board-instruction-focalboard": "Ապասեղմեք .boardarchive ֆայլը և տեղադրեք վահանակի board.jsonl ֆայլի բովանդակությունը՝ տարբերակի տողով կամ առանց դրա։ Վահանակի տեսքի խմբավորման հատկությունը դառնում է ցուցակներ, ընտրության այլ հատկությունները՝ պիտակներ, տեքստի և նշման վանդակների բլոկները՝ նկարագրություն և ստուգաթերթիկ, իսկ մեկնաբանությունները պահպանվում են։ Պատկերներն ու կցորդները չեն ներմուծվում։",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Ո՞ր սյունակն ինչ է",
+  "csv-mapping-description": "Ընտրեք ֆայլի այն սյունակը, որը պարունակում է քարտի յուրաքանչյուր դաշտը։ Ընտրությունները կատարվել են սյունակների անուններից. փոխեք սխալները և ընտրեք (ֆայլում չկա) այն դաշտի համար, որը ֆայլում չկա։",
+  "csv-mapping-not-in-file": "(ֆայլում չկա)",
+  "csv-mapping-column-number": "Սյունակ __number__",
+  "csv-mapping-list-missing": "Ֆայլում ցուցակի սյունակ չկա։ Ընտրեք մեկը վերևում կամ մուտքագրեք այն մեկ ցուցակի անունը, որտեղ կգնա յուրաքանչյուր քարտ։",
+  "csv-mapping-list-name": "Ցուցակ յուրաքանչյուր քարտի համար",
+  "csv-mapping-custom-fields": "Այլ սյունակներ՝ որպես տեքստային պատվերով դաշտեր ներմուծելու համար՝",
+  "csv-mapping-boards": "Յուրաքանչյուր թերթ դառնում է իր սեփական տախտակը՝",
+  "csv-mapping-skipped-sheets": "Թերթեր, որոնք չեն ներմուծվում՝",
+  "csv-mapping-title-required": "Ընտրեք քարտերի անվանումները պարունակող սյունակը։",
+  "csv-mapping-list-required": "Մուտքագրեք այն ցուցակի անունը, որտեղ կգնա յուրաքանչյուր քարտ, կամ ընտրեք ցուցակը պարունակող սյունակը։"
 }

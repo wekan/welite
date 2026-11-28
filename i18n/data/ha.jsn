@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "A Redmine, buɗe Issues na aikin, zaɓi Also available in: CSV a ƙasan jerin, zaɓi ginshiƙai (All columns, tare da Description) kuma fitar, sannan ka liƙa CSV ɗin. Redmine yana sanya sunayen ginshiƙai a harshenka, don haka saita harshenka zuwa Turanci a My account kafin fitarwa. Kowane matsayi yana zama jeri kuma batutuwa suna zama katuna, tare da tracker a matsayin alama, wanda aka ba wa, marubuci, kwanaki, babban aiki da batutuwa masu alaƙa; fifiko, rukuni, sigar da aka nufa, ƙiyasin lokaci, % Done da filayen keɓaɓɓu suna zama filayen keɓaɓɓu.",
   "import-board-instruction-orgmode": "Liƙa fayil ɗin Org mode, kamar yadda Emacs, Orgzly ko Beorg ke rubuta shi. Kanun saman matakin suna zama jerin abubuwa kuma kanun mataki na biyu suna zama katuna. Ana kiyaye TODO da DONE, fifiko, tambari, SCHEDULED, DEADLINE da CLOSED, kuma akwatunan alama da kanun masu zurfi suna zama jerin dubawa.",
   "import-board-instruction-focalboard": "Buɗe fayil ɗin .boardarchive daga kundin da aka matse, sannan manna abin da ke cikin board.jsonl na allo, tare da layin sigar ko ba tare da shi ba. Siffar haɗawa rukuni-rukuni ta kallon allo tana zama jerin abubuwa, sauran siffofin zaɓi suna zama alamomi, tubalan rubutu da akwatunan alama suna zama bayani da jerin dubawa, kuma ana riƙe sharhi. Ba a shigo da hotuna da haɗe-haɗe.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Wane ginshiƙi ne wanne?",
+  "csv-mapping-description": "Zaɓi ginshiƙin fayil ɗin da ke ɗauke da kowane filin kati. An yi zaɓuɓɓukan daga sunayen ginshiƙai; canza duk wanda ba daidai ba, kuma zaɓi (ba ya cikin fayil) ga filin da fayil ɗin ba shi da shi.",
+  "csv-mapping-not-in-file": "(ba ya cikin fayil)",
+  "csv-mapping-column-number": "Ginshiƙi __number__",
+  "csv-mapping-list-missing": "Fayil ɗin ba shi da ginshiƙi na jeri. Zaɓi ɗaya a sama, ko rubuta sunan jeri ɗaya da kowane kati zai shiga.",
+  "csv-mapping-list-name": "Jeri ga kowane kati",
+  "csv-mapping-custom-fields": "Sauran ginshiƙai da za a shigo da su a matsayin filayen keɓaɓɓu na rubutu:",
+  "csv-mapping-boards": "Kowane takarda yana zama allonsa na kansa:",
+  "csv-mapping-skipped-sheets": "Takardun da ba a shigo da su ba:",
+  "csv-mapping-title-required": "Zaɓi ginshiƙin da ke ɗauke da taken katuna.",
+  "csv-mapping-list-required": "Rubuta sunan jerin da kowane kati zai shiga, ko zaɓi ginshiƙin da ke ɗauke da jerin."
 }

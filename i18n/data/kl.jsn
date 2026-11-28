@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-imi suliniutip Issues-ii ammakkit, allattorsimaffiup ataani Also available in: CSV toqqaruk, kolonniit toqqakkit (All columns, Description ilanngullugu) nuussillugillu, taava CSV ikkuguk. Redmine-ip kolonniit oqaatsitsinnik ateqartittarpai, taamaattumik nuussinnginnermi My account-imi oqaatsit tuluttuunngortikkit. Killiffik tamarmi allattorsimaffinngortarpoq ajornartorsiutillu kortsinngortarput, tracker nalunaaqutatut, akisussaasoq, allattoq, ulluit, suliassaq angajoqqaaq ajornartorsiutillu attuumassuteqartut ilanngullugit; salliutitaq, immikkoortitaq, versionip anguniagaa, piffissaq missingersorneqartoq, % Done immikkoortullu namminneq ilusiligaat immikkoortunngortarput namminneq ilusiligaasunik.",
   "import-board-instruction-orgmode": "Org mode-imik fiilimik ikkuguk, soorlu Emacs, Orgzly imaluunniit Beorg allattarneri. Qulequtat qullersaasut allattorsimaffinngortarput, qulequtallu tulliusut kortsinngortarput. TODO aamma DONE, salliutitat, nalunaaqutat, SCHEDULED, DEADLINE aamma CLOSED toqqorneqartarput, checkboxillu qulequtallu itinerusut misissuiffiusumik allattorsimaffinngortarput.",
   "import-board-instruction-focalboard": ".boardarchive fiilip poortornera ammarlugu allattarfimmut atasoq board.jsonl ikkuguk, versionip titarnertaa ilanngullugu imaluunniit ilanngunnagu. Allattarfiup isikkiani eqimattakkuutaarinermut ilisarnaat allattorsimaffinngussaaq, toqqagassat allat nalunaaqutsersuutinngussapput, allatat aamma nalunaaqutserfiit immikkoortui nassuiaatinngortinneqassapput misissuiffiusumillu allattorsimaffinngortinneqassallutik, oqaaseqaatillu pigiinnarneqassapput. Assit ilanngussallu eqqunneqassanngillat.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kolonni sorleq sunaava?",
+  "csv-mapping-description": "Fiilip kolonnia kortsip immikkoortuanik tamaginnik imalik toqqaruk. Toqqakkat kolonniit atiinit toqqarneqarsimapput; kukkusut allanngortikkit, immikkoortullu fiilimi peqanngitsumut (fiilimi peqanngilaq) toqqaruk.",
+  "csv-mapping-not-in-file": "(fiilimi peqanngilaq)",
+  "csv-mapping-column-number": "Kolonni __number__",
+  "csv-mapping-list-missing": "Fiilimi allattorsimaffimmut kolonneqanngilaq. Qulaani ataaseq toqqaruk, imaluunniit allattorsimaffiup ataatsip kortsit tamarmik iluanut ingerlaffissaasa aqqa allaguk.",
+  "csv-mapping-list-name": "Allattorsimaffik kortsinut tamanut",
+  "csv-mapping-custom-fields": "Kolonniit allat allagartut immikkoortutut namminneq ilusiligaasutut eqqussassat:",
+  "csv-mapping-boards": "Ilitsiut tamarmi namminneq ilisarnaatinngortarpoq:",
+  "csv-mapping-skipped-sheets": "Ilitsiutit eqqunneqanngitsut:",
+  "csv-mapping-title-required": "Kolonni kortsit qulequtaannik imalik toqqaruk.",
+  "csv-mapping-list-required": "Allattorsimaffiup kortsit tamarmik iluanut ingerlaffissaasa aqqa allaguk, imaluunniit kolonni allattorsimaffimmik imalik toqqaruk."
 }

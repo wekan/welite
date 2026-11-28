@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "In Redmine, aperi Issues propositi, elige Also available in: CSV in imo indice, delige columnas (All columns, cum Description) et exporta; deinde CSV insere. Redmine columnas lingua tua nominat; itaque ante exportationem in My account linguam Anglicam elige. Quisque status fit index et quaestiones fiunt chartae, cum instrumento vestigationis ut titello, delegato, auctore, diebus, opere superiore et quaestionibus conexis; prioritas, categoria, versio destinata, tempus aestimatum, % Done et campi proprii fiunt campi proprii.",
   "import-board-instruction-orgmode": "Insere fasciculum Org mode, qualem Emacs, Orgzly aut Beorg scribunt. Tituli summi gradus fiunt indices et tituli secundi gradus fiunt chartae. TODO et DONE, prioritates, titelli, SCHEDULED, DEADLINE et CLOSED servantur; quadrata notanda et tituli inferiorum graduum fiunt indices probationis.",
   "import-board-instruction-focalboard": "Archivum .boardarchive expande et textum documenti board.jsonl tabulae insere, cum linea versionis aut sine ea. Proprietas qua conspectus tabulae in greges dividitur in indices convertitur, ceterae proprietates electionis in titellos, partes textus et quadratorum notandorum in descriptionem et indicem probationis; commentarii servantur. Imagines et documenta adiuncta non importantur.",
-  "import-board-instruction-todoist": "In Todoist, aperi propositum, elige indicem ⋯ in angulo dextro superiore, deinde Manage data > Export as CSV, et insere fasciculum CSV. Sectiones fiunt indices, munera fiunt chartae, submunera fiunt index probationis, adnotationes fiunt commentarii, et @labels atque prioritates p1 ad p3 fiunt tituli."
+  "import-board-instruction-todoist": "In Todoist, aperi propositum, elige indicem ⋯ in angulo dextro superiore, deinde Manage data > Export as CSV, et insere fasciculum CSV. Sectiones fiunt indices, munera fiunt chartae, submunera fiunt index probationis, adnotationes fiunt commentarii, et @labels atque prioritates p1 ad p3 fiunt tituli.",
+  "csv-mapping-title": "Quae columna cui campo respondet?",
+  "csv-mapping-description": "Elige columnam fasciculi quae quemque campum chartae continet. Electiones ex nominibus columnarum factae sunt; quae errant corrige, et pro campo quem fasciculus non habet elige (non in fasciculo).",
+  "csv-mapping-not-in-file": "(non in fasciculo)",
+  "csv-mapping-column-number": "Columna __number__",
+  "csv-mapping-list-missing": "Fasciculus columnam indicis non habet. Elige unam supra, aut scribe nomen unius indicis in quem omnes chartae ponuntur.",
+  "csv-mapping-list-name": "Index omnium chartarum",
+  "csv-mapping-custom-fields": "Aliae columnae ut campi proprii textuales importandae:",
+  "csv-mapping-boards": "Quodque folium fit tabula propria:",
+  "csv-mapping-skipped-sheets": "Folia quae non importantur:",
+  "csv-mapping-title-required": "Elige columnam quae titulos chartarum continet.",
+  "csv-mapping-list-required": "Scribe nomen indicis in quem omnes chartae ponuntur, aut elige columnam quae indicem continet."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine keessatti, Issues pirojektii banadhu, jala tarree sanaatti Also available in: CSV filadhu, tarjaawwan filadhu (All columns, Description wajjin) baasi, achiis CSV itti maxxansi. Redmine tarjaawwan afaan keetiin moggaasa, kanaaf utuu hin baasin dura My account keessatti afaan kee Ingiliffaa godhi. Haalli tokkoon tokkoon isaa tarree ta'a, rakkooleen immoo kaardiiwwan hordofaa akka asxaatti, kan itti kenname, barreessaa, guyyaawwan, hojii maatii fi rakkoolee walqabatan wajjin ta'u; dursi, ramaddiin, gosti galmaa, yeroon tilmaamame, % Done fi dirreewwan dhuunfaa dirreewwan dhuunfaa ta'u.",
   "import-board-instruction-orgmode": "Faayilii Org mode, akkuma Emacs, Orgzly ykn Beorg barreessanitti itti maxxansi. Mata-dureewwan sadarkaa olaanaa tarreewwan ta'u, mata-dureewwan sadarkaa lammaffaa immoo kaardiiwwan ta'u. TODO fi DONE, dursa, taagiiwwan, SCHEDULED, DEADLINE fi CLOSED ni eegamu, sanduuqawwan filannoo fi mata-dureewwan gadi fagoo tarreewwan qorannoo ta'u.",
   "import-board-instruction-focalboard": "Faayilii .boardarchive kuusaa cufame keessaa baasii qabiyyee board.jsonl gabatee sanaa sarara gosa isaa wajjin ykn malee maxxansi. Amalli garee uumu kan ilaalcha gabatee tarreewwan ta’a, amaloonni filannoo biroo mallattoowwan ta’u, kutaaleen barruu fi sanduuqota mallatteessuu ibsa fi tarree qorannoo ta’u, yaadawwanis ni eegamu. Fakkiiwwanii fi faayiliiwwan dabalataa hin galfaman.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Tarjaan kam isa kami?",
+  "csv-mapping-description": "Tarjaa faayilii dirree kaardii tokkoon tokkoon isaa qabu filadhu. Filannoowwan maqaa tarjaawwan irraa godhaman; kan dogoggora ta'e jijjiiri, dirree faayiliin hin qabneef immoo (faayilii keessa hin jiru) filadhu.",
+  "csv-mapping-not-in-file": "(faayilii keessa hin jiru)",
+  "csv-mapping-column-number": "Tarjaa __number__",
+  "csv-mapping-list-missing": "Faayiliin tarjaa tarreetiif hin qabu. Tokko ol keessaa filadhu, ykn maqaa tarree tokkoo kaardiin hundi itti galu barreessi.",
+  "csv-mapping-list-name": "Tarree kaardii hundaaf",
+  "csv-mapping-custom-fields": "Tarjaawwan biroo akka dirreewwan dhuunfaa barreeffamaatti galfaman:",
+  "csv-mapping-boards": "Waraqaan tokkoon tokkoon isaa gabatee mataa isaa ta'a:",
+  "csv-mapping-skipped-sheets": "Waraqaawwan hin galfamne:",
+  "csv-mapping-title-required": "Tarjaa maqaawwan kaardii qabu filadhu.",
+  "csv-mapping-list-required": "Maqaa tarree kaardiin hundi itti galu barreessi, ykn tarjaa tarree qabu filadhu."
 }

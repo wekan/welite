@@ -76,6 +76,7 @@ procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
+function CsvImportPreview(const Text:string):TJSONObject;
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
@@ -8068,7 +8069,7 @@ end;
 
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
-  Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
+  Result:=(FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
     (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist');
 end;
 
@@ -8133,7 +8134,9 @@ begin
     else Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1]]));
 end;
 
-procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil; Quiet: Boolean = False);
+function CsvMappedBoard(Rows,RawMapping:TJSONData):TJSONObject; forward;
+
+procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil; Quiet: Boolean = False; Prepared: TJSONObject = nil);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail,ListWipSql:string;
@@ -8875,7 +8878,8 @@ begin
   try
     try
       try
-        if IsZip and (SourceFormat='trello') then
+        if Prepared<>nil then Body:=TJSONObject(Prepared.Clone)
+        else if IsZip and (SourceFormat='trello') then
         begin
           SourceDocument:=ReadTrelloZip(aRequest.Content);
           try Body:=TrelloImport(SourceDocument); finally SourceDocument.Free; end;
@@ -8922,6 +8926,7 @@ begin
             else if SourceFormat='orgmode' then Body:=OrgModeImport(Value)
             else if SourceFormat='focalboard' then Body:=FocalboardImport(Value)
             else if SourceFormat='todoist' then Body:=TodoistImport(Value)
+            else if SourceFormat='csv' then Body:=CsvMappedBoard(Value,nil)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
@@ -9219,8 +9224,231 @@ begin
   ImportBoardRequest(aRequest,aResponse,Default(TWLTenant),'','','');
 end;
 
+const CsvFields:array[0..19] of string=('title','description','list','swimlane','owner','members',
+  'assignees','labels','receivedAt','startAt','dueAt','endAt','createdAt','modifiedAt',
+  'requestedBy','assignedBy','parentCard','spentTime','isOvertime','archived');
+  CsvAliases:array[0..19] of string=('title|name|card|card title|card name|task|task name|summary|subject',
+    'description|desc|details|notes|body','list|list name|stage|status|state|column','swimlane|lane',
+    'owner|creator|created by|author','members|member','assignee|assignees|assigned to','labels|label|tags|tag',
+    'received|received at|received date','start|start date|start at','due|due date|due at|deadline',
+    'end|end date|end at|finish date|finished at','created at|creation date|created',
+    'modified at|updated at|update date|modified on|last modified at','requested by|requester',
+    'assigned by|assigner','parent card|parent','spent time|spent time (hours)','overtime|overtime (hours)','archived');
+
+function GuessCsvColumns(Header:TJSONArray):TJSONObject;
+var I,J:Integer; Name:string;
+begin
+  Result:=TJSONObject.Create;
+  for I:=0 to Header.Count-1 do
+  begin
+    Name:=LowerCase(Trim(Header.Items[I].AsString));
+    for J:=Low(CsvFields) to High(CsvFields) do
+      if (Result.Find(CsvFields[J])=nil) and
+        (Pos('|'+Name+'|','|'+CsvAliases[J]+'|')>0) then Result.Add(CsvFields[J],I);
+  end;
+  if Result.Find('title')=nil then Result.Add('title',0);
+end;
+
+function CsvImportPreview(const Text:string):TJSONObject;
+var Csv,Candidate:TCSVDocument; Delimiter:Char; Input:string; Rows,Row:TJSONArray; I,J,Columns:Integer;
+begin
+  Input:=Text;
+  if Copy(Input,1,3)=#239#187#191 then Delete(Input,1,3);
+  Csv:=nil;
+  Columns:=0;
+  try
+    for Delimiter in [',',';',#9] do
+    begin
+      Candidate:=TCSVDocument.Create;
+      try
+        Candidate.Delimiter:=Delimiter;
+        Candidate.CSVText:=Input;
+        if (Candidate.RowCount>0) and (Candidate.ColCount[0]>Columns) then
+        begin
+          Csv.Free; Csv:=Candidate; Candidate:=nil;
+          Columns:=Csv.ColCount[0];
+        end;
+      finally Candidate.Free; end;
+    end;
+    if (Csv=nil) or (Columns>10000) or (Csv.RowCount>20000) then raise EConvertError.Create('Invalid CSV');
+    Result:=TJSONObject.Create;
+    try
+      Rows:=TJSONArray.Create; Result.Add('rows',Rows);
+      for I:=0 to Csv.RowCount-1 do
+      begin
+        Row:=TJSONArray.Create; Rows.Add(Row);
+        for J:=0 to Csv.ColCount[I]-1 do Row.Add(Csv.Cells[J,I]);
+      end;
+      Result.Add('columns',GuessCsvColumns(Rows.Arrays[0]));
+    except Result.Free; raise; end;
+  finally Csv.Free; end;
+end;
+
+function CsvMappedBoard(Rows,RawMapping:TJSONData):TJSONObject;
+var Columns,Mapping,Card,Board,Authors,ParentTitles:TJSONObject; Lists,Lanes,Cards,Labels,Custom,Values,Tags,People:TJSONArray;
+  Header,Row:TJSONArray; Field,Extra:TJSONData; I,J,K:Integer; Name,Key,Value,ListName,Title,Id,Parent:string;
+  Hours:Double; Stamp:TDateTime;
+
+  function ColumnIndex(Data:TJSONData):Integer;
+  begin
+    if not (Data is TJSONNumber) or (Data.AsFloat<0) or (Data.AsFloat>=Header.Count) or
+      (Frac(Data.AsFloat)<>0) then raise EConvertError.Create('Invalid CSV mapping');
+    Result:=Data.AsInteger;
+  end;
+
+  function Cell(Index:Integer):string;
+  begin
+    Result:='';
+    if (Index>=0) and (Index<Row.Count) and (Row.Items[Index].JSONType<>jtNull) then
+      Result:=Row.Items[Index].AsString;
+  end;
+
+  function Named(Table:TJSONArray; const Caption,LabelKey:string):string;
+  var N:Integer; Entry:TJSONObject;
+  begin
+    for N:=0 to Table.Count-1 do
+      if Table.Objects[N].Get(LabelKey,'')=Caption then Exit(Table.Objects[N].Get('_id',''));
+    Result:='entry-'+IntToStr(Table.Count);
+    Entry:=TJSONObject.Create(['_id',Result,LabelKey,Caption,'sort',Table.Count]);
+    if Table=Labels then Entry.Add('color','blue');
+    if Table=Custom then Entry.Add('type','text');
+    Table.Add(Entry);
+  end;
+
+begin
+  if not (Rows is TJSONArray) or (Rows.Count<1) or (Rows.Count>20000) or
+    not (Rows.Items[0] is TJSONArray) then raise EConvertError.Create('Invalid CSV rows');
+  Header:=TJSONArray(Rows.Items[0]);
+  for I:=0 to Header.Count-1 do
+    if not (Header.Items[I].JSONType in [jtString,jtNumber,jtBoolean,jtNull]) then
+      raise EConvertError.Create('Invalid CSV header');
+  if (Header.Count=0) or (Header.Count>10000) then raise EConvertError.Create('Invalid CSV header');
+  Columns:=nil; Extra:=nil; ListName:='';
+  ParentTitles:=TJSONObject.Create;
+  try
+    if RawMapping=nil then Columns:=GuessCsvColumns(Header)
+    else
+    begin
+      if not (RawMapping is TJSONObject) then raise EConvertError.Create('Invalid CSV mapping');
+      Mapping:=TJSONObject(RawMapping);
+      for I:=0 to Mapping.Count-1 do
+      begin
+        Field:=Mapping.Items[I];
+        case Mapping.Names[I] of
+          'columns':
+            begin
+              if not (Field is TJSONObject) then raise EConvertError.Create('Invalid CSV mapping');
+              Columns:=TJSONObject(Field.Clone);
+              for J:=0 to Columns.Count-1 do
+              begin
+                Key:=Columns.Names[J];
+                K:=Low(CsvFields);
+                while (K<=High(CsvFields)) and (CsvFields[K]<>Key) do Inc(K);
+                if K>High(CsvFields) then raise EConvertError.Create('Unknown CSV mapping field');
+                ColumnIndex(Columns.Items[J]);
+              end;
+            end;
+          'listName':
+            begin
+              if not (Field is TJSONString) or (Length(UTF8Decode(Field.AsString))>255) then
+                raise EConvertError.Create('Invalid CSV list name');
+              ListName:=Trim(Field.AsString);
+            end;
+          'customFieldColumns':
+            begin
+              if not (Field is TJSONArray) or (Field.Count>1000) then raise EConvertError.Create('Invalid CSV custom fields');
+              for J:=0 to Field.Count-1 do ColumnIndex(Field.Items[J]);
+              Extra:=Field;
+            end;
+          else raise EConvertError.Create('Unknown CSV mapping option');
+        end;
+      end;
+    end;
+    if (Columns=nil) or (Columns.Find('title')=nil) or ((Columns.Find('list')=nil) and (ListName='')) then
+      raise EConvertError.Create('CSV title or list mapping is missing');
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create(['title','Imported CSV']); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Custom:=TJSONArray.Create; Board.Add('customFields',Custom);
+      for I:=1 to Rows.Count-1 do
+      begin
+        if not (Rows.Items[I] is TJSONArray) then raise EConvertError.Create('Invalid CSV row');
+        Row:=TJSONArray(Rows.Items[I]);
+        for J:=0 to Row.Count-1 do
+          if not (Row.Items[J].JSONType in [jtString,jtNumber,jtBoolean,jtNull]) then
+            raise EConvertError.Create('Invalid CSV cell');
+        Title:=Trim(Cell(Columns.Get('title',-1)));
+        if Title='' then Continue;
+        Name:=Trim(Cell(Columns.Get('list',-1)));
+        if Name='' then Name:=ListName;
+        if Name='' then Name:='Imported';
+        Id:='row-'+IntToStr(I);
+        Card:=TJSONObject.Create(['_id',Id,'title',Title,'listId',Named(Lists,Name,'title'),'sort',I]);
+        Cards.Add(Card);
+        if ParentTitles.Find(Title)=nil then ParentTitles.Add(Title,Id)
+        else ParentTitles.Strings[Title]:='';
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for J:=0 to Columns.Count-1 do
+        begin
+          Key:=Columns.Names[J];
+          Value:=Cell(Columns.Items[J].AsInteger);
+          if Value='' then Continue;
+          case Key of
+            'description','requestedBy','assignedBy': Card.Add(Key,Value);
+            'parentCard': Card.Add('parentTitle',Trim(Value));
+            'swimlane': Card.Add('swimlaneId',Named(Lanes,Trim(Value),'title'));
+            'owner':
+              begin
+                Name:=ImportAuthorIdentity(Authors,Trim(Value));
+                if Name<>'' then Card.Add('userId',Name);
+              end;
+            'members','assignees':
+              begin
+                People:=TJSONArray.Create; Card.Add(Key,People);
+                for Name in Value.Split([',']) do
+                  if Trim(Name)<>'' then People.Add(ImportAuthorIdentity(Authors,Trim(Name)));
+              end;
+            'labels':
+              for Name in Value.Split([',']) do
+                if Trim(Name)<>'' then Tags.Add(Named(Labels,Trim(Name),'name'));
+            'receivedAt','startAt','dueAt','endAt','createdAt','modifiedAt':
+              if TryISO8601ToDate(Trim(Value),Stamp,True) then Card.Add(Key,Trim(Value));
+            'spentTime':
+              if TryStrToFloat(Trim(Value),Hours) and (Hours>=0) and not IsInfinite(Hours) then Card.Add(Key,Hours);
+            'archived','isOvertime': Card.Add(Key,SameText(Trim(Value),'true') or (Trim(Value)='1'));
+          end;
+        end;
+        if Extra<>nil then
+        begin
+          Values:=TJSONArray.Create; Card.Add('customFields',Values);
+          for J:=0 to Extra.Count-1 do
+          begin
+            K:=Extra.Items[J].AsInteger;
+            Name:=Trim(Header.Items[K].AsString);
+            if Name='' then Name:='Column '+IntToStr(K+1);
+            Value:=Cell(K);
+            if Value<>'' then Values.Add(TJSONObject.Create(['_id',Named(Custom,Name,'name'),'value',Value]));
+          end;
+        end;
+      end;
+      for I:=0 to Cards.Count-1 do
+      begin
+        Card:=Cards.Objects[I];
+        Parent:=ParentTitles.Get(Card.Get('parentTitle',''),'');
+        if (Parent<>'') and (Parent<>Card.Get('_id','')) then Card.Add('parentId',Parent);
+        Card.Delete('parentTitle');
+      end;
+    except Result.Free; raise; end;
+  finally ParentTitles.Free; Columns.Free; end;
+end;
+
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
-var Projects, Options, FileData: TJSONData; BatchSql: TStringList; Ids: TJSONArray; Reply: TJSONObject; I,J: Integer;
+var Projects, Options, FileData, Mapping: TJSONData; BatchSql: TStringList; Ids: TJSONArray; Reply: TJSONObject; I,J: Integer;
   Files, Members, Results: TJSONArray; FileRow, ResultRow: TJSONObject; Filename, Text, Encoded: string;
   procedure ImportOne(const Name, Content: string);
   var Payload: TJSONString;
@@ -9238,6 +9466,21 @@ begin
   if not (Args is TJSONArray) or ((Args.Count<>3) and (Args.Count<>4)) or not (Args.Items[0].JSONType in [jtObject,jtArray,jtString]) or
     not (Args.Items[1] is TJSONObject) or (Args.Items[2].JSONType<>jtString) then
   begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
+  if Args.Items[2].AsString='csv' then
+  begin
+    Mapping:=TJSONObject(Args.Items[1]).Find('csvMapping');
+    try
+      Reply:=CsvMappedBoard(Args.Items[0],Mapping);
+    except on E:EConvertError do
+      begin
+        SendJson(aResponse,'{"error":"invalid-import-mapping","reason":"Invalid CSV rows or mapping"}',400);
+        Exit;
+      end;
+    end;
+    try ImportBoardRequest(aRequest,aResponse,Tenant,Actor,'','csv',nil,nil,False,Reply);
+    finally Reply.Free; end;
+    Exit;
+  end;
   if not ExternalImportSupported(Args.Items[2].AsString) then
   begin SendJson(aResponse,'{"error":"invalid-import-format","reason":"Unknown import source"}',400); Exit; end;
   if Args.Items[1].Count<>0 then

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "په Redmine کې د پروژې Issues پرانیزئ، د لړليک په پای کې Also available in: CSV وټاکئ، ستنې غوره کړئ (All columns، د Description سره) او صادر یې کړئ، بیا CSV ولګوئ. Redmine ستنې ستاسو په ژبه نوموي، نو د صادرولو مخکې په My account کې خپله ژبه انګلیسي ته واړوئ. هر حالت په لړليک او ستونزې په کارتونو بدلېږي، د tracker د نښې په توګه، ګمارل شوي، لیکوال، نېټو، مورنۍ دندې او اړوندو ستونزو سره؛ لومړیتوب، کټګوري، هدف نسخه، اټکل شوی وخت، % Done او ځانګړې ساحې په ځانګړو ساحو بدلېږي.",
   "import-board-instruction-orgmode": "د Org mode دوتنه ولګوئ، لکه څنګه چې Emacs، Orgzly یا Beorg یې لیکي. د لومړۍ کچې سرلیکونه په لړليکونو او د دویمې کچې سرلیکونه په کارتونو بدلېږي. TODO او DONE، لومړیتوبونه، ټګونه، SCHEDULED، DEADLINE او CLOSED ساتل کېږي، او چک بکسونه او ژور سرلیکونه په کتنليکونو بدلېږي.",
   "import-board-instruction-focalboard": "د .boardarchive فایل له زېپ څخه وباسئ او د بورډ د board.jsonl منځپانګه د نسخې له کرښې سره یا پرته ترې ونښلوئ. د بورډ لید د ډلبندۍ ځانګړنه په لېستونو، نورې د ټاکنې ځانګړنې په نښو، د متن او نښه کولو بکسونو برخې په تشریح او کتنليک بدلېږي، او تبصرې ساتل کېږي. انځورونه او ضمیمې نه واردېږي.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "کومه ستنه کومه ده؟",
+  "csv-mapping-description": "د دوتنې هغه ستنه وټاکئ چې د کارت هره ساحه لري. انتخابونه د ستنو له نومونو جوړ شوي؛ هر هغه چې غلط وي بدل کړئ، او د هغې ساحې لپاره چې دوتنه یې نه لري (په دوتنه کې نشته) وټاکئ.",
+  "csv-mapping-not-in-file": "(په دوتنه کې نشته)",
+  "csv-mapping-column-number": "ستنه __number__",
+  "csv-mapping-list-missing": "دوتنه د لړليک لپاره ستنه نه لري. پورته یوه وټاکئ، یا د هغه یو لړليک نوم ولیکئ چې هر کارت پکې ځي.",
+  "csv-mapping-list-name": "د هر کارت لپاره لړليک",
+  "csv-mapping-custom-fields": "نورې ستنې چې د متني ځانګړو ساحو په توګه دننه شي:",
+  "csv-mapping-boards": "هره پاڼه خپله تخته کېږي:",
+  "csv-mapping-skipped-sheets": "هغه پاڼې چې نه دننه کېږي:",
+  "csv-mapping-title-required": "هغه ستنه وټاکئ چې د کارت سرلیکونه لري.",
+  "csv-mapping-list-required": "د هغه لړليک نوم ولیکئ چې هر کارت پکې ځي، یا هغه ستنه وټاکئ چې لړليک لري."
 }

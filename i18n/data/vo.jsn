@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "In Redmine, maifükolös Issues proyega, välolös Also available in: CSV len don liseda, välolös paditis (All columns, labü Description) e seveigolös, täno pladolös CSV. Redmine nemon paditis in pük olik, sekü atos sätolös püki olik ad Linglänapük in My account büä seveigol. Stad alik vedon lised e säkäds vedons kads, labü tracker as ninädapenäd, geban pejonidüköl, lautan, däts, vobod pala e säkäds teföl; büored, klad, fomam zeilik, tim pestimöl, % Done e fels lönik vedons fels lönik.",
   "import-board-instruction-orgmode": "Pladolös ragivi Org mode, äsä Emacs, Orgzly u Beorg penons oni. Tiäds nivoda balid vedons liseds e tiäds nivoda telid vedons kads. TODO e DONE, büoreds, tegs, SCHEDULED, DEADLINE e CLOSED pakipons, e kvads mäkama e tiäds dibikum vedons kontrolaliseds.",
   "import-board-instruction-focalboard": "Säpakön ragivi .boardarchive e nüpladön board.jsonl tavola, ko ked fomama u nen on. Patöf grupükama pö logam tavola vedon liseds, patöfs välama votik vedons ninädapenäds, bloks vödemas e bogs malükama vedons beskribi e kontrolalisedi, e küpets pakipons. Magods e läükots no panüpladons.",
-  "import-board-instruction-todoist": "In Todoist, maifükolös projegi, välolös lisedi välas ⋯ pö gul löpik detik onik, täno Manage data > Export as CSV, e nüpladolös nünedi CSV. Dils vedons liseds, vobots vedons kads, donavobots vedons kontrolalised, noets vedons küpets, e @labels e prioritäts p1 jü p3 vedons ninädapenäds."
+  "import-board-instruction-todoist": "In Todoist, maifükolös projegi, välolös lisedi välas ⋯ pö gul löpik detik onik, täno Manage data > Export as CSV, e nüpladolös nünedi CSV. Dils vedons liseds, vobots vedons kads, donavobots vedons kontrolalised, noets vedons küpets, e @labels e prioritäts p1 jü p3 vedons ninädapenäds.",
+  "csv-mapping-title": "Padit kinik binon kinik?",
+  "csv-mapping-description": "Välolös paditi ragiva, kel labon feli kada alik. Väls pemekons ma nems paditas; votükolös alikis, kels binons dobik, e välolös (no in ragiv) pro fel, keli ragiv no labon.",
+  "csv-mapping-not-in-file": "(no in ragiv)",
+  "csv-mapping-column-number": "Padit __number__",
+  "csv-mapping-list-missing": "Ragiv no labon paditi pro lised. Välolös bali löpo, u penolös nemi liseda bal, ini kel kad alik golon.",
+  "csv-mapping-list-name": "Lised pro kad alik",
+  "csv-mapping-custom-fields": "Padits votik ad panüveigön as fels lönik vödemik:",
+  "csv-mapping-boards": "Bled alik vedon tab lönik:",
+  "csv-mapping-skipped-sheets": "Bleds, kels no panüveigons:",
+  "csv-mapping-title-required": "Välolös paditi, kel labon tiädis kadas.",
+  "csv-mapping-list-required": "Penolös nemi liseda, ini kel kad alik golon, u välolös paditi, kel labon lisedi."
 }

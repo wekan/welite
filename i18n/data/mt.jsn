@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "F'Redmine, iftaħ Issues tal-proġett, agħżel Also available in: CSV fil-qiegħ tal-lista, agħżel il-kolonni (All columns, b'Description) u esporta, imbagħad waħħal is-CSV. Redmine jagħti lill-kolonni ismijiet fil-lingwa tiegħek, għalhekk issettja l-lingwa tiegħek għal English f'My account qabel tesporta. Kull stat isir lista u l-kwistjonijiet isiru karti, bit-tracker bħala tikketta, il-persuna assenjata, l-awtur, id-dati, il-kompitu ġenitur u l-kwistjonijiet relatati; il-prijorità, il-kategorija, il-verżjoni fil-mira, il-ħin stmat, % Done u l-kampi personalizzati jsiru kampi personalizzati.",
   "import-board-instruction-orgmode": "Waħħal fajl Org mode kif jinkiteb minn Emacs, Orgzly jew Beorg. L-intestaturi tal-ogħla livell isiru listi u dawk tat-tieni livell isiru karti. TODO u DONE, il-prijoritajiet, it-tikketti, SCHEDULED, DEADLINE u CLOSED jinżammu, u l-kaxxi tal-għażla u l-intestaturi aktar fil-fond isiru listi ta' kontroll.",
   "import-board-instruction-focalboard": "Iftaħ il-fajl .boardarchive mill-arkivju kkompressat u waħħal il-kontenut tal-board.jsonl tal-bord, bil-linja tal-verżjoni jew mingħajrha. Il-proprjetà tar-raggruppament tad-dehra tal-bord issir listi, proprjetajiet oħra tal-għażla jsiru tikketti, blokok ta’ test u kaxxi tal-immarkar isiru d-deskrizzjoni u lista ta’ verifika, u l-kummenti jinżammu. L-immaġnijiet u l-annessi ma jiġux importati.",
-  "import-board-instruction-todoist": "F’Todoist, iftaħ il-proġett, agħżel il-menu ⋯ fuq il-lemin ta’ fuq, imbagħad Manage data > Export as CSV, u waħħal il-fajl CSV. Is-sezzjonijiet isiru listi, il-kompiti jsiru karti, is-sottokompiti jsiru lista ta’ verifika, in-noti jsiru kummenti, u l-@labels u l-prijoritajiet p1 sa p3 isiru tikketti."
+  "import-board-instruction-todoist": "F’Todoist, iftaħ il-proġett, agħżel il-menu ⋯ fuq il-lemin ta’ fuq, imbagħad Manage data > Export as CSV, u waħħal il-fajl CSV. Is-sezzjonijiet isiru listi, il-kompiti jsiru karti, is-sottokompiti jsiru lista ta’ verifika, in-noti jsiru kummenti, u l-@labels u l-prijoritajiet p1 sa p3 isiru tikketti.",
+  "csv-mapping-title": "Liema kolonna hija liema?",
+  "csv-mapping-description": "Agħżel il-kolonna tal-fajl li fiha kull kamp tal-karta. L-għażliet saru mill-ismijiet tal-kolonni; ibdel dawk li huma żbaljati, u agħżel (mhux fil-fajl) għal kamp li ma jinsabx fil-fajl.",
+  "csv-mapping-not-in-file": "(mhux fil-fajl)",
+  "csv-mapping-column-number": "Kolonna __number__",
+  "csv-mapping-list-missing": "Il-fajl m'għandux kolonna għal-lista. Agħżel waħda hawn fuq, jew ittajpja l-isem tal-lista waħda li fiha tidħol kull karta.",
+  "csv-mapping-list-name": "Lista għal kull karta",
+  "csv-mapping-custom-fields": "Kolonni oħra biex jiġu importati bħala kampi personalizzati tat-test:",
+  "csv-mapping-boards": "Kull folja ssir bord għaliha:",
+  "csv-mapping-skipped-sheets": "Folji li ma jiġux importati:",
+  "csv-mapping-title-required": "Agħżel il-kolonna li fiha t-titli tal-karti.",
+  "csv-mapping-list-required": "Ittajpja l-isem tal-lista li fiha tidħol kull karta, jew agħżel il-kolonna li fiha l-lista."
 }

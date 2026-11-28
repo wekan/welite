@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Avaa Redminessä projektin Issues, valitse listan alareunasta Also available in: CSV, valitse sarakkeet (All columns ja Description) ja vie tiedot. Liitä sitten CSV-tiedoston sisältö. Redmine nimeää sarakkeet käyttämälläsi kielellä, joten vaihda ennen vientiä kieleksi English kohdassa My account. Jokaisesta tilasta tulee lista ja työasioista kortteja, joissa säilyvät seurantatyyppi tunnisteena, vastuuhenkilö, tekijä, päivämäärät, ylätason tehtävä ja liittyvät työasiat. Prioriteetista, luokasta, tavoiteversiosta, arvioidusta ajasta, % Done -tiedosta ja mukautetuista kentistä tulee mukautettuja kenttiä.",
   "import-board-instruction-orgmode": "Liitä Org mode -tiedosto, jonka olet tallentanut Emacsilla, Orgzlylla tai Beorgilla. Ylimmän tason otsikoista tulee listoja ja toisen tason otsikoista kortteja. TODO ja DONE, prioriteetit, tunnisteet sekä SCHEDULED, DEADLINE ja CLOSED säilytetään. Valintaruuduista ja syvempien tasojen otsikoista tulee tarkistuslistoja.",
   "import-board-instruction-focalboard": "Pura .boardarchive-tiedosto ja liitä taulun board.jsonl-tiedoston sisältö versiorivin kanssa tai ilman sitä. Taulunäkymän ryhmittelyominaisuudesta muodostuvat listat ja muista valintaominaisuuksista nimilaput. Teksti- ja valintaruutulohkoista muodostuvat kuvaus ja tarkistuslista, ja kommentit säilytetään. Kuvia ja liitteitä ei tuoda.",
-  "import-board-instruction-todoist": "Avaa Todoistissa projektivalikko ja valitse vienti malliksi (Export as a template). Liitä sitten CSV-tiedosto. Osioista tulee listoja, tehtävistä kortteja, alitehtävistä tarkistuslista ja muistiinpanoista kommentteja. @labels-tunnisteista ja prioriteeteista p1–p3 tulee tunnisteita."
+  "import-board-instruction-todoist": "Avaa Todoistissa projektivalikko ja valitse vienti malliksi (Export as a template). Liitä sitten CSV-tiedosto. Osioista tulee listoja, tehtävistä kortteja, alitehtävistä tarkistuslista ja muistiinpanoista kommentteja. @labels-tunnisteista ja prioriteeteista p1–p3 tulee tunnisteita.",
+  "csv-mapping-title": "Mikä sarake on mikäkin?",
+  "csv-mapping-description": "Valitse tiedoston sarake, joka sisältää kunkin korttikentän. Valinnat tehtiin sarakkeiden nimien perusteella; korjaa väärät valinnat ja valitse (ei tiedostossa) kentälle, jota tiedostossa ei ole.",
+  "csv-mapping-not-in-file": "(ei tiedostossa)",
+  "csv-mapping-column-number": "Sarake __number__",
+  "csv-mapping-list-missing": "Tiedostossa ei ole listan saraketta. Valitse sellainen yllä tai kirjoita sen yhden listan nimi, johon kaikki kortit tulevat.",
+  "csv-mapping-list-name": "Lista kaikille korteille",
+  "csv-mapping-custom-fields": "Muut sarakkeet, jotka tuodaan mukautettuina tekstikenttinä:",
+  "csv-mapping-boards": "Jokaisesta laskentataulukosta tulee oma taulu:",
+  "csv-mapping-skipped-sheets": "Laskentataulukot, joita ei tuoda:",
+  "csv-mapping-title-required": "Valitse korttien otsikot sisältävä sarake.",
+  "csv-mapping-list-required": "Kirjoita sen listan nimi, johon kaikki kortit tulevat, tai valitse listan sisältävä sarake."
 }

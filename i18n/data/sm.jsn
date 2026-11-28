@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "I le Redmine, tatala Issues a le poloketi, filifili Also available in: CSV i le pito i lalo o le lisi, filifili koluma (All columns, ma Description) ma auina atu, ona faapipii lea o le CSV. E faaigoa e Redmine koluma i lau gagana, o lea seti lau gagana i le Igilisi i le My account a o lei auina atu. O tulaga taitasi e avea ma lisi ma o issues e avea ma pepa, faatasi ma le tracker o se igoa faailoga, tagata tofia, tusitala, aso, galuega matua ma issues fesootai; o le faamuamua, vaega, lomiga faamoemoeina, taimi fuafuaina, % Done ma fanua patino e avea ma fanua patino.",
   "import-board-instruction-orgmode": "Faapipii se faila Org mode, e pei ona tusia e Emacs, Orgzly po o Beorg. O ulutala i le tulaga pito i luga e avea ma lisi ma o ulutala i le tulaga lona lua e avea ma pepa. E teu pea TODO ma DONE, faamuamua, faailoga, SCHEDULED, DEADLINE ma CLOSED, ma o pusa siaki ma ulutala e sili ona loloto e avea ma lisi siaki.",
   "import-board-instruction-focalboard": "Tatala le faila .boardarchive mai le zip ma faapipii le anotusi o le board.jsonl o le laupapa, faatasi ma le laina o le lomiga pe aunoa ma lea laina. O le uiga e tuufaatasi ai vaega i le vaaiga o le laupapa e avea ma lisi, o isi uiga filifilia e avea ma igoa faailoga, o poloka o tusitusiga ma pusa faailoga e avea ma faamatalaga ma se lisi siaki, ma e teu pea manatu faaalia. E lē faaulufaleina ata ma faila faaopoopo.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "O le fea koluma o le fea?",
+  "csv-mapping-description": "Filifili le koluma o le faila o loo iai fanua taitasi o le pepa. Na faia filifiliga mai igoa o koluma; sui so o se mea e sese, ma filifili (e le o i le faila) mo se fanua e le o iai i le faila.",
+  "csv-mapping-not-in-file": "(e le o i le faila)",
+  "csv-mapping-column-number": "Koluma __number__",
+  "csv-mapping-list-missing": "E leai se koluma o le faila mo le lisi. Filifili se tasi i luga, pe tusi le igoa o le lisi e tasi e alu i ai pepa uma.",
+  "csv-mapping-list-name": "Lisi mo pepa uma",
+  "csv-mapping-custom-fields": "Isi koluma e faaulufale o ni fanua patino tusitusiga:",
+  "csv-mapping-boards": "O laupepa taitasi e avea ma ona lava laupapa:",
+  "csv-mapping-skipped-sheets": "Laupepa e le faaulufale:",
+  "csv-mapping-title-required": "Filifili le koluma o loo iai ulutala o pepa.",
+  "csv-mapping-list-required": "Tusi le igoa o le lisi e alu i ai pepa uma, pe filifili le koluma o loo iai le lisi."
 }

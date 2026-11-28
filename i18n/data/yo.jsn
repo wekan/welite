@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ni Redmine, ṣii Issues ti iṣẹ akanṣe, yan Also available in: CSV ni isalẹ akojọ, mu awọn ọwọn (All columns, pẹlu Description) ki o gbe jade, lẹhinna lẹ CSV naa. Redmine fun awọn ọwọn ni orukọ ni ede rẹ, nitorina ṣeto ede rẹ si Gẹẹsi ni My account ṣaaju ki o to gbe jade. Ipo kọọkan di akojọ kan ati awọn ọrọ di awọn kaadi, pẹlu tracker bi akole, ayanfunni, onkọwe, awọn ọjọ, iṣẹ obi ati awọn ọrọ ti o jọmọ; pataki, ẹka, ẹya afojusun, akoko ti a ṣe iṣiro, % Done ati awọn aaye aṣa di awọn aaye aṣa.",
   "import-board-instruction-orgmode": "Lẹ faili Org mode kan, bi Emacs, Orgzly tabi Beorg ṣe kọ ọ. Awọn akọle ipele oke di awọn akojọ ati awọn akọle ipele keji di awọn kaadi. TODO ati DONE, awọn pataki, awọn ami, SCHEDULED, DEADLINE ati CLOSED ni a pa mọ, ati awọn apoti ami ati awọn akọle ti o jinlẹ di awọn akojọ ayẹwo.",
   "import-board-instruction-focalboard": "Ṣí fáìlì .boardarchive kúrò nínú àkójọpọ̀ tí a fún pọ̀, kí o sì lẹ ohun tó wà nínú board.jsonl pátákó náà mọ́, pẹ̀lú ìlà ẹ̀dà tàbí láìsí rẹ̀. Ẹ̀yà ìkójọpọ̀ ti ìwòye pátákó di àwọn àkójọ, àwọn ẹ̀yà yíyan yòókù di àwọn àkọlé, àwọn abala ọ̀rọ̀ àti àpótí àmì di àpèjúwe àti àkójọ àyẹ̀wò, a sì pa àwọn àlàyé mọ́. A kò kó àwọn àwòrán àti fáìlì àfikún wọlé.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Ọwọn wo ni ewo?",
+  "csv-mapping-description": "Yan ọwọn faili ti o ni aaye kaadi kọọkan. A ṣe awọn yiyan lati awọn orukọ ọwọn; yi eyikeyi ti ko tọ pada, ki o yan (ko si ninu faili) fun aaye ti faili ko ni.",
+  "csv-mapping-not-in-file": "(ko si ninu faili)",
+  "csv-mapping-column-number": "Ọwọn __number__",
+  "csv-mapping-list-missing": "Faili ko ni ọwọn fun akojọ. Yan ọkan loke, tabi tẹ orukọ akojọ kan ti gbogbo kaadi yoo lọ sinu.",
+  "csv-mapping-list-name": "Akojọ fun gbogbo kaadi",
+  "csv-mapping-custom-fields": "Awọn ọwọn miiran lati gbe wọle bi awọn aaye aṣa ọrọ:",
+  "csv-mapping-boards": "Iwe kọọkan di pátákó tirẹ:",
+  "csv-mapping-skipped-sheets": "Awọn iwe ti a ko gbe wọle:",
+  "csv-mapping-title-required": "Yan ọwọn ti o ni awọn akọle kaadi.",
+  "csv-mapping-list-required": "Tẹ orukọ akojọ ti gbogbo kaadi yoo lọ sinu, tabi yan ọwọn ti o ni akojọ naa."
 }

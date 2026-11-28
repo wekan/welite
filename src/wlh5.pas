@@ -1135,7 +1135,7 @@ begin
     '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
     '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
     E(Words.Text('import', 'Import')) + '</button></form>' +
-    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p><p><a href="/import/markdown">Markdown</a></p><p><a href="/import/wekan">WeKan JSON</a></p><p><a href="/import/trello">Trello</a></p><p><a href="/import/pivotal">Pivotal Tracker CSV</a></p><p><a href="/import/redmine">Redmine CSV</a></p><p><a href="/import/tasksorg">Tasks.org JSON</a></p><p><a href="/import/superproductivity">Super Productivity JSON</a></p><p><a href="/import/clickup">ClickUp CSV</a></p><p><a href="/import/ticktick">TickTick CSV</a></p><p><a href="/import/linear">Linear CSV</a></p><p><a href="/import/quire">Quire CSV</a></p><p><a href="/import/obsidian">Obsidian Kanban</a></p><p><a href="/import/meistertask">MeisterTask CSV</a></p><p><a href="/import/nullboard">Nullboard NBX</a></p><p><a href="/import/monday">monday.com XLSX</a></p><p><a href="/import/wrike">Wrike XLSX</a></p><p><a href="/import/teamwork">Teamwork.com XLSX</a></p><p><a href="/import/businessmap">Businessmap XLSX</a></p><p><a href="/import/opml">OPML</a></p><p><a href="/import/todotxt">todo.txt</a></p><p><a href="/import/taskwarrior">Taskwarrior JSON</a></p><p><a href="/import/orgmode">Org mode</a></p><p><a href="/import/focalboard">Focalboard JSONL</a></p><p><a href="/import/todoist">Todoist CSV</a></p>', '') + '</template>';
+    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p><p><a href="/import/markdown">Markdown</a></p><p><a href="/import/wekan">WeKan JSON</a></p><p><a href="/import/trello">Trello</a></p><p><a href="/import/pivotal">Pivotal Tracker CSV</a></p><p><a href="/import/redmine">Redmine CSV</a></p><p><a href="/import/tasksorg">Tasks.org JSON</a></p><p><a href="/import/superproductivity">Super Productivity JSON</a></p><p><a href="/import/clickup">ClickUp CSV</a></p><p><a href="/import/ticktick">TickTick CSV</a></p><p><a href="/import/linear">Linear CSV</a></p><p><a href="/import/quire">Quire CSV</a></p><p><a href="/import/obsidian">Obsidian Kanban</a></p><p><a href="/import/meistertask">MeisterTask CSV</a></p><p><a href="/import/nullboard">Nullboard NBX</a></p><p><a href="/import/monday">monday.com XLSX</a></p><p><a href="/import/wrike">Wrike XLSX</a></p><p><a href="/import/teamwork">Teamwork.com XLSX</a></p><p><a href="/import/businessmap">Businessmap XLSX</a></p><p><a href="/import/opml">OPML</a></p><p><a href="/import/todotxt">todo.txt</a></p><p><a href="/import/taskwarrior">Taskwarrior JSON</a></p><p><a href="/import/orgmode">Org mode</a></p><p><a href="/import/focalboard">Focalboard JSONL</a></p><p><a href="/import/todoist">Todoist CSV</a></p><p><a href="/import/csv">CSV / TSV</a></p>', '') + '</template>';
 end;
 
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
@@ -5821,6 +5821,20 @@ begin
     finally Args.Free; end;
     Exit;
   end;
+  if Name='csvImportPreview' then
+  begin
+    Args:=nil;
+    try
+      try Args:=GetJSON(Request.Content); except end;
+      if not (Args is TJSONArray) or (Args.Count<>1) or not (Args.Items[0] is TJSONString) then
+      begin SendJsonAnswer(Response,400,'{"error":"invalid-import-format"}'); Exit; end;
+      try Chart:=CsvImportPreview(Args.Items[0].AsString);
+      except on Error:EConvertError do
+      begin SendJsonAnswer(Response,400,'{"error":"invalid-import-format"}'); Exit; end; end;
+      try SendJsonAnswer(Response,200,'{"result":'+Chart.AsJSON+'}'); finally Chart.Free; end;
+    finally Args.Free; end;
+    Exit;
+  end;
   if Name='importBoard' then
   begin
     Args:=nil;
@@ -9534,6 +9548,31 @@ end;
 
 procedure Html5ExternalImport(Request: TRequest; Response: TResponse);
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Title, Source, FormatName, Instruction: string;
+
+  function CsvMappingForm:string;
+  const Fields:array[0..19] of string=('title','description','list','swimlane','owner','members','assignees','labels',
+    'receivedAt','startAt','dueAt','endAt','createdAt','modifiedAt','requestedBy','assignedBy','parentCard','spentTime','isOvertime','archived');
+    Keys:array[0..19] of string=('title','description','list','swimlane','owner','members','assignee','labels',
+    'card-received','card-start','card-due','card-end','createdAt','last-modified-at','requested-by','assigned-by','parent-card','spent-time-hours','overtime-hours','archived');
+  var K:Integer;
+  begin
+    Result:='<form class="js-csv-mapping" hidden><h2>'+E(Words.Text('csv-mapping-title','Which column is which?'))+'</h2><p>'+
+      E(Words.Text('csv-mapping-description','Choose the column for each card field.'))+'</p>';
+    for K:=Low(Fields) to High(Fields) do
+      Result:=Result+'<p><label for="csv-map-'+Fields[K]+'">'+E(Words.Text(Keys[K],Fields[K]))+'</label>'+
+        '<select id="csv-map-'+Fields[K]+'" data-field="'+Fields[K]+'"><option value="">'+
+        E(Words.Text('csv-mapping-not-in-file','(not in the file)'))+'</option></select></p>';
+    Result:=Result+'<div class="js-csv-mapping-list-missing"><p>'+
+      E(Words.Text('csv-mapping-list-missing','Choose a list or type its name.'))+'</p><label>'+
+      E(Words.Text('csv-mapping-list-name','List for every card'))+'<input class="js-csv-map-list-name" maxlength="255" value="'+
+      HtmlAttr(Words.Text('scrum-category-todo','To Do'))+'"></label></div>'+
+      '<fieldset class="js-csv-extra-fields"><legend>'+E(Words.Text('csv-mapping-custom-fields','Other columns to import as text custom fields'))+'</legend></fieldset>'+
+      '<p class="js-csv-mapping-error warning" role="alert" data-title-required="'+
+      HtmlAttr(Words.Text('csv-mapping-title-required','Choose the title column.'))+'" data-list-required="'+
+      HtmlAttr(Words.Text('csv-mapping-list-required','Type the name of the list every card goes into, or choose the column that holds the list.'))+
+      '" data-import-failed="'+HtmlAttr(Words.Text('import-scoped-failed','Import failed'))+'" hidden></p>'+
+      '<button type="submit" class="primary js-csv-mapping-import">'+E(Words.Text('import','Import'))+'</button></form>';
+  end;
 begin
   if not ResolveTenant(Request,T) or not TenantOpen(T) then begin SendPage(Response,404,''); Exit; end;
   if not Html5User(T.Db,Request,S) then begin SendPage(Response,401,''); Exit; end;
@@ -9576,14 +9615,17 @@ begin
       'orgmode': FormatName:='Org mode';
       'focalboard': FormatName:='Focalboard';
       'todoist': FormatName:='Todoist';
+      'csv': FormatName:='CSV';
       else FormatName:='Kanboard';
     end;
     Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
-    Instruction:=Words.Text('import-board-instruction-'+Source, FormatName + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick') or (Source='linear') or (Source='quire') or (Source='meistertask') or (Source='todoist'),' CSV',IfThen((Source='markdown') or (Source='obsidian'),' Markdown',IfThen((Source='opml') or (Source='todotxt') or (Source='orgmode'),'',' JSON'))));
+    Instruction:=Words.Text('import-board-instruction-'+Source, FormatName + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick') or (Source='linear') or (Source='quire') or (Source='meistertask') or (Source='todoist'),' CSV',IfThen((Source='markdown') or (Source='obsidian'),' Markdown',IfThen((Source='opml') or (Source='todotxt') or (Source='orgmode') or (Source='csv'),'',' JSON'))));
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
       '<label for="import-textarea">' + E(Instruction) + '</label><textarea id="import-textarea"></textarea>' +
       IfThen((Source='monday') or (Source='wrike') or (Source='teamwork') or (Source='businessmap'),'<label>'+E(FormatName)+' XLSX<input type="file" class="js-import-file" accept=".xlsx"></label>','')+
+      IfThen(Source='csv','<label>'+E(Words.Text('import-file-label','Choose a file'))+
+        '<input type="file" class="js-import-file js-csv-import-file" accept=".csv,.tsv,text/csv,text/tab-separated-values"></label>','')+
       IfThen(Source='trello','<label>Trello ZIP<input type="file" class="js-import-zip-file" accept=".zip,application/zip"></label>','')+
       IfThen(Source='markdown','<label>'+E(Words.Text('import-board-c','Import board'))+
         '<input type="file" class="js-import-many-files" accept=".md,.markdown,.zip" multiple></label>','')+
@@ -9591,7 +9633,7 @@ begin
         E(Words.Text('import-one-board-per-project','One board per project'))+
         '</button><input type="hidden" class="js-import-split-value">','')+
       '<p class="warning" role="alert" hidden>'+E(Words.Text('import-scoped-failed','Import failed'))+'</p>' +
-      '<button class="primary js-import-without-mapping" type="submit">'+E(Words.Text('import','Import'))+'</button></form><section class="js-import-report" hidden><h2>'+
+      '<button class="primary js-import-without-mapping" type="submit">'+E(Words.Text('import','Import'))+'</button></form>'+IfThen(Source='csv',CsvMappingForm,'')+'<section class="js-import-report" hidden><h2>'+
       E(Words.Text('import-report-heading','Import report'))+'</h2><ul></ul><a class="js-open-imported-board">'+
       E(Words.Text('import-report-open-board','Open imported board'))+'</a></section><section class="js-import-many-results" hidden><ul></ul><a class="js-import-many-all-boards" href="/">'+E(Words.Text('all-boards','All Boards'))+'</a></section></main>'));
   finally Words.Free; end;

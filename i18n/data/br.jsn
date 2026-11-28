@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "E Redmine, digorit Issues ar raktres, dibabit Also available in: CSV e traoñ ar roll, dibabit ar bannoù (All columns, gant Description) hag ezporzhiit, ha pegit ar CSV goude. Redmine a anv ar bannoù en ho yezh, setu lakait ho yezh e saozneg e My account a-raok ezporzhiañ. Pep statud a zeu da vezañ ur roll hag an issues a zeu da vezañ kartennoù, gant an tracker evel tikedenn, den deverket, aozer, deiziadoù, trevell kar hag issues kar; ar briorelezh, ar rummad, ar stumm pal, an amzer priziet, % Done hag ar maeziennoù personelaet a zeu da vezañ maeziennoù personelaet.",
   "import-board-instruction-orgmode": "Pegit ur restr Org mode, evel m'he skriv Emacs, Orgzly pe Beorg. An titloù a-us a zeu da vezañ rolloù hag an titloù eil live a zeu da vezañ kartennoù. TODO ha DONE, ar priorelezhioù, an tikedennoù, SCHEDULED, DEADLINE ha CLOSED a vez miret, hag ar boestoù da askañ hag an titloù donoc'h a zeu da vezañ liskadurien.",
   "import-board-instruction-focalboard": "Diziipit ar restr .boardarchive ha pegit endalc’had board.jsonl an daolenn, gant pe hep al linenn stumm. Dont a ra perzh strollañ gwel an daolenn da vezañ rolloù, ar perzhioù dibab all da vezañ tikedennoù, ar bloc’hoù testenn ha boestoù da askañ da vezañ an deskrivadur hag ur roll-gwiriañ, ha miret e vez an evezhiadennoù. Ne vez ket enporzhiet ar skeudennoù hag ar restroù stag.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Peseurt bann eo pehini?",
+  "csv-mapping-description": "Dibabit bann ar restr a zalc'h pep maezienn eus ar gartenn. An dibaboù a zo bet graet diouzh anvioù ar bannoù; kemmit ar re a zo fall, ha dibabit (n'emañ ket er restr) evit ur vaezienn n'emañ ket er restr.",
+  "csv-mapping-not-in-file": "(n'emañ ket er restr)",
+  "csv-mapping-column-number": "Bann __number__",
+  "csv-mapping-list-missing": "N'eus bann ebet evit ar roll er restr. Dibabit unan a-us, pe skrivit anv an unan roll ma'z a pep kartenn ennañ.",
+  "csv-mapping-list-name": "Roll evit pep kartenn",
+  "csv-mapping-custom-fields": "Bannoù all da enporzhiañ evel maeziennoù personelaet testenn:",
+  "csv-mapping-boards": "Pep follenn a zeu da vezañ un daolenn dezhi hec'h-unan:",
+  "csv-mapping-skipped-sheets": "Follennoù n'int ket enporzhiet:",
+  "csv-mapping-title-required": "Dibabit ar bann a zalc'h titloù ar c'hartennoù.",
+  "csv-mapping-list-required": "Skrivit anv ar roll ma'z a pep kartenn ennañ, pe dibabit ar bann a zalc'h ar roll."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Go Redmine, bula Issues ya projeke, kgetha Also available in: CSV ka tlase ga lelokelelo, kgetha dikholomo (All columns, le Description) gomme o romele, ke moka o kgomaretše CSV. Redmine e reela dikholomo ka polelo ya gago, ka gona beakanya polelo ya gago go Seisemane go My account pele o romela. Boemo bjo bongwe le bjo bongwe bo fetoga lelokelelo gomme mathata a fetoga dikarata, le tracker bjalo ka leswao, yo a filwego mošomo, mongwadi, matšatši, mošomo wa motswadi le mathata a amanago; bohlokwa, legoro, phetolelo ye e nepilwego, nako ye e akantšwego, % Done le mašemo a gago di fetoga mašemo a gago.",
   "import-board-instruction-orgmode": "Kgomaretša faele ya Org mode, bjalo ka ge Emacs, Orgzly goba Beorg di e ngwala. Dihlogo tša godimo di fetoga malokelelo gomme dihlogo tša legato la bobedi di fetoga dikarata. TODO le DONE, dintlha tša pele, ditaki, SCHEDULED, DEADLINE le CLOSED di a bolokwa, gomme mapokisi a go kgetha le dihlogo tše di tseneletšego di fetoga malokelelo a tlhahlobo.",
   "import-board-instruction-focalboard": "Ntšha faele ya .boardarchive polokelong ye e gateletšwego gomme o kgomaretše diteng tša board.jsonl ya boto, le mothaladi wa phetolelo goba ntle le wona. Sebopego sa go hlopha ponong ya boto se fetoga mananeo, dibopego tše dingwe tša kgetho di fetoga diswayo, dikarolo tša sengwalwa le mapokisi a go swaya di fetoga tlhalošo le lelokelelo la tlhahlobo, gomme ditshwayotshwayo di a bolokwa. Diswantšho le difaele tše di kgomareditšwego ga di tsenywe.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kholomo efe ke efe?",
+  "csv-mapping-description": "Kgetha kholomo ya faele yeo e swerego lešemo le lengwe le le lengwe la karata. Dikgetho di dirilwe go tšwa go maina a dikholomo; fetoša tše di fošagetšego, gomme o kgethe (ga e gona ka faeleng) bakeng sa lešemo leo faele e se nago lona.",
+  "csv-mapping-not-in-file": "(ga e gona ka faeleng)",
+  "csv-mapping-column-number": "Kholomo __number__",
+  "csv-mapping-list-missing": "Faele ga e na kholomo ya lelokelelo. Kgetha e tee ka godimo, goba ngwala leina la lelokelelo le tee leo karata ye nngwe le ye nngwe e yago go lona.",
+  "csv-mapping-list-name": "Lelokelelo la karata ye nngwe le ye nngwe",
+  "csv-mapping-custom-fields": "Dikholomo tše dingwe tša go tsenywa bjalo ka mašemo a gago a sengwalwa:",
+  "csv-mapping-boards": "Letlakala le lengwe le le lengwe le fetoga poto ya lona:",
+  "csv-mapping-skipped-sheets": "Matlakala ao a sa tsenywego:",
+  "csv-mapping-title-required": "Kgetha kholomo yeo e swerego dihlogo tša dikarata.",
+  "csv-mapping-list-required": "Ngwala leina la lelokelelo leo karata ye nngwe le ye nngwe e yago go lona, goba kgetha kholomo yeo e swerego lelokelelo."
 }

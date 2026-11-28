@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Mu Redmine, tsegulani Issues za pulojekiti, sankhani Also available in: CSV pansi pa mndandanda, sankhani mizati (All columns, ndi Description) ndipo tulutsani, kenako matani CSV. Redmine imatchula mizati m'chilankhulo chanu, choncho ikani chilankhulo chanu kukhala Chingerezi mu My account musanatulutse. Mkhalidwe uliwonse umakhala mndandanda ndipo nkhani zimakhala makhadi, pamodzi ndi tracker ngati chizindikiro, woperekedwa ntchito, wolemba, masiku, ntchito ya kholo ndi nkhani zogwirizana; zofunika kwambiri, gulu, mtundu womwe ukuyembekezeka, nthawi yoyerekezedwa, % Done ndi malo apadera zimakhala malo apadera.",
   "import-board-instruction-orgmode": "Matani fayilo ya Org mode, monga momwe Emacs, Orgzly kapena Beorg amailembera. Mitu ya pamwamba imakhala mindandanda ndipo mitu ya gawo lachiwiri imakhala makhadi. TODO ndi DONE, zofunika kwambiri, ma tag, SCHEDULED, DEADLINE ndi CLOSED zimasungidwa, ndipo mabokosi owunika ndi mitu yakuya zimakhala mindandanda yowunika.",
   "import-board-instruction-focalboard": "Tsegulani fayilo ya .boardarchive kuchokera m’phukusi lopanikizidwa ndipo matani zomwe zili mu board.jsonl ya bolodi, ndi mzere wa mtundu kapena popanda iwo. Chinthu chogawa m’magulu pa mawonekedwe a bolodi chimakhala mindandanda, zinthu zina zosankha zimakhala zilembo, magawo a mawu ndi mabokosi ochonga amakhala kufotokoza ndi mndandanda woyang’anira, ndipo ndemanga zimasungidwa. Zithunzi ndi mafayilo olumikizidwa sizilowetsedwa.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Mzati uti ndi uti?",
+  "csv-mapping-description": "Sankhani mzati wa fayilo womwe uli ndi malo aliwonse a khadi. Zosankhazo zinapangidwa kuchokera ku mayina a mizati; sinthani zilizonse zolakwika, ndipo sankhani (palibe mu fayilo) pa malo omwe fayilo ilibe.",
+  "csv-mapping-not-in-file": "(palibe mu fayilo)",
+  "csv-mapping-column-number": "Mzati __number__",
+  "csv-mapping-list-missing": "Fayilo ilibe mzati wa mndandanda. Sankhani umodzi pamwambapa, kapena lembani dzina la mndandanda umodzi womwe khadi lililonse limalowamo.",
+  "csv-mapping-list-name": "Mndandanda wa khadi lililonse",
+  "csv-mapping-custom-fields": "Mizati ina yolowetsa ngati malo apadera a mawu:",
+  "csv-mapping-boards": "Tsamba lililonse limakhala bolodi lake:",
+  "csv-mapping-skipped-sheets": "Masamba omwe salowetsedwa:",
+  "csv-mapping-title-required": "Sankhani mzati womwe uli ndi mitu ya makhadi.",
+  "csv-mapping-list-required": "Lembani dzina la mndandanda womwe khadi lililonse limalowamo, kapena sankhani mzati womwe uli ndi mndandanda."
 }

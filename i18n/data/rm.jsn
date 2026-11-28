@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "En Redmine avrì las Issues dal project, tschernai Also available in: CSV a la fin da la glista, tschernai las colonnas (All columns, cun Description) ed exportai, lura encollai il CSV. Redmine numna las colonnas en Vossa lingua, perquai midai Vossa lingua en englais en My account avant che exportar. Mintga status daventa ina glista ed issues daventan cartas, cun il tracker sco etichetta, persuna incumbensada, autur, datas, lavur superiura ed issues correspundentas; prioritad, categoria, versiun finala, temp stimà, % Done e champs persunalisads daventan champs persunalisads.",
   "import-board-instruction-orgmode": "Encollai ina datoteca Org mode, sco quai che Emacs, Orgzly u Beorg la scrivan. Titels dal nivel superiur daventan glistas e titels dal segund nivel daventan cartas. TODO e DONE, prioritads, tags, SCHEDULED, DEADLINE e CLOSED vegnan mantegnids, e checkboxes e titels pli profunds daventan glistas da controlla.",
   "import-board-instruction-focalboard": "Decumprimar la datoteca .boardarchive ed incollar il board.jsonl d'ina tabella, cun u senza sia lingia da versiun. La proprietad da gruppaziun da la vista da la tabella daventa las glistas, las autras proprietads da selecziun daventan etichettas, ils blocs da text e da chaschettas da marcar daventan la descripziun ed ina glista da controlla, ed ils commentaris vegnan mantegnids. Maletgs ed agiuntas na vegnan betg importads.",
-  "import-board-instruction-todoist": "En Todoist, avrir il project, tscherner il menu ⋯ sura a dretga, lura Administrar las datas > Exportar sco CSV, ed incollar la datoteca CSV. Las secziuns daventan glistas, las incumbensas daventan cartas, las sutincumbensas daventan ina glista da controlla, las notizias daventan commentaris, e las @etichettas e las prioritads p1 fin p3 daventan etichettas."
+  "import-board-instruction-todoist": "En Todoist, avrir il project, tscherner il menu ⋯ sura a dretga, lura Administrar las datas > Exportar sco CSV, ed incollar la datoteca CSV. Las secziuns daventan glistas, las incumbensas daventan cartas, las sutincumbensas daventan ina glista da controlla, las notizias daventan commentaris, e las @etichettas e las prioritads p1 fin p3 daventan etichettas.",
+  "csv-mapping-title": "Tgenina colonna è tgenina?",
+  "csv-mapping-description": "Tschernai la colonna da la datoteca che cuntegna mintga champ da la carta. La tscherna è vegnida fatga tenor ils nums da las colonnas; midai quellas che èn faussas, e tschernai (betg en la datoteca) per in champ che la datoteca n'ha betg.",
+  "csv-mapping-not-in-file": "(betg en la datoteca)",
+  "csv-mapping-column-number": "Colonna __number__",
+  "csv-mapping-list-missing": "La datoteca n'ha nagina colonna per la glista. Tschernai ina survart, u tippai il num da l'unica glista en la quala mintga carta va.",
+  "csv-mapping-list-name": "Glista per mintga carta",
+  "csv-mapping-custom-fields": "Autras colonnas da importar sco champs persunalisads da text:",
+  "csv-mapping-boards": "Mintga fegl daventa ina atgna tabella:",
+  "csv-mapping-skipped-sheets": "Fegls che na vegnan betg importads:",
+  "csv-mapping-title-required": "Tschernai la colonna che cuntegna ils titels da las cartas.",
+  "csv-mapping-list-required": "Tippai il num da la glista en la quala mintga carta va, u tschernai la colonna che cuntegna la glista."
 }

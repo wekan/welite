@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "ใน Redmine เปิด Issues ของโครงการ เลือก Also available in: CSV ที่ด้านล่างรายการ เลือกคอลัมน์ (All columns พร้อม Description) แล้วส่งออก จากนั้นวาง CSV Redmine ตั้งชื่อคอลัมน์ตามภาษาของคุณ จึงต้องตั้งภาษาเป็น English ใน My account ก่อนส่งออก แต่ละสถานะจะกลายเป็นรายการและปัญหาจะกลายเป็นการ์ด โดยใช้ประเภทตัวติดตามเป็นป้ายกำกับ พร้อมผู้รับผิดชอบ ผู้สร้าง วันที่ งานแม่ และปัญหาที่เกี่ยวข้อง ส่วนลำดับความสำคัญ หมวดหมู่ รุ่นเป้าหมาย เวลาประมาณการ % Done และฟิลด์ที่กำหนดเองจะกลายเป็นฟิลด์ที่กำหนดเอง",
   "import-board-instruction-orgmode": "วางไฟล์ Org mode ที่สร้างจาก Emacs, Orgzly หรือ Beorg หัวข้อระดับบนสุดจะกลายเป็นรายการและหัวข้อระดับที่สองจะกลายเป็นการ์ด โดยคง TODO, DONE, ลำดับความสำคัญ, แท็ก, SCHEDULED, DEADLINE และ CLOSED ไว้ ส่วนช่องทำเครื่องหมายและหัวข้อที่ลึกกว่านั้นจะกลายเป็นเช็คลิสต์",
   "import-board-instruction-focalboard": "แตกไฟล์ .boardarchive แล้ววางเนื้อหา board.jsonl ของบอร์ด โดยจะมีหรือไม่มีบรรทัดเวอร์ชันก็ได้ คุณสมบัติที่ใช้จัดกลุ่มในมุมมองบอร์ดจะกลายเป็นรายการ คุณสมบัติแบบเลือกอื่น ๆ จะกลายเป็นป้ายกำกับ บล็อกข้อความและช่องทำเครื่องหมายจะกลายเป็นคำอธิบายและเช็คลิสต์ และความคิดเห็นจะถูกเก็บไว้ รูปภาพและไฟล์แนบจะไม่ถูกนำเข้า",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "คอลัมน์ใดตรงกับฟิลด์ใด?",
+  "csv-mapping-description": "เลือกคอลัมน์ในไฟล์ที่มีข้อมูลของแต่ละฟิลด์ในการ์ด ระบบเลือกไว้ตามชื่อคอลัมน์แล้ว ให้แก้ไขตัวเลือกที่ไม่ถูกต้อง และเลือก (ไม่มีในไฟล์) สำหรับฟิลด์ที่ไม่มีในไฟล์",
+  "csv-mapping-not-in-file": "(ไม่มีในไฟล์)",
+  "csv-mapping-column-number": "คอลัมน์ __number__",
+  "csv-mapping-list-missing": "ไฟล์ไม่มีคอลัมน์สำหรับรายการ เลือกคอลัมน์ด้านบน หรือพิมพ์ชื่อรายการเดียวที่จะใช้เก็บการ์ดทั้งหมด",
+  "csv-mapping-list-name": "รายการสำหรับการ์ดทั้งหมด",
+  "csv-mapping-custom-fields": "คอลัมน์อื่นที่จะนำเข้าเป็นฟิลด์ที่กำหนดเองชนิดข้อความ:",
+  "csv-mapping-boards": "แต่ละชีตจะกลายเป็นบอร์ดแยกกัน:",
+  "csv-mapping-skipped-sheets": "ชีตที่ไม่นำเข้า:",
+  "csv-mapping-title-required": "เลือกคอลัมน์ที่มีชื่อการ์ด",
+  "csv-mapping-list-required": "พิมพ์ชื่อรายการที่จะใช้เก็บการ์ดทั้งหมด หรือเลือกคอลัมน์ที่มีรายการ"
 }

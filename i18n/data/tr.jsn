@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine'da projenin Issues bölümünü açın, listenin altındaki Also available in: CSV seçeneğini seçin, sütunları belirleyin (Description dâhil All columns) ve dışa aktarın, ardından CSV'yi yapıştırın. Redmine sütunları sizin dilinizde adlandırır; bu nedenle dışa aktarmadan önce My account bölümünde dili English olarak ayarlayın. Her durum bir listeye, sorunlar ise etiket olarak sorun türü, atanan kişi, yazar, tarihler, üst görev ve ilişkili sorunlarla kartlara dönüşür; öncelik, kategori, hedef sürüm, tahmini süre, % Done ve özel alanlar özel alanlara dönüşür.",
   "import-board-instruction-orgmode": "Emacs, Orgzly veya Beorg tarafından oluşturulan bir Org mode dosyasını yapıştırın. En üst düzeydeki başlıklar listelere, ikinci düzeydeki başlıklar kartlara dönüşür. TODO ve DONE, öncelikler, etiketler, SCHEDULED, DEADLINE ve CLOSED korunur. Onay kutuları ve daha derindeki başlıklar kontrol listelerine dönüşür.",
   "import-board-instruction-focalboard": ".boardarchive dosyasını açın ve panonun board.jsonl içeriğini sürüm satırıyla birlikte veya bu satır olmadan yapıştırın. Pano görünümünün gruplama özelliği listelere, diğer seçim özellikleri etiketlere, metin ve onay kutusu blokları açıklamaya ve bir kontrol listesine dönüşür; yorumlar korunur. Görseller ve ekler içe aktarılmaz.",
-  "import-board-instruction-todoist": "Todoist'te proje menüsünü açıp şablon olarak dışa aktarmayı seçin, ardından CSV dosyasını yapıştırın. Bölümler listelere, görevler kartlara, alt görevler bir kontrol listesine, notlar yorumlara, @labels ve p1 ile p3 arasındaki öncelikler etiketlere dönüşür."
+  "import-board-instruction-todoist": "Todoist'te proje menüsünü açıp şablon olarak dışa aktarmayı seçin, ardından CSV dosyasını yapıştırın. Bölümler listelere, görevler kartlara, alt görevler bir kontrol listesine, notlar yorumlara, @labels ve p1 ile p3 arasındaki öncelikler etiketlere dönüşür.",
+  "csv-mapping-title": "Hangi sütun hangi alana karşılık geliyor?",
+  "csv-mapping-description": "Her kart alanını içeren dosya sütununu seçin. Seçimler sütun adlarına göre yapıldı; yanlış olanları düzeltin ve dosyada bulunmayan bir alan için (dosyada yok) seçeneğini seçin.",
+  "csv-mapping-not-in-file": "(dosyada yok)",
+  "csv-mapping-column-number": "Sütun __number__",
+  "csv-mapping-list-missing": "Dosyada liste için bir sütun yok. Yukarıdan bir sütun seçin veya tüm kartların ekleneceği tek listenin adını yazın.",
+  "csv-mapping-list-name": "Tüm kartlar için liste",
+  "csv-mapping-custom-fields": "Metin türünde özel alan olarak içe aktarılacak diğer sütunlar:",
+  "csv-mapping-boards": "Her çalışma sayfası ayrı bir pano olur:",
+  "csv-mapping-skipped-sheets": "İçe aktarılmayan çalışma sayfaları:",
+  "csv-mapping-title-required": "Kart başlıklarını içeren sütunu seçin.",
+  "csv-mapping-list-required": "Tüm kartların ekleneceği listenin adını yazın veya listeyi içeren sütunu seçin."
 }

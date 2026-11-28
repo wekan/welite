@@ -2354,5 +2354,16 @@
   "import-board-instruction-redmine": "A Redmine, obriu Issues del projecte, trieu Also available in: CSV al final de la llista, seleccioneu les columnes (All columns, amb Description) i exporteu; després enganxeu el CSV. Redmine posa els noms de les columnes en la vostra llengua, així que abans d’exportar establiu la llengua English a My account. Cada estat esdevé una llista i les incidències esdevenen fitxes, amb el tipus d’incidència com a etiqueta, persona assignada, autor, dates, tasca principal i incidències relacionades; la prioritat, categoria, versió de destinació, temps estimat, % Done i camps personalitzats esdevenen camps personalitzats.",
   "import-board-instruction-orgmode": "Enganxeu un fitxer Org mode, tal com el generen Emacs, Orgzly o Beorg. Els encapçalaments de primer nivell esdevenen llistes i els de segon nivell esdevenen fitxes. Es conserven TODO i DONE, les prioritats, etiquetes, SCHEDULED, DEADLINE i CLOSED, i les caselles de selecció i els encapçalaments de nivells inferiors esdevenen llistes de comprovació.",
   "import-board-instruction-focalboard": "Descomprimiu el fitxer .boardarchive i enganxeu el contingut del board.jsonl del tauler, amb la línia de versió o sense. La propietat d’agrupació de la vista del tauler es converteix en llistes, les altres propietats de selecció en etiquetes, els blocs de text i de caselles de selecció en la descripció i una llista de verificació, i els comentaris es conserven. Les imatges i els fitxers adjunts no s’importen.",
-  "import-board-instruction-todoist": "A Todoist, obriu el menú del projecte i trieu Export as a template; després enganxeu el contingut del fitxer CSV. Les seccions esdevenen llistes, les tasques esdevenen fitxes, les subtasques esdevenen una llista de comprovació, les notes esdevenen comentaris, i @labels i les prioritats de p1 a p3 esdevenen etiquetes."
+  "import-board-instruction-todoist": "A Todoist, obriu el menú del projecte i trieu Export as a template; després enganxeu el contingut del fitxer CSV. Les seccions esdevenen llistes, les tasques esdevenen fitxes, les subtasques esdevenen una llista de comprovació, les notes esdevenen comentaris, i @labels i les prioritats de p1 a p3 esdevenen etiquetes.",
+  "csv-mapping-title": "Quina columna correspon a cada camp?",
+  "csv-mapping-description": "Trieu la columna del fitxer que conté cada camp de la fitxa. Les opcions s’han triat a partir dels noms de les columnes; corregiu les que siguen incorrectes i trieu (no és al fitxer) per als camps que el fitxer no tinga.",
+  "csv-mapping-not-in-file": "(no és al fitxer)",
+  "csv-mapping-column-number": "Columna __number__",
+  "csv-mapping-list-missing": "El fitxer no té cap columna per a la llista. Trieu-ne una més amunt o escriviu el nom de l’única llista on aniran totes les fitxes.",
+  "csv-mapping-list-name": "Llista per a totes les fitxes",
+  "csv-mapping-custom-fields": "Altres columnes per importar com a camps personalitzats de text:",
+  "csv-mapping-boards": "Cada full es convertix en un tauler propi:",
+  "csv-mapping-skipped-sheets": "Fulls que no s’importen:",
+  "csv-mapping-title-required": "Trieu la columna que conté els títols de les fitxes.",
+  "csv-mapping-list-required": "Escriviu el nom de la llista on aniran totes les fitxes o trieu la columna que conté la llista."
 }

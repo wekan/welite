@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Kwi-Redmine, vula Issues yeprojekthi, khetha Also available in: CSV emazantsi oluhlu, khetha iikholam (All columns, kunye Description) uze uthumele ngaphandle, emva koko uncamathisele i-CSV. I-Redmine ithiya iikholam ngolwimi lwakho, ngoko seta ulwimi lwakho lube sisiNgesi kwi-My account ngaphambi kokuthumela ngaphandle. Imeko nganye iba luluhlu kwaye imiba iba ngamakhadi, kunye nesilandeleli njengeleyibhile, umntu owabelweyo, umbhali, imihla, umsebenzi ongumzali nemiba enxulumeneyo; into ephambili, udidi, uhlobo ekujoliswe kulo, ixesha eliqikelelweyo, % Done neenkalo ezenzelwe wena ziba ziinkalo ezenzelwe wena.",
   "import-board-instruction-orgmode": "Ncamathisela ifayile ye-Org mode ebhalwe yi-Emacs, Orgzly okanye Beorg. Izihloko ezikwinqanaba eliphezulu ziba zizintlu kwaye izihloko zenqanaba lesibini ziba ngamakhadi. TODO kunye DONE, izinto eziphambili, iithegi, SCHEDULED, DEADLINE kunye CLOSED ziyagcinwa, kwaye iibhokisi zokukhangela nezihloko ezinzulu ziba zizintlu zokuhlola.",
   "import-board-instruction-focalboard": "Khupha ifayile ye-.boardarchive kwindawo ecinezelweyo uze uncamathisele umxholo we-board.jsonl yebhodi, kunye nomgca wenguqulelo okanye ngaphandle kwawo. Uphawu lokwahlula ngokwamaqela kumboniso webhodi luba zizintlu, ezinye iimpawu zokukhetha ziba ziileyibhile, iibhloko zombhalo neebhokisi zokukhangela ziba yinkcazelo noluhlu lokukhangela, aze amagqabantshintshi agcinwe. Imifanekiso nezincamatheliso azingeniswa.",
-  "import-board-instruction-todoist": "Kwi-Todoist, vula imenyu yeprojekthi uze ukhethe Export as a template, emva koko uncamathisele ifayile ye-CSV. Amacandelo aba zizintlu, imisebenzi iba ngamakhadi, imisebenzi engaphantsi iba luluhlu lokuhlola, amanqaku aba zizimvo, kwaye @labels nezinto eziphambili p1 ukuya p3 ziba ziileyibhile."
+  "import-board-instruction-todoist": "Kwi-Todoist, vula imenyu yeprojekthi uze ukhethe Export as a template, emva koko uncamathisele ifayile ye-CSV. Amacandelo aba zizintlu, imisebenzi iba ngamakhadi, imisebenzi engaphantsi iba luluhlu lokuhlola, amanqaku aba zizimvo, kwaye @labels nezinto eziphambili p1 ukuya p3 ziba ziileyibhile.",
+  "csv-mapping-title": "Yeyiphi ikholamu emele ntoni?",
+  "csv-mapping-description": "Khetha ikholamu yefayile enommandla ngamnye wekhadi. Ukhetho lwenziwe ngokwamagama eekholamu; lungisa olungachanekanga, uze ukhethe (ayikho kwifayile) kummandla ongekhoyo kwifayile.",
+  "csv-mapping-not-in-file": "(ayikho kwifayile)",
+  "csv-mapping-column-number": "Ikholamu __number__",
+  "csv-mapping-list-missing": "Ifayile ayinayo ikholamu yoluhlu. Khetha enye apha ngasentla, okanye uchwetheze igama loluhlu olunye aza kufakwa kulo onke amakhadi.",
+  "csv-mapping-list-name": "Uluhlu lwawo onke amakhadi",
+  "csv-mapping-custom-fields": "Ezinye iikholamu eziza kungeniswa njengemimandla elungiselelweyo yombhalo:",
+  "csv-mapping-boards": "Iphepha ngalinye liba yibhodi yalo:",
+  "csv-mapping-skipped-sheets": "Amaphepha angangeniswayo:",
+  "csv-mapping-title-required": "Khetha ikholamu enezihloko zamakhadi.",
+  "csv-mapping-list-required": "Chwetheza igama loluhlu aza kufakwa kulo onke amakhadi, okanye ukhethe ikholamu enoluhlu."
 }

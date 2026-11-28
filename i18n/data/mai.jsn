@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine मे परियोजनाक Issues खोलू, सूचीक नीचाँ Also available in: CSV चुनू, स्तंभ चुनू (All columns, Description क संग) आ निर्यात करू, फेर CSV पेस्ट करू। Redmine स्तंभक नाम अहाँक भाषा मे दैत अछि, तेँ निर्यात सँ पहिने My account मे भाषा अंग्रेजी राखू। प्रत्येक स्थिति एकटा सूची बनैत अछि आ समस्या कार्ड बनैत अछि, लेबलक रूपमे ट्रैकर, उत्तरदायी, लेखक, तिथि, मूल काज आ संबंधित समस्याक संग; प्राथमिकता, श्रेणी, लक्ष्य संस्करण, अनुमानित समय, % Done आ अपन क्षेत्र अपन क्षेत्र बनैत अछि।",
   "import-board-instruction-orgmode": "Org mode फाइल पेस्ट करू, जेना Emacs, Orgzly वा Beorg ओकरा लिखैत अछि। सभसँ ऊपरक स्तरक शीर्षक सूची बनैत अछि आ दोसर स्तरक शीर्षक कार्ड बनैत अछि। TODO आ DONE, प्राथमिकता, टैग, SCHEDULED, DEADLINE आ CLOSED राखल जाइत अछि, आ चेकबॉक्स आ आर गहींर शीर्षक जाँच सूची बनैत अछि।",
   "import-board-instruction-focalboard": ".boardarchive फाइल अनजिप करू आ बोर्डक board.jsonl क सामग्री संस्करण पाँतिक संग वा ओकरा बिना पेस्ट करू। बोर्ड दृश्यक समूह बनेनिहार गुण सूचीमे, आन चयन गुण लेबलमे, पाठ आ चेकबॉक्स ब्लॉक विवरण आ जाँच सूचीमे बदलैत अछि, आ टिप्पणी सुरक्षित रहैत अछि। चित्र आ संलग्न फाइल आयात नहि होइत अछि।",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "कोन स्तंभ की थिक?",
+  "csv-mapping-description": "फाइलक ओ स्तंभ चुनू जाहि मे कार्डक प्रत्येक क्षेत्र अछि। चयन स्तंभक नाम सँ कएल गेल; जे गलत अछि से बदलू, आ जे क्षेत्र फाइल मे नहि अछि ओकरा लेल (फाइल मे नहि) चुनू।",
+  "csv-mapping-not-in-file": "(फाइल मे नहि)",
+  "csv-mapping-column-number": "स्तंभ __number__",
+  "csv-mapping-list-missing": "फाइल मे सूची लेल कोनो स्तंभ नहि अछि। ऊपर एकटा चुनू, वा ओहि एकटा सूचीक नाम लिखू जाहि मे सभ कार्ड जाइत अछि।",
+  "csv-mapping-list-name": "सभ कार्ड लेल सूची",
+  "csv-mapping-custom-fields": "पाठ अपन क्षेत्रक रूपमे आयात करबाक लेल आन स्तंभ:",
+  "csv-mapping-boards": "प्रत्येक शीट अपन पट्ट बनैत अछि:",
+  "csv-mapping-skipped-sheets": "शीट जे आयात नहि होइत अछि:",
+  "csv-mapping-title-required": "ओ स्तंभ चुनू जाहि मे कार्डक शीर्षक अछि।",
+  "csv-mapping-list-required": "ओहि सूचीक नाम लिखू जाहि मे सभ कार्ड जाइत अछि, वा ओ स्तंभ चुनू जाहि मे सूची अछि।"
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Í Redmine skaltu opna Issues verkefnisins, velja Also available in: CSV neðst á listanum, velja dálkana (All columns, með Description) og flytja út, og líma CSV síðan inn. Redmine nefnir dálkana á þínu tungumáli, svo stilltu tungumálið á ensku í My account áður en þú flytur út. Hver staða verður að lista og mál að spjöldum með rekjaranum sem merki, ábyrgðaraðila, höfundi, dagsetningum, yfirverkefni og tengdum málum; forgangur, flokkur, markútgáfa, áætlaður tími, % Done og sérsniðnir reitir verða að sérsniðnum reitum.",
   "import-board-instruction-orgmode": "Límdu inn Org mode-skrá eins og Emacs, Orgzly eða Beorg búa til. Fyrirsagnir á efsta stigi verða listar og fyrirsagnir á öðru stigi verða spjöld. TODO og DONE, forgangur, merki, SCHEDULED, DEADLINE og CLOSED haldast, en gátreitir og fyrirsagnir á dýpri stigum verða gátlistar.",
   "import-board-instruction-focalboard": "Afþjappaðu .boardarchive-skránni og límdu innihald board.jsonl fyrir töfluna, með eða án útgáfulínunnar. Flokkunareiginleiki töflusýnarinnar verður að listum, aðrir valeiginleikar verða að merkjum, texta- og gátreitablokkir verða að lýsingu og gátlista og athugasemdir varðveitast. Myndir og viðhengi eru ekki flutt inn.",
-  "import-board-instruction-todoist": "Í Todoist skaltu opna valmynd verkefnisins og velja útflutning sem sniðmát, síðan líma inn CSV-skrána. Hlutar verða listar, verkefni verða spjöld, undirverkefni verða gátlisti, minnispunktar verða athugasemdir og @labels og forgangar p1 til p3 verða merki."
+  "import-board-instruction-todoist": "Í Todoist skaltu opna valmynd verkefnisins og velja útflutning sem sniðmát, síðan líma inn CSV-skrána. Hlutar verða listar, verkefni verða spjöld, undirverkefni verða gátlisti, minnispunktar verða athugasemdir og @labels og forgangar p1 til p3 verða merki.",
+  "csv-mapping-title": "Hvaða dálkur samsvarar hvaða reit?",
+  "csv-mapping-description": "Veldu dálkinn í skránni sem inniheldur hvern reit spjaldsins. Valið byggðist á heitum dálkanna; leiðréttu rangt val og veldu (ekki í skránni) fyrir reit sem skráin hefur ekki.",
+  "csv-mapping-not-in-file": "(ekki í skránni)",
+  "csv-mapping-column-number": "Dálkur __number__",
+  "csv-mapping-list-missing": "Skráin hefur engan dálk fyrir listann. Veldu einn hér að ofan eða sláðu inn heiti eina listans sem öll spjöldin fara á.",
+  "csv-mapping-list-name": "Listi fyrir öll spjöld",
+  "csv-mapping-custom-fields": "Aðrir dálkar sem á að flytja inn sem sérsniðna textareiti:",
+  "csv-mapping-boards": "Hvert vinnublað verður að sérstakri töflu:",
+  "csv-mapping-skipped-sheets": "Vinnublöð sem eru ekki flutt inn:",
+  "csv-mapping-title-required": "Veldu dálkinn sem inniheldur heiti spjaldanna.",
+  "csv-mapping-list-required": "Sláðu inn heiti listans sem öll spjöldin fara á eða veldu dálkinn sem inniheldur listann."
 }

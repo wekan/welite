@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Yn Redmine, agorwch Issues y prosiect, dewiswch Also available in: CSV ar waelod y rhestr, dewiswch y colofnau (All columns, gyda Description) ac allforiwch, yna gludwch y CSV. Mae Redmine yn enwi'r colofnau yn eich iaith chi, felly gosodwch eich iaith i Saesneg yn My account cyn allforio. Daw pob statws yn rhestr a materion yn gardiau, gyda'r tracker fel label, aseinai, awdur, dyddiadau, tasg rhiant a materion cysylltiedig; daw blaenoriaeth, categori, fersiwn targed, amser amcangyfrifedig, % Done a meysydd personol yn feysydd personol.",
   "import-board-instruction-orgmode": "Gludwch ffeil Org mode, fel y mae Emacs, Orgzly neu Beorg yn ei hysgrifennu. Daw penawdau'r lefel uchaf yn rhestrau a daw penawdau'r ail lefel yn gardiau. Cedwir TODO a DONE, blaenoriaethau, tagiau, SCHEDULED, DEADLINE a CLOSED, a daw blychau ticio a phenawdau dyfnach yn rhestrau gwirio.",
   "import-board-instruction-focalboard": "Dadsipiwch y ffeil .boardarchive a gludwch gynnwys board.jsonl y bwrdd, gyda llinell y fersiwn neu hebddi. Daw priodwedd grwpio golwg y bwrdd yn restrau, priodweddau dewis eraill yn labeli, blociau testun a blychau ticio yn ddisgrifiad a rhestr wirio, a chedwir y sylwadau. Ni fewnforir delweddau nac atodiadau.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Pa golofn yw pa un?",
+  "csv-mapping-description": "Dewiswch golofn y ffeil sy'n dal pob maes cerdyn. Gwnaed y dewisiadau o enwau'r colofnau; newidiwch unrhyw rai sy'n anghywir, a dewiswch (nid yn y ffeil) ar gyfer maes nad yw gan y ffeil.",
+  "csv-mapping-not-in-file": "(nid yn y ffeil)",
+  "csv-mapping-column-number": "Colofn __number__",
+  "csv-mapping-list-missing": "Nid oes gan y ffeil golofn ar gyfer y rhestr. Dewiswch un uchod, neu teipiwch enw'r un rhestr y mae pob cerdyn yn mynd iddi.",
+  "csv-mapping-list-name": "Rhestr ar gyfer pob cerdyn",
+  "csv-mapping-custom-fields": "Colofnau eraill i'w mewnforio fel meysydd personol testun:",
+  "csv-mapping-boards": "Daw pob dalen yn fwrdd ei hun:",
+  "csv-mapping-skipped-sheets": "Dalennau nad ydynt yn cael eu mewnforio:",
+  "csv-mapping-title-required": "Dewiswch y golofn sy'n dal teitlau'r cardiau.",
+  "csv-mapping-list-required": "Teipiwch enw'r rhestr y mae pob cerdyn yn mynd iddi, neu dewiswch y golofn sy'n dal y rhestr."
 }

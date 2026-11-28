@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "በRedmine ውስጥ የፕሮጀክቱን Issues ይክፈቱ፣ በዝርዝሩ ግርጌ Also available in: CSV ን ይምረጡ፣ አምዶቹን ይምረጡ (All columns፣ ከDescription ጋር) እና ይላኩ፣ ከዚያም CSV ን ይለጥፉ። Redmine አምዶቹን በእርስዎ ቋንቋ ይሰይማል፣ ስለዚህ ከመላክዎ በፊት በMy account ውስጥ ቋንቋዎን ወደ እንግሊዝኛ ያድርጉ። እያንዳንዱ ሁኔታ ዝርዝር ይሆናል፣ ጉዳዮችም ከትራከሩ እንደ መለያ፣ ኃላፊ፣ ደራሲ፣ ቀኖች፣ የወላጅ ተግባር እና ተዛማጅ ጉዳዮች ጋር ካርዶች ይሆናሉ፤ ቅድሚያ፣ ምድብ፣ የታለመ ስሪት፣ የተገመተ ጊዜ፣ % Done እና ብጁ መስኮች ብጁ መስኮች ይሆናሉ።",
   "import-board-instruction-orgmode": "Emacs፣ Orgzly ወይም Beorg እንደሚጽፉት የOrg mode ፋይል ለጥፍ። የላይኛው ደረጃ ርዕሶች ዝርዝሮች ይሆናሉ፣ የሁለተኛ ደረጃ ርዕሶች ደግሞ ካርዶች ይሆናሉ። TODO እና DONE፣ ቅድሚያዎች፣ መለያዎች፣ SCHEDULED፣ DEADLINE እና CLOSED ይጠበቃሉ፤ የምልክት ሳጥኖች እና ጥልቅ ርዕሶች የማረጋገጫ ዝርዝሮች ይሆናሉ።",
   "import-board-instruction-focalboard": "የ .boardarchive ፋይሉን ከመጭመቂያው ያውጡና የሰሌዳውን board.jsonl ይዘት ከስሪት መስመሩ ጋር ወይም ያለ እሱ ይለጥፉ። የሰሌዳ እይታው የመቧደኛ ባህሪ ዝርዝሮች፣ ሌሎች የምርጫ ባህሪያት መለያዎች፣ የጽሑፍና የምልክት ማድረጊያ ሳጥን ክፍሎች መግለጫና የማረጋገጫ ዝርዝር ይሆናሉ፣ አስተያየቶችም ይቀመጣሉ። ምስሎችና አባሪዎች አይመጡም።",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "የትኛው አምድ የትኛው ነው?",
+  "csv-mapping-description": "እያንዳንዱን የካርድ መስክ የሚይዘውን የፋይሉን አምድ ይምረጡ። ምርጫዎቹ ከአምድ ስሞቹ ተደርገዋል፤ የተሳሳቱትን ይቀይሩ፣ ፋይሉ ለሌለው መስክ ደግሞ (በፋይሉ ውስጥ የለም) ን ይምረጡ።",
+  "csv-mapping-not-in-file": "(በፋይሉ ውስጥ የለም)",
+  "csv-mapping-column-number": "አምድ __number__",
+  "csv-mapping-list-missing": "ፋይሉ ለዝርዝሩ አምድ የለውም። ከላይ አንዱን ይምረጡ፣ ወይም ሁሉም ካርዶች የሚገቡበትን የአንድ ዝርዝር ስም ይተይቡ።",
+  "csv-mapping-list-name": "ለሁሉም ካርዶች ዝርዝር",
+  "csv-mapping-custom-fields": "እንደ ጽሑፍ ብጁ መስኮች የሚገቡ ሌሎች አምዶች፦",
+  "csv-mapping-boards": "እያንዳንዱ ሉህ የራሱ ሰሌዳ ይሆናል፦",
+  "csv-mapping-skipped-sheets": "የማይገቡ ሉሆች፦",
+  "csv-mapping-title-required": "የካርድ ርዕሶችን የሚይዘውን አምድ ይምረጡ።",
+  "csv-mapping-list-required": "ሁሉም ካርዶች የሚገቡበትን የዝርዝሩን ስም ይተይቡ፣ ወይም ዝርዝሩን የሚይዘውን አምድ ይምረጡ።"
 }

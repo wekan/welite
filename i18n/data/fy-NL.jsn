@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Iepenje yn Redmine de Issues fan it projekt, kies Also available in: CSV ûnderoan de list, kies de kolommen (All columns, mei Description) en eksportearje, plak dan de CSV. Redmine neamt de kolommen yn jo taal, dus set jo taal op Ingelsk yn My account foar it eksportearjen. Elke status wurdt in list en issues wurde kaarten, mei de tracker as label, tawiisde persoan, auteur, datums, âldertaak en besibbe issues; prioriteit, kategory, doelferzje, skatte tiid, % Done en oanpaste fjilden wurde oanpaste fjilden.",
   "import-board-instruction-orgmode": "Plak in Org mode-bestân, sa't Emacs, Orgzly of Beorg it skriuwe. Kopteksten op it boppeste nivo wurde listen en kopteksten op it twadde nivo wurde kaarten. TODO en DONE, prioriteiten, tags, SCHEDULED, DEADLINE en CLOSED bliuwe bewarre, en karfakjes en djipper kopteksten wurde kontrôlelisten.",
   "import-board-instruction-focalboard": "Pak it .boardarchive-bestân út en plak de ynhâld fan it board.jsonl-bestân fan it boerd, mei of sûnder de ferzjerigel. De groepearringseigenskip fan de boerdwerjefte wurdt listen, oare seleksje-eigenskippen wurde oantsjuttingsetiketten, tekst- en karfakblokken wurde de beskriuwing en in kontrôlelist, en opmerkings bliuwe bewarre. Ofbyldings en bylagen wurde net ymportearre.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Hokker kolom is hokker?",
+  "csv-mapping-description": "Kies de kolom fan it bestân dy't elk kaartfjild befettet. De karren binne makke út de kolomnammen; feroarje alles wat ferkeard is, en kies (net yn it bestân) foar in fjild dat it bestân net hat.",
+  "csv-mapping-not-in-file": "(net yn it bestân)",
+  "csv-mapping-column-number": "Kolom __number__",
+  "csv-mapping-list-missing": "It bestân hat gjin kolom foar de list. Kies der hjirboppe ien, of typ de namme fan de iene list dêr't elke kaart yn giet.",
+  "csv-mapping-list-name": "List foar elke kaart",
+  "csv-mapping-custom-fields": "Oare kolommen om as oanpaste tekstfjilden te ymportearjen:",
+  "csv-mapping-boards": "Elk blêd wurdt in eigen boerd:",
+  "csv-mapping-skipped-sheets": "Blêden dy't net ymportearre wurde:",
+  "csv-mapping-title-required": "Kies de kolom dy't de kaarttitels befettet.",
+  "csv-mapping-list-required": "Typ de namme fan de list dêr't elke kaart yn giet, of kies de kolom dy't de list befettet."
 }

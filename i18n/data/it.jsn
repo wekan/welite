@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "In Redmine, apri le Issues del progetto, scegli Also available in: CSV in fondo all’elenco, seleziona le colonne (All columns, con Description) ed esporta, quindi incolla il CSV. Redmine assegna alle colonne i nomi nella tua lingua, quindi imposta English in My account prima dell’esportazione. Ogni stato diventa una lista e le segnalazioni diventano schede, con il tracker come etichetta, assegnatario, autore, date, attività superiore e segnalazioni correlate; priorità, categoria, versione di destinazione, tempo stimato, % Done e campi personalizzati diventano campi personalizzati.",
   "import-board-instruction-orgmode": "Incolla un file Org mode scritto da Emacs, Orgzly o Beorg. Le intestazioni di primo livello diventano liste e quelle di secondo livello diventano schede. TODO e DONE, priorità, etichette, SCHEDULED, DEADLINE e CLOSED vengono mantenuti; le caselle di controllo e le intestazioni più profonde diventano liste di controllo.",
   "import-board-instruction-focalboard": "Decomprimi il file .boardarchive e incolla il contenuto del file board.jsonl della bacheca, con o senza la riga della versione. La proprietà di raggruppamento della vista della bacheca diventa le liste, le altre proprietà di selezione diventano etichette, i blocchi di testo e di caselle di spunta diventano la descrizione e una lista di controllo, e i commenti vengono mantenuti. Le immagini e gli allegati non vengono importati.",
-  "import-board-instruction-todoist": "In Todoist, apri il menu del progetto e scegli Esporta come modello, poi incolla il file CSV. Le sezioni diventano liste, le attività diventano schede, le sottoattività diventano una lista di controllo, le note diventano commenti e @labels e le priorità da p1 a p3 diventano etichette."
+  "import-board-instruction-todoist": "In Todoist, apri il menu del progetto e scegli Esporta come modello, poi incolla il file CSV. Le sezioni diventano liste, le attività diventano schede, le sottoattività diventano una lista di controllo, le note diventano commenti e @labels e le priorità da p1 a p3 diventano etichette.",
+  "csv-mapping-title": "Quale colonna corrisponde a quale campo?",
+  "csv-mapping-description": "Scegli la colonna del file che contiene ciascun campo della scheda. Le scelte sono state effettuate in base ai nomi delle colonne; correggi quelle errate e scegli (non presente nel file) per un campo che il file non contiene.",
+  "csv-mapping-not-in-file": "(non presente nel file)",
+  "csv-mapping-column-number": "Colonna __number__",
+  "csv-mapping-list-missing": "Il file non contiene una colonna per la lista. Scegline una sopra, oppure digita il nome dell'unica lista in cui inserire tutte le schede.",
+  "csv-mapping-list-name": "Lista per tutte le schede",
+  "csv-mapping-custom-fields": "Altre colonne da importare come campi personalizzati di testo:",
+  "csv-mapping-boards": "Ogni foglio diventa una bacheca separata:",
+  "csv-mapping-skipped-sheets": "Fogli che non vengono importati:",
+  "csv-mapping-title-required": "Scegli la colonna che contiene i titoli delle schede.",
+  "csv-mapping-list-required": "Digita il nome della lista in cui inserire tutte le schede, oppure scegli la colonna che contiene la lista."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Di Redmine de, Issues ya projeyê veke, li binê lîsteyê Also available in: CSV hilbijêre, stûnan hilbijêre (All columns, bi Description) û derxe, paşê CSV bizeliqîne. Redmine stûnan bi zimanê te binav dike, ji ber vê pêşî derxistinê di My account de zimanê xwe bike Îngilîzî. Her rewş dibe lîsteyek û pirsgirêk dibin kart, bi tracker wekî etîket, berpirsyar, nivîskar, dîrok, erka dê û bav û pirsgirêkên têkildar; pêşanî, kategorî, guhertoya armanc, dema texmînkirî, % Done û qadên taybet dibin qadên taybet.",
   "import-board-instruction-orgmode": "Pelekî Org mode bizeliqîne, wekî ku Emacs, Orgzly an Beorg dinivîsin. Sernavên asta jorîn dibin lîste û sernavên asta duyem dibin kart. TODO û DONE, pêşanî, etîket, SCHEDULED, DEADLINE û CLOSED têne parastin, û qutiyên nîşankirinê û sernavên kûrtir dibin lîsteyên kontrolê.",
   "import-board-instruction-focalboard": "Pela .boardarchive ji arşîvê derxe û naveroka board.jsonl ya panelê, bi rêzika guhertoyê an bê wê, pê ve bike. Taybetmendiya komkirinê ya dîmena panelê dibe lîste, taybetmendiyên din ên hilbijartinê dibin etîket, blokên nivîsê û qutiyên nîşankirinê dibin danasîn û lîsteya kontrolê, û şîrove tên parastin. Wêne û pêvek nayên têxistin.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kîjan stûn kîjan e?",
+  "csv-mapping-description": "Stûna pelê ya ku her qada kartê dihewîne hilbijêre. Hilbijartin ji navên stûnan hatine kirin; yên şaş biguherîne, û ji bo qadeke ku pel tune (ne di pelê de) hilbijêre.",
+  "csv-mapping-not-in-file": "(ne di pelê de)",
+  "csv-mapping-column-number": "Stûn __number__",
+  "csv-mapping-list-missing": "Di pelê de stûnek ji bo lîsteyê tune. Li jor yekê hilbijêre, an navê wê lîsteya ku hemû kart diçinê binivîse.",
+  "csv-mapping-list-name": "Lîste ji bo her kartê",
+  "csv-mapping-custom-fields": "Stûnên din ku wekî qadên taybet ên nivîsê werin têxistin:",
+  "csv-mapping-boards": "Her pel dibe depoya xwe:",
+  "csv-mapping-skipped-sheets": "Pelên ku nayên têxistin:",
+  "csv-mapping-title-required": "Stûna ku sernavên kartan dihewîne hilbijêre.",
+  "csv-mapping-list-required": "Navê wê lîsteya ku hemû kart diçinê binivîse, an stûna ku lîsteyê dihewîne hilbijêre."
 }

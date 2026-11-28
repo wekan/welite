@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-ში გახსენით პროექტის Issues, სიის ბოლოში აირჩიეთ Also available in: CSV, აირჩიეთ სვეტები (All columns, Description-ით) და ექსპორტირეთ, შემდეგ ჩასვით CSV. Redmine სვეტებს თქვენს ენაზე ასახელებს, ამიტომ ექსპორტამდე My account-ში ენად ინგლისური დააყენეთ. თითოეული სტატუსი სიად იქცევა, საკითხები კი ბარათებად, ტრეკერით ნიშნის სახით, პასუხისმგებლით, ავტორით, თარიღებით, მშობელი ამოცანით და დაკავშირებული საკითხებით; პრიორიტეტი, კატეგორია, სამიზნე ვერსია, შეფასებული დრო, % Done და მომხმარებლის ველები მომხმარებლის ველებად იქცევა.",
   "import-board-instruction-orgmode": "ჩასვით Org mode ფაილი, როგორც მას Emacs, Orgzly ან Beorg წერს. ზედა დონის სათაურები სიებად იქცევა, მეორე დონისა — ბარათებად. TODO და DONE, პრიორიტეტები, ტეგები, SCHEDULED, DEADLINE და CLOSED შენარჩუნდება, ხოლო მოსანიშნი ველები და უფრო ღრმა სათაურები საკონტროლო სიებად იქცევა.",
   "import-board-instruction-focalboard": "გახსენით .boardarchive არქივი და ჩასვით დაფის board.jsonl ფაილის შიგთავსი ვერსიის სტრიქონით ან მის გარეშე. დაფის ხედის დაჯგუფების თვისება იქცევა სიებად, სხვა ასარჩევი თვისებები — ნიშნებად, ტექსტისა და მოსანიშნი უჯრების ბლოკები — აღწერად და საკონტროლო სიად, ხოლო კომენტარები შენარჩუნდება. სურათებისა და დანართების იმპორტი არ ხდება.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "რომელი სვეტი რომელია?",
+  "csv-mapping-description": "აირჩიეთ ფაილის სვეტი, რომელიც ბარათის თითოეულ ველს შეიცავს. არჩევანი სვეტების სახელების მიხედვით გაკეთდა; შეცვალეთ არასწორები და აირჩიეთ (ფაილში არ არის) იმ ველისთვის, რომელიც ფაილს არ აქვს.",
+  "csv-mapping-not-in-file": "(ფაილში არ არის)",
+  "csv-mapping-column-number": "სვეტი __number__",
+  "csv-mapping-list-missing": "ფაილს სიის სვეტი არ აქვს. აირჩიეთ ერთი ზემოთ ან აკრიფეთ იმ ერთი სიის სახელი, რომელშიც ყველა ბარათი მოხვდება.",
+  "csv-mapping-list-name": "სია ყველა ბარათისთვის",
+  "csv-mapping-custom-fields": "სხვა სვეტები, რომლებიც ტექსტურ მომხმარებლის ველებად შემოვა:",
+  "csv-mapping-boards": "თითოეული ფურცელი ცალკე დაფად იქცევა:",
+  "csv-mapping-skipped-sheets": "ფურცლები, რომლებიც არ შემოდის:",
+  "csv-mapping-title-required": "აირჩიეთ სვეტი, რომელიც ბარათების სათაურებს შეიცავს.",
+  "csv-mapping-list-required": "აკრიფეთ იმ სიის სახელი, რომელშიც ყველა ბარათი მოხვდება, ან აირჩიეთ სიის სვეტი."
 }

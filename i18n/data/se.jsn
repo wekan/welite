@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine:s, raba prošeavtta Issues, vállje Also available in: CSV listtu vuolimusas, vállje čuolddaid (All columns, Description:in) ja olggosfievrrit, ja liibme CSV:a. Redmine namuha čuolddaid du gillii, nu bija du giela eaŋgalsgiellan My account:s ovdal olggosfievrrideami. Juohke dilli šaddá listun ja áššit goarttain, tracker mearkan, ovddasvástideaddjiin, čálliin, dáhtoniiguin, váhnenbargguin ja čatnon áššiiguin; vuoruhus, kategoriija, ulbmilveršuvdna, árvvoštallon áigi, % Done ja iešmearriduvvon gieddit šaddet iešmearriduvvon giettiin.",
   "import-board-instruction-orgmode": "Liibme Org mode -fiilla, nu go Emacs, Orgzly dahje Beorg dan čállet. Bajimus bajilčállagat šaddet listtuin ja nuppi dási bajilčállagat šaddet goarttain. TODO ja DONE, vuoruhusat, tággat, SCHEDULED, DEADLINE ja CLOSED seailluhuvvojit, ja dárkkistanboksat ja čiekŋalet bajilčállagat šaddet dárkkistanlisttuin.",
   "import-board-instruction-focalboard": "Raba .boardarchive-fiilla ja liibme távvala board.jsonl, veršuvdnalinnjáin dahje dan haga. Távvalgovahusa juohkiniešvuohta šaddá listtuin, eará válljeniešvuođat šaddet gilkorin, teaksta- ja merkenruvttoblokkat šaddet válddahussan ja dárkkistanlistun, ja kommeanttat vurkejuvvojit. Govat ja mielddusat eai sisafievrriduvvo.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Guhte čuolda lea mii?",
+  "csv-mapping-description": "Vállje fiilla čuoldda mas lea juohke goartagieddi. Válljemat leat dahkkojuvvon čuolddaid namaid vuođul; rievdat daid mat leat boasttut, ja vállje (ii fiillas) gieddái mii fiillas ii leat.",
+  "csv-mapping-not-in-file": "(ii fiillas)",
+  "csv-mapping-column-number": "Čuolda __number__",
+  "csv-mapping-list-missing": "Fiillas ii leat čuolda listtu várás. Vállje dan bajábealde, dahje čális dan ovtta listtu nama gosa buot goarttat mannet.",
+  "csv-mapping-list-name": "Listu buot goarttaide",
+  "csv-mapping-custom-fields": "Eará čuolddat maid sisafievrridit teakstan iešmearriduvvon giettiin:",
+  "csv-mapping-boards": "Juohke bláđđi šaddá iežas távvalin:",
+  "csv-mapping-skipped-sheets": "Bláđit mat eai sisafievrriduvvo:",
+  "csv-mapping-title-required": "Vállje čuoldda mas leat goarttaid namahusat.",
+  "csv-mapping-list-required": "Čális dan listtu nama gosa buot goarttat mannet, dahje vállje čuoldda mas listu lea."
 }

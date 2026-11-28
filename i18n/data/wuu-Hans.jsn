@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "勒 Redmine 里打开项目个 Issues，勒列表下头选 Also available in: CSV，选好列（All columns，带 Description）再导出，然后粘贴 CSV。Redmine 会用侬个语言写列名，所以导出前先勒 My account 里把语言设成 English。每只状态变成一只列表，问题变成卡片，跟踪器变成标签，负责人、作者、日期、父任务搭关联问题保留下来；优先级、分类、目标版本、预计时间、% Done 搭自定义字段变成自定义字段。",
   "import-board-instruction-orgmode": "贴进 Org mode 文件，就是 Emacs、Orgzly 或者 Beorg 写出来个格式。最上层个标题变成列表，第二层个标题变成卡片。TODO 搭仔 DONE、优先级、标签、SCHEDULED、DEADLINE 搭仔 CLOSED 侪保留，复选框搭仔更下层个标题变成检查清单。",
   "import-board-instruction-focalboard": "解压 .boardarchive 文件，再把看板个 board.jsonl 内容贴进来，有版本行呒没版本行侪好。看板视图个分组属性变成列表，别个选择属性变成标签，文字搭复选框区块变成描述搭清单，评论保留下来。图片搭附件勿会导入。",
-  "import-board-instruction-todoist": "勒 Todoist 里向，打开项目菜单，选导出成模板（Export as a template），再贴进 CSV 文件。分段变成列表，任务变成卡片，子任务变成检查清单，备注变成评论，@labels 搭仔 p1 到 p3 个优先级变成标签。"
+  "import-board-instruction-todoist": "勒 Todoist 里向，打开项目菜单，选导出成模板（Export as a template），再贴进 CSV 文件。分段变成列表，任务变成卡片，子任务变成检查清单，备注变成评论，@labels 搭仔 p1 到 p3 个优先级变成标签。",
+  "csv-mapping-title": "每一列对应啥？",
+  "csv-mapping-description": "替每只卡片字段选文件里向对应个列。已经照列名选好仔；有选错个请改正，文件里向呒没个字段就选（文件里向呒没）。",
+  "csv-mapping-not-in-file": "（文件里向呒没）",
+  "csv-mapping-column-number": "第 __number__ 列",
+  "csv-mapping-list-missing": "文件里向呒没列表列。请勒上头选一列，或者输入一只列表名，全部卡片侪放到搿只列表里向。",
+  "csv-mapping-list-name": "全部卡片用个列表",
+  "csv-mapping-custom-fields": "作为文本自定义字段导入个其他列：",
+  "csv-mapping-boards": "每张工作表各自变成一块看板：",
+  "csv-mapping-skipped-sheets": "勿导入个工作表：",
+  "csv-mapping-title-required": "请选择有卡片标题个列。",
+  "csv-mapping-list-required": "请输入全部卡片要放进去个列表名，或者选有列表个列。"
 }

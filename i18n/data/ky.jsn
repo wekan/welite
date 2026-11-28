@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine'да долбоордун Issues ачып, тизменин ылдыйындагы Also available in: CSV тандаңыз, мамычаларды тандап (All columns, Description менен) экспорттоңуз, анан CSV чаптаңыз. Redmine мамычаларды сиздин тилиңизде атайт, ошондуктан экспорттоодон мурун My account ичинде тилиңизди англисчеге коюңуз. Ар бир статус тизме болот, маселелер трекер белги катары, жооптуусу, автору, күндөрү, ата тапшырмасы жана байланыштуу маселелери менен карточкалар болот; артыкчылык, категория, максаттуу версия, бааланган убакыт, % Done жана ыңгайлаштырылган талаалар ыңгайлаштырылган талаалар болот.",
   "import-board-instruction-orgmode": "Emacs, Orgzly же Beorg жазгандай Org mode файлын чаптаңыз. Жогорку деңгээлдеги аталыштар тизмелер, экинчи деңгээлдеги аталыштар карточкалар болот. TODO жана DONE, артыкчылыктар, тегдер, SCHEDULED, DEADLINE жана CLOSED сакталат, ал эми белгилөө кутучалары жана тереңирээк аталыштар текшерүү тизмелери болот.",
   "import-board-instruction-focalboard": ".boardarchive файлын архивден чыгарып, тактанын board.jsonl мазмунун версия сабы менен же ансыз чаптаңыз. Тактанын көрүнүшүндөгү топтоо касиети тизмелерге, башка тандоо касиеттери белгилерге, текст жана белгилөө кутучаларынын блоктору сүрөттөмөгө жана текшерүү тизмесине айланат, ал эми комментарийлер сакталат. Сүрөттөр жана тиркемелер импорттолбойт.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Кайсы мамыча кайсы?",
+  "csv-mapping-description": "Файлдын ар бир карточка талаасын камтыган мамычасын тандаңыз. Тандоолор мамычалардын аттарынан жасалды; туура эместерин өзгөртүңүз, ал эми файлда жок талаа үчүн (файлда жок) тандаңыз.",
+  "csv-mapping-not-in-file": "(файлда жок)",
+  "csv-mapping-column-number": "Мамыча __number__",
+  "csv-mapping-list-missing": "Файлда тизме үчүн мамыча жок. Жогорудан бирөөнү тандаңыз, же бардык карточкалар кире турган бир тизменин атын териңиз.",
+  "csv-mapping-list-name": "Бардык карточкалар үчүн тизме",
+  "csv-mapping-custom-fields": "Текст ыңгайлаштырылган талаалары катары импорттолуучу башка мамычалар:",
+  "csv-mapping-boards": "Ар бир барак өз тактасы болот:",
+  "csv-mapping-skipped-sheets": "Импорттолбогон барактар:",
+  "csv-mapping-title-required": "Карточкалардын аталыштарын камтыган мамычаны тандаңыз.",
+  "csv-mapping-list-required": "Бардык карточкалар кире турган тизменин атын териңиз, же тизмени камтыган мамычаны тандаңыз."
 }

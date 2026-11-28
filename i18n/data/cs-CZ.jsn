@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "V Redmine otevřete Issues projektu, dole v seznamu zvolte Also available in: CSV, vyberte sloupce (All columns včetně Description) a exportujte. Poté CSV vložte. Redmine pojmenovává sloupce ve vašem jazyce, proto před exportem nastavte jazyk na English v My account. Každý stav se převede na seznam a požadavky na karty s typem požadavku jako štítkem, přiřazenou osobou, autorem, daty, nadřazeným úkolem a souvisejícími požadavky; priorita, kategorie, cílová verze, odhadovaný čas, % Done a vlastní pole se převedou na vlastní pole.",
   "import-board-instruction-orgmode": "Vložte soubor Org mode zapsaný aplikací Emacs, Orgzly nebo Beorg. Nadpisy nejvyšší úrovně se stanou seznamy a nadpisy druhé úrovně kartami. TODO a DONE, priority, štítky, SCHEDULED, DEADLINE a CLOSED se zachovají; zaškrtávací políčka a hlubší nadpisy se stanou kontrolními seznamy.",
   "import-board-instruction-focalboard": "Rozbalte soubor .boardarchive a vložte obsah souboru board.jsonl tabule, s řádkem verze nebo bez něj. Vlastnost seskupování v zobrazení tabule se změní na seznamy, ostatní výběrové vlastnosti na štítky, bloky textu a zaškrtávacích polí na popis a kontrolní seznam a komentáře se zachovají. Obrázky a přílohy se neimportují.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Který sloupec je který?",
+  "csv-mapping-description": "Vyberte sloupec souboru pro každé pole karty. Sloupce byly vybrány podle názvů; nesprávné volby opravte a pro pole, které v souboru není, vyberte (není v souboru).",
+  "csv-mapping-not-in-file": "(není v souboru)",
+  "csv-mapping-column-number": "Sloupec __number__",
+  "csv-mapping-list-missing": "Soubor nemá sloupec pro seznam. Vyberte jej výše nebo zadejte název jediného seznamu, do kterého se vloží všechny karty.",
+  "csv-mapping-list-name": "Seznam pro všechny karty",
+  "csv-mapping-custom-fields": "Další sloupce k importu jako vlastní textová pole:",
+  "csv-mapping-boards": "Každý list se stane samostatným tablem:",
+  "csv-mapping-skipped-sheets": "Listy, které se neimportují:",
+  "csv-mapping-title-required": "Vyberte sloupec s názvy karet.",
+  "csv-mapping-list-required": "Zadejte název seznamu pro všechny karty nebo vyberte sloupec obsahující seznam."
 }

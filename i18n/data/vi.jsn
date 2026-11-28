@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Trong Redmine, mở Issues của dự án, chọn Also available in: CSV ở cuối danh sách, chọn cột (All columns, kèm Description) và xuất, rồi dán CSV. Redmine đặt tên cột theo ngôn ngữ của bạn, vì vậy trước khi xuất hãy đặt ngôn ngữ thành English trong My account. Mỗi trạng thái trở thành danh sách, còn vấn đề trở thành thẻ với loại vấn đề làm nhãn, người được giao, tác giả, ngày tháng, nhiệm vụ cha và các vấn đề liên quan; mức ưu tiên, danh mục, phiên bản mục tiêu, thời gian ước tính, % Done và trường tùy chỉnh trở thành trường tùy chỉnh.",
   "import-board-instruction-orgmode": "Dán tệp Org mode được tạo bởi Emacs, Orgzly hoặc Beorg. Các tiêu đề cấp cao nhất trở thành danh sách và tiêu đề cấp hai trở thành thẻ. TODO và DONE, mức ưu tiên, nhãn, SCHEDULED, DEADLINE và CLOSED được giữ lại; các ô đánh dấu và tiêu đề sâu hơn trở thành danh sách kiểm tra.",
   "import-board-instruction-focalboard": "Giải nén tệp .boardarchive và dán nội dung tệp board.jsonl của bảng, có hoặc không có dòng phiên bản. Thuộc tính nhóm của chế độ xem bảng trở thành các danh sách, các thuộc tính lựa chọn khác trở thành nhãn, các khối văn bản và hộp kiểm trở thành mô tả và danh sách kiểm tra, còn bình luận được giữ lại. Hình ảnh và tệp đính kèm không được nhập.",
-  "import-board-instruction-todoist": "Trong Todoist, mở dự án, chọn menu ⋯ ở góc trên bên phải, rồi Manage data > Export as CSV, và dán tệp CSV. Các phần trở thành danh sách, nhiệm vụ trở thành thẻ, nhiệm vụ con trở thành danh sách kiểm tra, ghi chú trở thành bình luận, còn @nhãn và mức ưu tiên p1 đến p3 trở thành nhãn."
+  "import-board-instruction-todoist": "Trong Todoist, mở dự án, chọn menu ⋯ ở góc trên bên phải, rồi Manage data > Export as CSV, và dán tệp CSV. Các phần trở thành danh sách, nhiệm vụ trở thành thẻ, nhiệm vụ con trở thành danh sách kiểm tra, ghi chú trở thành bình luận, còn @nhãn và mức ưu tiên p1 đến p3 trở thành nhãn.",
+  "csv-mapping-title": "Mỗi cột tương ứng với trường nào?",
+  "csv-mapping-description": "Chọn cột trong tệp chứa từng trường của thẻ. Các lựa chọn được suy ra từ tên cột; sửa những lựa chọn sai và chọn (không có trong tệp) cho trường mà tệp không có.",
+  "csv-mapping-not-in-file": "(không có trong tệp)",
+  "csv-mapping-column-number": "Cột __number__",
+  "csv-mapping-list-missing": "Tệp không có cột danh sách. Chọn một cột ở trên, hoặc nhập tên danh sách duy nhất để đưa tất cả thẻ vào.",
+  "csv-mapping-list-name": "Danh sách cho tất cả thẻ",
+  "csv-mapping-custom-fields": "Các cột khác cần nhập làm trường tùy chỉnh kiểu văn bản:",
+  "csv-mapping-boards": "Mỗi trang tính trở thành một bảng riêng:",
+  "csv-mapping-skipped-sheets": "Các trang tính không được nhập:",
+  "csv-mapping-title-required": "Chọn cột chứa tiêu đề thẻ.",
+  "csv-mapping-list-required": "Nhập tên danh sách để đưa tất cả thẻ vào, hoặc chọn cột chứa danh sách."
 }

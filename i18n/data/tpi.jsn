@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Long Redmine, opim Issues bilong projek, makim Also available in: CSV long as bilong lis, makim ol kolum (All columns, wantaim Description) na salim i go aut, nau pestim CSV. Redmine i kolim ol kolum long tok ples bilong yu, olsem na senisim tok ples bilong yu i go long Inglis long My account pastaim long salim i go aut. Olgeta stetas i kamap wanpela lis na ol isyu i kamap ol kat, wantaim tracker olsem mak, man i gat wok, man i raitim, de, wok papa na ol isyu i join; samting i namba wan, kategori, vesen yu laik kisim, taim yu ting, % Done na ol fil bilong yu yet i kamap ol fil bilong yu yet.",
   "import-board-instruction-orgmode": "Pestim wanpela fail bilong Org mode, olsem Emacs, Orgzly o Beorg i raitim. Ol het long antap tru i kamap ol lis na ol het long namba tu lain i kamap ol kat. TODO na DONE, ol samting i namba wan, ol tag, SCHEDULED, DEADLINE na CLOSED i stap, na ol bokis bilong sekim na ol het i stap daun moa i kamap ol lis bilong sekim.",
   "import-board-instruction-focalboard": "Opim fail .boardarchive i stap long zip na putim insait bilong board.jsonl bilong bod, wantaim lain bilong vesin o nogat. Seting bilong bungim ol samting long ol grup long bod i kamap ol lis, ol arapela seting bilong makim i kamap ol mak, ol hap teks na ol bokis bilong tikim i kamap tok save na lis bilong sekim, na ol komen i stap yet. Ol piksa na ol fail i pas wantaim i no kam insait.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Wanem kolum em i wanem samting?",
+  "csv-mapping-description": "Makim kolum bilong fail i holim olgeta fil bilong kat. Ol i makim pinis long nem bilong ol kolum; senisim ol i no stret, na makim (i no stap long fail) bilong wanpela fil we fail i no gat.",
+  "csv-mapping-not-in-file": "(i no stap long fail)",
+  "csv-mapping-column-number": "Kolum __number__",
+  "csv-mapping-list-missing": "Fail i no gat kolum bilong lis. Makim wanpela antap, o raitim nem bilong wanpela lis we olgeta kat i go insait.",
+  "csv-mapping-list-name": "Lis bilong olgeta kat",
+  "csv-mapping-custom-fields": "Ol arapela kolum bilong bringim i kam olsem fil bilong yu yet bilong rait:",
+  "csv-mapping-boards": "Olgeta sit i kamap bot bilong em yet:",
+  "csv-mapping-skipped-sheets": "Ol sit i no kam insait:",
+  "csv-mapping-title-required": "Makim kolum i holim ol nem bilong kat.",
+  "csv-mapping-list-required": "Raitim nem bilong lis we olgeta kat i go insait, o makim kolum i holim lis."
 }

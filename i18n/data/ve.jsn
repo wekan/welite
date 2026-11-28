@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Kha Redmine, vulani Issues dza phurodzhege, nangani Also available in: CSV fhasi ha mutevhe, nangani kholomu (All columns, na Description) ni bvisele nnḓa, ni kone u nambatedza CSV. Redmine i ṋea kholomu madzina nga luambo lwaṋu, nga zwenezwo vhewani luambo lwaṋu lu vhe Luisimane kha My account ni sa athu bvisela nnḓa. Tshiimo tshiṅwe na tshiṅwe tshi vha mutevhe na mafhungo a vha khadi, na tracker sa ḽeibuḽu, o avhelwaho mushumo, muṅwali, maḓuvha, mushumo wa vhubebi na mafhungo a elanaho; ndeme, khethekanyo, vesheni ye ya livhiswa, tshifhinga tsho khakhathelwaho, % Done na fhethu ha data ho dzudzanywaho zwi vha fhethu ha data ho dzudzanywaho.",
   "import-board-instruction-orgmode": "Nambatedzani faela ya Org mode, sa zwine Emacs, Orgzly kana Beorg zwa i ṅwala. Ṱhoho dza nṱha dzi vha mitevhe na ṱhoho dza vhuvhili dzi vha khadi. TODO na DONE, ndeme, thegi, SCHEDULED, DEADLINE na CLOSED zwi a vhulungwa, na zwibogisi zwa u swaya na ṱhoho dza fhasi zwi vha mitevhe ya u sedza.",
   "import-board-instruction-focalboard": "Vulani faela ya .boardarchive ni nambatedze board.jsonl ya bodo, i na mutaladzi wa nzudzanyo kana i si nawo. Tshivhumbeo tsha u kuvhanganya nga zwigwada kha mbonalo ya bodo tshi shanduka tsha vha mitevhe, zwiṅwe zwivhumbeo zwa u nanga zwi shanduka zwa vha dziḽeibuḽu, zwipiḓa zwa maṅwalwa na mabogisi a u maka zwi shanduka zwa vha ṱhaluso na mutevhe wa u ṱola, nahone mihumbulo a a vhulungwa. Zwifanyiso na zwiambataniswa a zwi dzheniswi.",
-  "import-board-instruction-todoist": "Kha Todoist, vulani phurodzheke, nangani menyu ya ⋯ i re nṱha kha tshauri, nga murahu Manage data > Export as CSV, ni nambatedze faela ya CSV. Zwipiḓa zwi vha mitevhe, mishumo i vha makhadi, mishumo miṱuku i vha mutevhe wa u sedza, zwiṱodzi zwi vha mihumbulo, nahone @labels na zwi ṱanganedzwaho u thoma p1 u swika p3 zwi vha dziḽeibuḽu."
+  "import-board-instruction-todoist": "Kha Todoist, vulani phurodzheke, nangani menyu ya ⋯ i re nṱha kha tshauri, nga murahu Manage data > Export as CSV, ni nambatedze faela ya CSV. Zwipiḓa zwi vha mitevhe, mishumo i vha makhadi, mishumo miṱuku i vha mutevhe wa u sedza, zwiṱodzi zwi vha mihumbulo, nahone @labels na zwi ṱanganedzwaho u thoma p1 u swika p3 zwi vha dziḽeibuḽu.",
+  "csv-mapping-title": "Kholomu ifhio ndi ifhio?",
+  "csv-mapping-description": "Nangani kholomu ya faela i farelaho fhethu huṅwe na huṅwe ha khadi. Khetho dzo itwa u bva kha madzina a kholomu; shandukisani dziṅwe dzi re na vhukhakhi, ni nange (not in the file) kha fhethu hu si kho kha faela.",
+  "csv-mapping-not-in-file": "(a hu kha faela)",
+  "csv-mapping-column-number": "Kholomu __number__",
+  "csv-mapping-list-missing": "Faela a i na kholomu ya mutevhe. Nangani nthihi nṱha, kana ni ṅwale dzina ḽa mutevhe muthihi une khadi iṅwe na iṅwe ya ya khawo.",
+  "csv-mapping-list-name": "Mutevhe wa khadi iṅwe na iṅwe",
+  "csv-mapping-custom-fields": "Kholomu dziṅwe dza u dzhenisa sa fhethu ha data ho dzudzanywaho ha maṅwalwa:",
+  "csv-mapping-boards": "Shithi iṅwe na iṅwe i vha bodo yayo:",
+  "csv-mapping-skipped-sheets": "Shithi dzi sa dzheniswi:",
+  "csv-mapping-title-required": "Nangani kholomu i farelaho ṱhoho dza khadi.",
+  "csv-mapping-list-required": "Ṅwalani dzina ḽa mutevhe une khadi iṅwe na iṅwe ya ya khawo, kana ni nange kholomu i farelaho mutevhe."
 }

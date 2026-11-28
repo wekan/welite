@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "V Redmine odprite Issues projekta, na dnu seznama izberite Also available in: CSV, izberite stolpce (All columns, vključno z Description) in izvozite, nato prilepite CSV. Redmine poimenuje stolpce v vašem jeziku, zato pred izvozom nastavite jezik na English v My account. Vsako stanje postane seznam, težave pa kartice z vrsto težave kot oznako, dodeljeno osebo, avtorjem, datumi, nadrejeno nalogo in povezanimi težavami; prednost, kategorija, ciljna različica, ocenjeni čas, % Done in polja po meri postanejo polja po meri.",
   "import-board-instruction-orgmode": "Prilepite datoteko Org mode, ustvarjeno z Emacs, Orgzly ali Beorg. Naslovi najvišje ravni postanejo seznami, naslovi druge ravni pa kartice. TODO in DONE, prioritete, oznake, SCHEDULED, DEADLINE in CLOSED se ohranijo, potrditvena polja in globlji naslovi pa postanejo kontrolni seznami.",
   "import-board-instruction-focalboard": "Razširite datoteko .boardarchive in prilepite vsebino datoteke board.jsonl table, z vrstico različice ali brez nje. Lastnost združevanja v pogledu table postane sezname, druge izbirne lastnosti postanejo oznake, bloki besedila in potrditvenih polj postanejo opis in kontrolni seznam, komentarji pa se ohranijo. Slike in priloge se ne uvozijo.",
-  "import-board-instruction-todoist": "V Todoistu odprite meni projekta in izberite izvoz kot predlogo, nato prilepite datoteko CSV. Razdelki postanejo seznami, naloge kartice, podnaloge kontrolni seznam, opombe komentarji, @labels in prednosti od p1 do p3 pa oznake."
+  "import-board-instruction-todoist": "V Todoistu odprite meni projekta in izberite izvoz kot predlogo, nato prilepite datoteko CSV. Razdelki postanejo seznami, naloge kartice, podnaloge kontrolni seznam, opombe komentarji, @labels in prednosti od p1 do p3 pa oznake.",
+  "csv-mapping-title": "Kateri stolpec predstavlja katero polje?",
+  "csv-mapping-description": "Izberite stolpec datoteke, ki vsebuje posamezno polje kartice. Izbire temeljijo na imenih stolpcev; popravite napačne in za polje, ki ga datoteka nima, izberite (ni v datoteki).",
+  "csv-mapping-not-in-file": "(ni v datoteki)",
+  "csv-mapping-column-number": "Stolpec __number__",
+  "csv-mapping-list-missing": "Datoteka nima stolpca za seznam. Izberite ga zgoraj ali vnesite ime enega seznama, kamor gredo vse kartice.",
+  "csv-mapping-list-name": "Seznam za vse kartice",
+  "csv-mapping-custom-fields": "Drugi stolpci za uvoz kot besedilna poljubna polja:",
+  "csv-mapping-boards": "Vsak delovni list postane svoja tabla:",
+  "csv-mapping-skipped-sheets": "Delovni listi, ki niso uvoženi:",
+  "csv-mapping-title-required": "Izberite stolpec z naslovi kartic.",
+  "csv-mapping-list-required": "Vnesite ime seznama, kamor gredo vse kartice, ali izberite stolpec, ki vsebuje seznam."
 }

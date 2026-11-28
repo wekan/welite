@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Nan Redmine, ouvri Issues pwojè a, chwazi Also available in: CSV anba lis la, chwazi kolòn yo (All columns, ak Description) epi ekspòte, apre sa kole CSV a. Redmine bay kolòn yo non nan lang ou, kidonk mete lang ou an anglè nan My account anvan ou ekspòte. Chak estati vin yon lis epi pwoblèm yo vin kat, ak tracker la kòm yon etikèt, moun ki responsab, otè, dat, travay paran ak pwoblèm ki gen rapò; priyorite, kategori, vèsyon sib, tan estime, % Done ak chan pèsonalize yo vin chan pèsonalize.",
   "import-board-instruction-orgmode": "Kole yon fichye Org mode jan Emacs, Orgzly oswa Beorg ekri li. Tit premye nivo yo vin lis epi tit dezyèm nivo yo vin kat. TODO ak DONE, priyorite, etikèt, SCHEDULED, DEADLINE ak CLOSED konsève, epi kaz pou tcheke ak tit ki pi fon yo vin lis verifikasyon.",
   "import-board-instruction-focalboard": "Dezip fichye .boardarchive la epi kole kontni board.jsonl tablo a, avèk oswa san liy vèsyon an. Pwopriyete ki sèvi pou gwoupe nan vi tablo a vin lis, lòt pwopriyete seleksyon yo vin etikèt, blòk tèks ak kaz pou tcheke yo vin deskripsyon an ak yon lis verifikasyon, epi kòmantè yo konsève. Imaj ak fichye atache yo pa enpòte.",
-  "import-board-instruction-todoist": "Nan Todoist, ouvri pwojè a, chwazi meni ⋯ anlè adwat la, apre sa Manage data > Export as CSV, epi kole fichye CSV a. Seksyon yo vin lis, travay yo vin kat, sou-travay yo vin yon lis verifikasyon, nòt yo vin kòmantè, epi @labels ak priyorite p1 rive p3 yo vin etikèt."
+  "import-board-instruction-todoist": "Nan Todoist, ouvri pwojè a, chwazi meni ⋯ anlè adwat la, apre sa Manage data > Export as CSV, epi kole fichye CSV a. Seksyon yo vin lis, travay yo vin kat, sou-travay yo vin yon lis verifikasyon, nòt yo vin kòmantè, epi @labels ak priyorite p1 rive p3 yo vin etikèt.",
+  "csv-mapping-title": "Ki kolòn ki koresponn ak ki chan?",
+  "csv-mapping-description": "Chwazi kolòn fichye a ki gen chak chan kat. Chwa yo te fèt dapre non kolòn yo; korije sa ki pa bon, epi chwazi (pa nan fichye a) pou yon chan fichye a pa genyen.",
+  "csv-mapping-not-in-file": "(pa nan fichye a)",
+  "csv-mapping-column-number": "Kolòn __number__",
+  "csv-mapping-list-missing": "Fichye a pa gen kolòn pou lis la. Chwazi youn anlè a, oswa tape non sèl lis kote tout kat yo pral ale a.",
+  "csv-mapping-list-name": "Lis pou tout kat yo",
+  "csv-mapping-custom-fields": "Lòt kolòn pou enpòte kòm chan tèks pèsonalize:",
+  "csv-mapping-boards": "Chak fèy vin yon tablo apa:",
+  "csv-mapping-skipped-sheets": "Fèy ki pa enpòte yo:",
+  "csv-mapping-title-required": "Chwazi kolòn ki gen tit kat yo.",
+  "csv-mapping-list-required": "Tape non lis kote tout kat yo pral ale a, oswa chwazi kolòn ki gen lis la."
 }

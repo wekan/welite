@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Le Redmine me la, ʋu dɔ la ƒe Issues, tia Also available in: CSV le xexlẽdzesi la ƒe te, tia ƒlowo (All columns, kple Description) eye nàɖee, emegbe tsɔ CSV la de eme. Redmine naa ŋkɔ ƒlowo le wò gbe me, eyata ɖo wò gbe be wòanye Eŋlisigbe le My account me hafi nàɖee. Nɔnɔme ɖesiaɖe zua xexlẽdzesi eye nyawo zua kaɖiwo, kple tracker abe dzesi ene, dɔwɔla, ŋlɔla, ŋkekewo, dɔ dzitsotso kple nya siwo do ka; priority, category, target version, estimated time, % Done kple agble tɔxɛwo zua agble tɔxɛwo.",
   "import-board-instruction-orgmode": "Tsɔ Org mode faɛl de eme, abe ale si Emacs, Orgzly alo Beorg ŋlɔnɛ ene. Tanya siwo le tame zua xexlẽdzesiwo eye tanya siwo le ɖoƒe evelia zua kaɖiwo. Wodzraa TODO kple DONE, nu vevitɔwo, tags, SCHEDULED, DEADLINE kple CLOSED ɖo, eye dzesideɖefewo kple tanya siwo le te wu zua ŋkuɖodzinudzesiwo.",
   "import-board-instruction-focalboard": "Ʋu .boardarchive ƒe agbalẽdzraɖoƒe eye nàte kpekpeɖeŋu ƒe board.jsonl ɖe afisia, kple eƒe tɔtrɔ ƒe fli alo emanɔmee. Nɔnɔme si ƒoa nuwo nu ƒu ɖe ƒuƒoƒowo me le kpekpeɖeŋu ƒe nukpɔkpɔ me trɔna dzua xexlẽdzesiwo, tiatia ƒe nɔnɔme bubuwo trɔna dzua dzesiwo, nuŋɔŋlɔ kple dzesidede ƒe aɖaka ƒe akpa siwo le eme trɔna dzua numeɖeɖe kple dodokpɔ xexlẽdzesi, eye woléa nuŋɔŋlɔwo ɖe asi. Wometsɔa nɔnɔmetatawo kple kpeɖeŋu-agbalẽwo va eme o.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Ƒlo kae nye ka?",
+  "csv-mapping-description": "Tia faɛl la ƒe ƒlo si me kaɖi ƒe agble ɖesiaɖe le. Wotia nuwo tso ƒlowo ƒe ŋkɔwo me; trɔ esiwo menyo o, eye nàtia (mele faɛl la me o) na agble si mele faɛl la me o.",
+  "csv-mapping-not-in-file": "(mele faɛl la me o)",
+  "csv-mapping-column-number": "Ƒlo __number__",
+  "csv-mapping-list-missing": "Ƒlo aɖeke mele faɛl la me na xexlẽdzesi la o. Tia ɖeka le etame, alo ŋlɔ xexlẽdzesi ɖeka si me kaɖiwo katã ayi la ƒe ŋkɔ.",
+  "csv-mapping-list-name": "Xexlẽdzesi na kaɖi ɖesiaɖe",
+  "csv-mapping-custom-fields": "Ƒlo bubu siwo woatsɔ va eme abe nuŋɔŋlɔ agble tɔxɛwo ene:",
+  "csv-mapping-boards": "Axa ɖesiaɖe zua eya ŋutɔ ƒe kpekpeɖeŋu:",
+  "csv-mapping-skipped-sheets": "Axa siwo wometsɔ va eme o:",
+  "csv-mapping-title-required": "Tia ƒlo si me kaɖiwo ƒe ŋkɔwo le.",
+  "csv-mapping-list-required": "Ŋlɔ xexlẽdzesi si me kaɖiwo katã ayi la ƒe ŋkɔ, alo tia ƒlo si me xexlẽdzesi la le."
 }

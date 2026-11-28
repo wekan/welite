@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-да жобаның Issues бөлімін ашып, тізімнің төменгі жағындағы «Also available in: CSV» таңдаңыз, бағандарды таңдап (All columns, Description-мен бірге) экспорттаңыз, содан кейін CSV-ді қойыңыз. Redmine бағандарды сіздің тіліңізде атайды, сондықтан экспорт алдында My account ішінде тілді ағылшыншаға қойыңыз. Әрбір күй тізімге, мәселелер карточкаларға айналады, трекер белгі ретінде, жауаптысы, авторы, күндері, ата-аналық тапсырмасы және байланысты мәселелері сақталады; басымдық, санат, мақсатты нұсқа, бағаланған уақыт, % Done және теңшелетін өрістер теңшелетін өрістерге айналады.",
   "import-board-instruction-orgmode": "Emacs, Orgzly немесе Beorg жазатын Org mode файлын қойыңыз. Жоғарғы деңгейдегі тақырыптар тізімдерге, ал екінші деңгейдегі тақырыптар карточкаларға айналады. TODO және DONE, басымдықтар, тегтер, SCHEDULED, DEADLINE және CLOSED сақталады, ал белгі қойылатын шаршылар мен тереңірек тақырыптар тексеру тізімдеріне айналады.",
   "import-board-instruction-focalboard": ".boardarchive файлын мұрағаттан шығарып, тақтаның board.jsonl мазмұнын нұсқа жолымен немесе онсыз қойыңыз. Тақта көрінісінің топтау қасиеті тізімдерге, басқа таңдау қасиеттері белгілерге, мәтін мен құсбелгі блоктары сипаттамаға және тексеру тізіміне айналады, ал пікірлер сақталады. Суреттер мен тіркемелер импортталмайды.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Қай баған қайсы?",
+  "csv-mapping-description": "Әр карточка өрісін сақтайтын файл бағанын таңдаңыз. Таңдаулар баған атауларынан жасалды; қатесін өзгертіңіз, ал файлда жоқ өріс үшін (файлда жоқ) таңдаңыз.",
+  "csv-mapping-not-in-file": "(файлда жоқ)",
+  "csv-mapping-column-number": "__number__-баған",
+  "csv-mapping-list-missing": "Файлда тізім бағаны жоқ. Жоғарыдан біреуін таңдаңыз немесе барлық карточка түсетін бір тізімнің атауын теріңіз.",
+  "csv-mapping-list-name": "Барлық карточкаларға арналған тізім",
+  "csv-mapping-custom-fields": "Мәтіндік теңшелетін өріс ретінде импортталатын басқа бағандар:",
+  "csv-mapping-boards": "Әр парақ өз тақтасына айналады:",
+  "csv-mapping-skipped-sheets": "Импортталмайтын парақтар:",
+  "csv-mapping-title-required": "Карточка тақырыптары бар бағанды таңдаңыз.",
+  "csv-mapping-list-required": "Барлық карточка түсетін тізім атауын теріңіз немесе тізімі бар бағанды таңдаңыз."
 }

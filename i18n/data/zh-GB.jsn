@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "在 Redmine 中，打开项目的 Issues，在列表底部选择 Also available in: CSV，选择列（All columns，包含 Description）并导出，然后粘贴 CSV。Redmine 使用你的语言命名列，因此请在导出前将 My account 中的语言设为英语。每个状态会成为列表，问题会成为卡片，并保留作为标签的跟踪类型、被指派人、作者、日期、父任务和相关问题；优先级、类别、目标版本、预计时间、% Done 和自定义字段会成为自定义字段。",
   "import-board-instruction-orgmode": "粘贴 Emacs、Orgzly 或 Beorg 生成的 Org mode 文件。顶层标题会成为列表，第二层标题会成为卡片。TODO 和 DONE、优先级、标签、SCHEDULED、DEADLINE 和 CLOSED 会保留，复选框和更深层的标题会成为检查清单。",
   "import-board-instruction-focalboard": "解压 .boardarchive 文件并粘贴看板的 board.jsonl 内容，可以包含或省略版本行。看板视图的分组属性转换为列表，其他选择属性转换为标签，文本和复选框区块转换为描述和检查清单，评论会保留。图片和附件不会导入。",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "各列分别对应什么？",
+  "csv-mapping-description": "选择文件中包含各卡片字段的列。当前选择根据列名确定；请修正错误选择，并为文件中没有的字段选择“文件中不存在”。",
+  "csv-mapping-not-in-file": "（文件中不存在）",
+  "csv-mapping-column-number": "第 __number__ 列",
+  "csv-mapping-list-missing": "文件中没有表示列表的列。请在上方选择一列，或输入所有卡片都要放入的同一个列表的名称。",
+  "csv-mapping-list-name": "所有卡片放入的列表",
+  "csv-mapping-custom-fields": "作为文本自定义字段导入的其他列：",
+  "csv-mapping-boards": "每个工作表都会成为独立的看板：",
+  "csv-mapping-skipped-sheets": "不会导入的工作表：",
+  "csv-mapping-title-required": "选择包含卡片标题的列。",
+  "csv-mapping-list-required": "输入所有卡片都要放入的列表名称，或选择包含列表的列。"
 }

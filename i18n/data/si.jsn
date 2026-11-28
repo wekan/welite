@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine හි, ව්‍යාපෘතියේ Issues විවෘත කර, ලැයිස්තුවේ පහළින් Also available in: CSV තෝරා, තීරු තෝරා (All columns, Description සමඟ) නිර්යාත කරන්න, ඉන්පසු CSV අලවන්න. Redmine තීරු ඔබගේ භාෂාවෙන් නම් කරන බැවින්, නිර්යාත කිරීමට පෙර My account හි ඔබගේ භාෂාව ඉංග්‍රීසියට සකසන්න. සෑම තත්ත්වයක්ම ලැයිස්තුවක් බවට ද ගැටලු කාඩ්පත් බවට ද පත් වේ, tracker ලේබලයක් ලෙස, පවරන ලද අය, කතුවරයා, දින, මව් කාර්යය සහ සම්බන්ධිත ගැටලු සමඟ; ප්‍රමුඛතාව, ප්‍රවර්ගය, ඉලක්ක අනුවාදය, ඇස්තමේන්තු කාලය, % Done සහ අභිරුචි ක්ෂේත්‍ර අභිරුචි ක්ෂේත්‍ර බවට පත් වේ.",
   "import-board-instruction-orgmode": "Emacs, Orgzly හෝ Beorg ලියන ආකාරයට Org mode ගොනුවක් අලවන්න. ඉහළ මට්ටමේ ශීර්ෂ ලැයිස්තු බවට ද දෙවන මට්ටමේ ශීර්ෂ කාඩ්පත් බවට ද පත් වේ. TODO සහ DONE, ප්‍රමුඛතා, ටැග, SCHEDULED, DEADLINE සහ CLOSED රැඳේ, සහ සලකුණු කොටු සහ ගැඹුරු ශීර්ෂ පිරික්සුම් ලැයිස්තු බවට පත් වේ.",
   "import-board-instruction-focalboard": ".boardarchive ගොනුව දිගහැර, පුවරුවේ board.jsonl අන්තර්ගතය අනුවාද පේළිය සමඟ හෝ එය නොමැතිව අලවන්න. පුවරු දසුනේ කාණ්ඩ කිරීමේ ගුණාංගය ලැයිස්තු බවටත්, අනෙකුත් තේරීම් ගුණාංග ලේබල බවටත්, පෙළ සහ සලකුණු කොටු බ්ලොක් විස්තරය සහ පිරික්සුම් ලැයිස්තුවක් බවටත් පත් වේ. අදහස් රඳවා ගනී. රූප සහ ඇමුණුම් ආයාත නොකෙරේ.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "කුමන තීරුව කුමක්ද?",
+  "csv-mapping-description": "එක් එක් කාඩ්පත් ක්ෂේත්‍රය අඩංගු ගොනුවේ තීරුව තෝරන්න. තේරීම් තීරු නම්වලින් සිදු කරන ලදී; වැරදි ඒවා වෙනස් කරන්න, සහ ගොනුවේ නැති ක්ෂේත්‍රයක් සඳහා (ගොනුවේ නැත) තෝරන්න.",
+  "csv-mapping-not-in-file": "(ගොනුවේ නැත)",
+  "csv-mapping-column-number": "තීරුව __number__",
+  "csv-mapping-list-missing": "ගොනුවේ ලැයිස්තුව සඳහා තීරුවක් නැත. ඉහතින් එකක් තෝරන්න, නැතහොත් සියලු කාඩ්පත් යන එකම ලැයිස්තුවේ නම ටයිප් කරන්න.",
+  "csv-mapping-list-name": "සියලු කාඩ්පත් සඳහා ලැයිස්තුව",
+  "csv-mapping-custom-fields": "පෙළ අභිරුචි ක්ෂේත්‍ර ලෙස ආයාත කිරීමට වෙනත් තීරු:",
+  "csv-mapping-boards": "සෑම පත්‍රයක්ම තමන්ගේම පුවරුවක් බවට පත් වේ:",
+  "csv-mapping-skipped-sheets": "ආයාත නොකෙරෙන පත්‍ර:",
+  "csv-mapping-title-required": "කාඩ්පත් සිරැසි අඩංගු තීරුව තෝරන්න.",
+  "csv-mapping-list-required": "සියලු කාඩ්පත් යන ලැයිස්තුවේ නම ටයිප් කරන්න, නැතහොත් ලැයිස්තුව අඩංගු තීරුව තෝරන්න."
 }

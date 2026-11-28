@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "ዲብ Redmine፣ Issues ናይ ፕሮጀክት ክፈት፣ ዲብ ታሕቲ ዝርዝር Also available in: CSV ምረጽ፣ ዓምድታት ምረጽ (All columns, ምስ Description) ወ አግዕዞ፣ ድሕሪኡ CSV ለጥፍ። Redmine ዓምድታት ብ ልሳንካ ይሰምዮም፣ ስለዚ ቅድሚ ምግዕዛዝ ዲብ My account ልሳንካ ናብ English ቀይር። ነፍሲ ወከፍ ሓላት ዝርዝር ይኸውን ወ issues ወረቀት ካርዳት ይኾኑ፣ ምስ tracker ከም እሻረት፣ ሓላፍ፣ ደራሲ፣ ተመራት፣ ወላዲ ዕዮ ወ ዝተኣሳሰሩ issues፤ ቀዳምነት፣ ምድብ፣ ዕላማ version፣ ግምት ጊዜ፣ % Done ወ ብሕታዊ ሜዳታት ብሕታዊ ሜዳታት ይኾኑ።",
   "import-board-instruction-orgmode": "ከምቲ Emacs, Orgzly ወይ Beorg ዝጽሕፍዎ ፈይል Org mode ለጥፍ። ናይ ላዕሊ ኣርእስትታት ዝርዝራት ይኾኑ፣ ናይ ካልኣይ ደረጃ ኣርእስትታት ድማ ወረቀት ካርዳት ይኾኑ። TODO ወ DONE፣ ቀዳምነታት፣ tags፣ SCHEDULED፣ DEADLINE ወ CLOSED ይዕቀቡ፣ ሳጹናት ምልክትን ዝዓመቑ ኣርእስትታትን ድማ ናይ ምርመራ ዝርዝራት ይኾኑ።",
   "import-board-instruction-focalboard": "ለፈይል .boardarchive ፍተሕ ወboard.jsonl ናይ ምዱድ ለጥፍ፣ ምስ መሰመር ናይ ንስከት አው በለ እሉ። ዲብ መርኣይ ምዱድ ለናይ ምግማዕ ባህርየት ዝርዝራት ለገብእ፣ ብዕድ ባህርያት ናይ ምንቃይ እሻራት ለገብእ፣ ለናይ ክታበት ወሳንዱቅ እሻረት ክፍል ዋስፎ ወናይ ምርመራ ዝርዝር ለገብእ፣ ወርእይታት ለልትሐፈዝ። ሱረት ወተለጠፍቲ ኢልትአምጸእኒ።",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ኣየናይ ዓምዲ እንታይ እዩ?",
+  "csv-mapping-description": "ነፍሲ ወከፍ ሜዳ ወረቀት ካርድ ዝሕዝ ዓምዲ ፈይል ምረጽ። ምርጫታት ካብ አስማይ ዓምድታት ተገይሮም፤ ጌጋ ዝኾኑ ቀይር፣ ን ፈይል ዘይብሉ ሜዳ ድማ (ዲብ ፈይል የለን) ምረጽ።",
+  "csv-mapping-not-in-file": "(ዲብ ፈይል የለን)",
+  "csv-mapping-column-number": "ዓምዲ __number__",
+  "csv-mapping-list-missing": "ፈይል ን ዝርዝር ዓምዲ የብሉን። ካብ ላዕሊ ሓደ ምረጽ፣ ወይ ስሜት እቲ ኩሉ ወረቀት ካርድ ዝኣትዎ ሓደ ዝርዝር ጽሓፍ።",
+  "csv-mapping-list-name": "ዝርዝር ን ኩሉ ወረቀት ካርድ",
+  "csv-mapping-custom-fields": "ከም ክቱብ ብሕታዊ ሜዳታት ዝኣትዉ ካልኦት ዓምድታት፦",
+  "csv-mapping-boards": "ነፍሲ ወከፍ sheet ናይ ገዛእ ርእሱ ምዱድ ይኸውን፦",
+  "csv-mapping-skipped-sheets": "ዘይኣትዉ sheets፦",
+  "csv-mapping-title-required": "ኣርእስትታት ወረቀት ካርዳት ዝሕዝ ዓምዲ ምረጽ።",
+  "csv-mapping-list-required": "ስሜት እቲ ኩሉ ወረቀት ካርድ ዝኣትዎ ዝርዝር ጽሓፍ፣ ወይ ዝርዝር ዝሕዝ ዓምዲ ምረጽ።"
 }

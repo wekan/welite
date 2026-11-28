@@ -2344,5 +2344,16 @@
   "import-board-instruction-redmine": "Redmine లో, ప్రాజెక్ట్ Issues తెరిచి, జాబితా దిగువన Also available in: CSV ఎంచుకోండి, నిలువు వరుసలను ఎంచుకుని (All columns, Description తో) ఎగుమతి చేయండి, ఆపై CSV ను అతికించండి. Redmine నిలువు వరుసలకు మీ భాషలో పేర్లు పెడుతుంది, కాబట్టి ఎగుమతి చేసే ముందు My account లో మీ భాషను ఆంగ్లానికి సెట్ చేయండి. ప్రతి స్థితి ఒక జాబితాగా, ఇష్యూలు కార్డులుగా మారతాయి, ట్రాకర్ లేబుల్‌గా, కేటాయించిన వ్యక్తి, రచయిత, తేదీలు, మాతృ పని మరియు సంబంధిత ఇష్యూలతో; ప్రాధాన్యత, వర్గం, లక్ష్య సంస్కరణ, అంచనా సమయం, % Done మరియు కస్టమ్ ఫీల్డ్‌లు కస్టమ్ ఫీల్డ్‌లుగా మారతాయి.",
   "import-board-instruction-orgmode": "Emacs, Orgzly లేదా Beorg వ్రాసే విధంగా Org mode ఫైల్‌ను అతికించండి. పై స్థాయి శీర్షికలు జాబితాలుగా, రెండవ స్థాయి శీర్షికలు కార్డులుగా మారతాయి. TODO మరియు DONE, ప్రాధాన్యతలు, ట్యాగ్‌లు, SCHEDULED, DEADLINE మరియు CLOSED అలాగే ఉంచబడతాయి, చెక్‌బాక్స్‌లు మరియు లోతైన శీర్షికలు చెక్‌లిస్ట్‌లుగా మారతాయి.",
   "import-board-instruction-focalboard": ".boardarchive ఫైల్‌ను అన్‌జిప్ చేసి, బోర్డు యొక్క board.jsonl విషయాన్ని వెర్షన్ పంక్తితో లేదా అది లేకుండా అతికించండి. బోర్డు వీక్షణలోని సమూహపరిచే లక్షణం జాబితాలుగా, ఇతర ఎంపిక లక్షణాలు లేబుళ్లుగా, పాఠ్యం మరియు చెక్‌బాక్స్ బ్లాక్‌లు వివరణ మరియు చెక్‌లిస్ట్‌గా మారతాయి. వ్యాఖ్యలు అలాగే ఉంటాయి. చిత్రాలు మరియు జోడింపులు దిగుమతి చేయబడవు.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ఏ నిలువు వరుస ఏది?",
+  "csv-mapping-description": "ప్రతి కార్డ్ ఫీల్డ్‌ను కలిగి ఉన్న ఫైల్ నిలువు వరుసను ఎంచుకోండి. ఎంపికలు నిలువు వరుసల పేర్ల నుండి చేయబడ్డాయి; తప్పుగా ఉన్నవాటిని మార్చండి, మరియు ఫైల్‌లో లేని ఫీల్డ్ కోసం (ఫైల్‌లో లేదు) ఎంచుకోండి.",
+  "csv-mapping-not-in-file": "(ఫైల్‌లో లేదు)",
+  "csv-mapping-column-number": "నిలువు వరుస __number__",
+  "csv-mapping-list-missing": "ఫైల్‌లో జాబితా కోసం నిలువు వరుస లేదు. పైన ఒకటి ఎంచుకోండి, లేదా ప్రతి కార్డ్ వెళ్ళే ఒక జాబితా పేరును టైప్ చేయండి.",
+  "csv-mapping-list-name": "ప్రతి కార్డ్ కోసం జాబితా",
+  "csv-mapping-custom-fields": "టెక్స్ట్ కస్టమ్ ఫీల్డ్‌లుగా దిగుమతి చేయవలసిన ఇతర నిలువు వరుసలు:",
+  "csv-mapping-boards": "ప్రతి షీట్ దాని సొంత బోర్డుగా మారుతుంది:",
+  "csv-mapping-skipped-sheets": "దిగుమతి కాని షీట్‌లు:",
+  "csv-mapping-title-required": "కార్డ్ శీర్షికలను కలిగి ఉన్న నిలువు వరుసను ఎంచుకోండి.",
+  "csv-mapping-list-required": "ప్రతి కార్డ్ వెళ్ళే జాబితా పేరును టైప్ చేయండి, లేదా జాబితాను కలిగి ఉన్న నిలువు వరుసను ఎంచుకోండి."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Programoje Redmine atverkite projekto Issues, sąrašo apačioje pasirinkite Also available in: CSV, pasirinkite stulpelius (All columns kartu su Description) ir eksportuokite, tada įklijuokite CSV turinį. Redmine suteikia stulpeliams pavadinimus jūsų kalba, todėl prieš eksportuodami skiltyje My account nustatykite kalbą English. Kiekviena būsena tampa sąrašu, o darbo elementai — kortelėmis su darbo tipu kaip žyma, atsakingu asmeniu, autoriumi, datomis, pirmine užduotimi ir susijusiais darbo elementais; prioritetas, kategorija, tikslinė versija, numatomas laikas, % Done ir pasirinktiniai laukai tampa pasirinktiniais laukais.",
   "import-board-instruction-orgmode": "Įklijuokite Org mode failą, sukurtą naudojant Emacs, Orgzly arba Beorg. Aukščiausio lygio antraštės tampa sąrašais, o antrojo lygio antraštės — kortelėmis. TODO ir DONE, prioritetai, žymos, SCHEDULED, DEADLINE ir CLOSED išsaugomi, o žymimieji langeliai ir gilesnės antraštės tampa kontroliniais sąrašais.",
   "import-board-instruction-focalboard": "Išskleiskite .boardarchive failą ir įklijuokite lentos board.jsonl failo turinį su versijos eilute arba be jos. Lentos rodinio grupavimo savybė tampa sąrašais, kitos pasirinkimo savybės — etiketėmis, teksto ir žymimųjų langelių blokai — aprašymu ir kontroliniu sąrašu, o komentarai išsaugomi. Paveikslėliai ir priedai neimportuojami.",
-  "import-board-instruction-todoist": "Todoist atverkite projekto meniu ir pasirinkite eksportavimą kaip šabloną, tada įklijuokite CSV failą. Skyriai tampa sąrašais, užduotys — kortelėmis, antrinės užduotys — kontroliniu sąrašu, pastabos — komentarais, o @labels ir prioritetai nuo p1 iki p3 — žymomis."
+  "import-board-instruction-todoist": "Todoist atverkite projekto meniu ir pasirinkite eksportavimą kaip šabloną, tada įklijuokite CSV failą. Skyriai tampa sąrašais, užduotys — kortelėmis, antrinės užduotys — kontroliniu sąrašu, pastabos — komentarais, o @labels ir prioritetai nuo p1 iki p3 — žymomis.",
+  "csv-mapping-title": "Kuris stulpelis ką reiškia?",
+  "csv-mapping-description": "Pasirinkite failo stulpelį kiekvienam kortelės laukui. Stulpeliai parinkti pagal jų pavadinimus; pataisykite netinkamus pasirinkimus, o jei lauko faile nėra, pasirinkite (faile nėra).",
+  "csv-mapping-not-in-file": "(faile nėra)",
+  "csv-mapping-column-number": "Stulpelis __number__",
+  "csv-mapping-list-missing": "Faile nėra sąrašo stulpelio. Pasirinkite jį aukščiau arba įveskite vieno sąrašo, į kurį bus įtrauktos visos kortelės, pavadinimą.",
+  "csv-mapping-list-name": "Sąrašas visoms kortelėms",
+  "csv-mapping-custom-fields": "Kiti stulpeliai, importuojami kaip tekstiniai pasirinktiniai laukai:",
+  "csv-mapping-boards": "Kiekvienas lapas tampa atskira lenta:",
+  "csv-mapping-skipped-sheets": "Neimportuojami lapai:",
+  "csv-mapping-title-required": "Pasirinkite stulpelį su kortelių pavadinimais.",
+  "csv-mapping-list-required": "Įveskite sąrašo, į kurį bus įtrauktos visos kortelės, pavadinimą arba pasirinkite stulpelį su sąrašu."
 }

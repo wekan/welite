@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-programmas avaida projektan Issues, valiče Also available in: CSV lugetišen alaosas, valiče kolonkad (All columns, Description-pöudanke) i eksportiruigat, siloi pane CSV. Redmine nimitab kolonkad teiden kelel, sikš vajehtagat kel' anglijan kel'he My account -lehtpolel enne eksportad. Jogahine status tegese lugetišeks i tegendad kartoikš, trekeranke znaman, tegijanke, avtoranke, päivmärdoidenke, vanhembaižen tegendanke i sidotud tegendoidenke; prioritet, kategorii, märitud versii, arvostadud aig, % Done i kävutajan märitud pöudad tegesoiš kävutajan märitud pöudikš.",
   "import-board-instruction-orgmode": "Pane Org mode -fail, kut sidä kirjutadas Emacs, Orgzly vai Beorg. Ezmäižen tazopindan pälkirjutesed tegesoiš lugetišikš, a toižen tazopindan pälkirjutesed kartoikš. TODO i DONE, prioritetad, tegad, SCHEDULED, DEADLINE i CLOSED kaitas, a kodvindknopkad i süvembad pälkirjutesed tegesoiš kodvindlugetišikš.",
   "import-board-instruction-focalboard": "Ava .boardarchive-arhiv da ličta laudan board.jsonl, versionrivin ke vai ilman sidä. Laudan näguman joukoihe jagamižen ominaižuz’ tegesoi lugetišiks, toižed valičendan ominaižuded znamadeks, tekstan da märkitsemisruuduiden blokad kirjutuseks da kodvindlugetišeks, da sel’genzoitused kaicetas. Kuvid da ličtusid ei toda.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kudamb kolonk om kudamb?",
+  "csv-mapping-description": "Valiče failan kolonk, kus om jogahine kartan pöud. Valičendad tehtihe kolonkoiden nimiden mödhe; vajehtagat ned, kudambad oma värad, i valiče (ei ole failas) pöudan täht, kudambad failas ei ole.",
+  "csv-mapping-not-in-file": "(ei ole failas)",
+  "csv-mapping-column-number": "Kolonk __number__",
+  "csv-mapping-list-missing": "Failas ei ole kolonkad lugetišen täht. Valiče se ülähän, vai kirjuta sen ühten lugetišen nimi, kuna kaik kartad mändas.",
+  "csv-mapping-list-name": "Lugetiž kaikiden kartoiden täht",
+  "csv-mapping-custom-fields": "Toižed kolonkad importiruida kävutajan märitud tekstpöudin:",
+  "csv-mapping-boards": "Jogahine lehtpol' tegese ičeze laudaks:",
+  "csv-mapping-skipped-sheets": "Lehtpoled, kudambid ei importiruiše:",
+  "csv-mapping-title-required": "Valiče kolonk, kus oma kartoiden nimed.",
+  "csv-mapping-list-required": "Kirjuta lugetišen nimi, kuna kaik kartad mändas, vai valiče kolonk, kus om lugetiž."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "W Redmine otwórz Issues projektu, wybierz Also available in: CSV na dole listy, wybierz kolumny (All columns z Description) i wyeksportuj, a następnie wklej CSV. Redmine nadaje kolumnom nazwy w Twoim języku, więc przed eksportem ustaw język na English w My account. Każdy status staje się listą, a zgłoszenia kartami z typem zgłoszenia jako etykietą, przypisaną osobą, autorem, datami, zadaniem nadrzędnym i powiązanymi zgłoszeniami; priorytet, kategoria, wersja docelowa, szacowany czas, % Done i pola niestandardowe stają się polami niestandardowymi.",
   "import-board-instruction-orgmode": "Wklej plik Org mode zapisany przez Emacs, Orgzly lub Beorg. Nagłówki najwyższego poziomu stają się listami, a nagłówki drugiego poziomu kartami. TODO i DONE, priorytety, etykiety, SCHEDULED, DEADLINE i CLOSED są zachowywane, a pola wyboru i głębsze nagłówki stają się checklistami.",
   "import-board-instruction-focalboard": "Rozpakuj plik .boardarchive i wklej zawartość pliku board.jsonl tablicy, z wierszem wersji lub bez niego. Właściwość grupowania widoku tablicy staje się listami, inne właściwości wyboru etykietami, bloki tekstu i pól wyboru opisem oraz checklistą, a komentarze zostają zachowane. Obrazy i załączniki nie są importowane.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Która kolumna odpowiada któremu polu?",
+  "csv-mapping-description": "Wybierz kolumnę pliku zawierającą każde pole karty. Wybory zostały dokonane na podstawie nazw kolumn; popraw błędne wybory i wybierz (brak w pliku) dla pola, którego plik nie zawiera.",
+  "csv-mapping-not-in-file": "(brak w pliku)",
+  "csv-mapping-column-number": "Kolumna __number__",
+  "csv-mapping-list-missing": "Plik nie ma kolumny z listą. Wybierz ją powyżej lub wpisz nazwę jednej listy, do której trafią wszystkie karty.",
+  "csv-mapping-list-name": "Lista dla wszystkich kart",
+  "csv-mapping-custom-fields": "Inne kolumny do zaimportowania jako niestandardowe pola tekstowe:",
+  "csv-mapping-boards": "Każdy arkusz staje się osobną tablicą:",
+  "csv-mapping-skipped-sheets": "Arkusze, które nie zostaną zaimportowane:",
+  "csv-mapping-title-required": "Wybierz kolumnę zawierającą tytuły kart.",
+  "csv-mapping-list-required": "Wpisz nazwę listy, do której trafią wszystkie karty, lub wybierz kolumnę zawierającą listę."
 }

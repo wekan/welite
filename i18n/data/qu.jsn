@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine nisqapi, proyectop Issues nisqanta kichay, sutisuyup uranpi Also available in: CSV akllay, sayaqkunata akllay (All columns, Description nisqawan) hurquy, chaymanta CSVta k'askachiy. Redmineqa sayaqkunata simiykipi sutichan, chayrayku hurquyta manaraq ruwachkaspa My account nisqapi simiykita inglés simiman churay. Sapa kayqa sutisuyum kanqa, sasachakuykunataq kartakunam kanqa, tracker unancha hina, ruranapaq churasqanwan, qillqaqninwan, pachankunawan, tayta llamk'ayninwan, t'inkisqa sasachakuykunawan; ñawpaqchay, rikch'ay, target version, chaninchasqa mita, % Done, sapaq pampakuna ima sapaq pampakunam kanqa.",
   "import-board-instruction-orgmode": "Org mode willañiqita k'askachiy, Emacs, Orgzly utaq Beorg qillqasqanta hina. Hanaq kaq uma qillqakunaqa sutisuyukunam kanqa, iskay kaq patapi uma qillqakunataq kartakunam kanqa. TODO, DONE, ñawpaqchaykuna, unanchakuna, SCHEDULED, DEADLINE, CLOSED ima waqaychakunqa, chiqaqchana k'uchukunataq aswan ukhu uma qillqakunataq qhawana sutisuyukunam kanqa.",
   "import-board-instruction-focalboard": ".boardarchive kiputa kichay, hinaspa pirqap board.jsonl kaqninta k'askachiy, musuqchasqa yupaypa wachunwan utaq mana chay wachuyuq. Pirqa qhawaypa huñunapaq kaynin sutisuyukuna tukun, huk akllana kayninkuna unanchakuna tukunku, qillqa hinallataq chimpuna tawa kuchu t'aqakuna willakuywan qhawana sutisuyu tukunku, rimaykunataqa waqaychanku. Wankikuna hinallataq yapasqakunaqa manam apamusqachu kanku.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Mayqin sayaqmi mayqin?",
+  "csv-mapping-description": "Sapa karta pampata hap'iq willañiqip sayaqninta akllay. Akllaykunaqa sayaqkunap sutinmantam ruwakurqa; pantasqakunata tikray, willañiqipi mana kaq pampapaqtaq (mana willañiqipi) akllay.",
+  "csv-mapping-not-in-file": "(mana willañiqipi)",
+  "csv-mapping-column-number": "Sayaq __number__",
+  "csv-mapping-list-missing": "Willañiqiqa manam sutisuyupaq sayaqniyuqchu. Hanaqpi hukta akllay, utaq llapan kartakuna yaykunan huk sutisuyup sutinta qillqay.",
+  "csv-mapping-list-name": "Llapan kartakunapaq sutisuyu",
+  "csv-mapping-custom-fields": "Qillqa sapaq pampa hina yaykuchinapaq huk sayaqkuna:",
+  "csv-mapping-boards": "Sapa raphiqa kikin pirqanmi kanqa:",
+  "csv-mapping-skipped-sheets": "Mana yaykuchisqa raphikuna:",
+  "csv-mapping-title-required": "Kartakunap sutinta hap'iq sayaqta akllay.",
+  "csv-mapping-list-required": "Llapan kartakuna yaykunan sutisuyup sutinta qillqay, utaq sutisuyuta hap'iq sayaqta akllay."
 }

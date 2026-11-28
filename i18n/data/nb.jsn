@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Åpne prosjektets Issues i Redmine, velg Also available in: CSV nederst i listen, velg kolonnene (All columns med Description), og eksporter. Lim deretter inn CSV-filen. Redmine gir kolonnene navn på språket ditt, så sett språket til English i My account før eksporten. Hver status blir en liste, og saker blir kort med sakstypen som etikett, tildelt person, forfatter, datoer, overordnet oppgave og relaterte saker; prioritet, kategori, målversjon, estimert tid, % Done og egendefinerte felt blir egendefinerte felt.",
   "import-board-instruction-orgmode": "Lim inn en Org mode-fil skrevet av Emacs, Orgzly eller Beorg. Overskrifter på øverste nivå blir lister, og overskrifter på andre nivå blir kort. TODO og DONE, prioriteter, etiketter, SCHEDULED, DEADLINE og CLOSED beholdes, og avkrysningsbokser og dypere overskrifter blir sjekklister.",
   "import-board-instruction-focalboard": "Pakk ut .boardarchive-filen og lim inn tavlens board.jsonl, med eller uten versjonslinjen. Tavlevisningens grupperingsegenskap blir lister, andre valgegenskaper blir etiketter, tekst- og avkrysningsboksblokker blir beskrivelsen og en sjekkliste, og kommentarer beholdes. Bilder og vedlegg importeres ikke.",
-  "import-board-instruction-todoist": "Åpne prosjektmenyen i Todoist og velg Eksporter som mal. Lim deretter inn CSV-filen. Seksjoner blir lister, oppgaver blir kort, deloppgaver blir en sjekkliste, notater blir kommentarer, og @labels og prioritetene p1 til p3 blir etiketter."
+  "import-board-instruction-todoist": "Åpne prosjektmenyen i Todoist og velg Eksporter som mal. Lim deretter inn CSV-filen. Seksjoner blir lister, oppgaver blir kort, deloppgaver blir en sjekkliste, notater blir kommentarer, og @labels og prioritetene p1 til p3 blir etiketter.",
+  "csv-mapping-title": "Hvilken kolonne er hvilken?",
+  "csv-mapping-description": "Velg kolonnen i filen som inneholder hvert kortfelt. Valgene ble gjort ut fra kolonnenavnene; rett de som er feil, og velg (ikke i filen) for et felt som filen ikke har.",
+  "csv-mapping-not-in-file": "(ikke i filen)",
+  "csv-mapping-column-number": "Kolonne __number__",
+  "csv-mapping-list-missing": "Filen har ingen kolonne for listen. Velg en ovenfor, eller skriv navnet på den ene listen som alle kortene skal plasseres i.",
+  "csv-mapping-list-name": "Liste for alle kort",
+  "csv-mapping-custom-fields": "Andre kolonner som skal importeres som tilpassede tekstfelt:",
+  "csv-mapping-boards": "Hvert regneark blir en egen tavle:",
+  "csv-mapping-skipped-sheets": "Regneark som ikke importeres:",
+  "csv-mapping-title-required": "Velg kolonnen som inneholder korttitlene.",
+  "csv-mapping-list-required": "Skriv navnet på listen som alle kortene skal plasseres i, eller velg kolonnen som inneholder listen."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine ནང་ ལས་འགུལ་གྱི་ Issues ཁ་ཕྱེ་ ཐོ་ཡིག་གི་མཇུག་ལུ་ Also available in: CSV གདམ་ ཀ་ཐིག་ཚུ་ (All columns, Description དང་གཅིག་ཁར་) གདམ་ཞིནམ་ལས་ ཕྱིར་སྐྱེལ་འབད་ དེ་ལས་ CSV འདི་སྦྱར། Redmine གིས་ ཀ་ཐིག་ཚུ་ཁྱོད་ཀྱི་སྐད་ཡིག་ནང་མིང་བཏགསཔ་ཨིན་ དེ་འབདཝ་ལས་ ཕྱིར་སྐྱེལ་མ་འབད་བའི་ཧེ་མ་ My account ནང་ ཁྱོད་ཀྱི་སྐད་ཡིག་འདི་ ཨིང་ལིཤ་ལུ་གཞི་སྒྲིག་འབད། གནས་སྟངས་རེ་རེ་ ཐོ་ཡིག་ལུ་འགྱུར་ཏེ་ གནད་དོན་ཚུ་ tracker འདི་ཁ་ཡིག་སྦེ་, འགན་འཁུར་པ་, རྩོམ་པ་པོ་, ཚེས་གྲངས་, ཕ་མའི་ལས་འགན་དང་ འབྲེལ་བ་ཡོད་པའི་གནད་དོན་དང་གཅིག་ཁར་ ཤོག་བྱང་ལུ་འགྱུརཝ་ཨིན། གཙོ་རིམ་, དབྱེ་ཁག་, དམིགས་གཏད་ཐོན་རིམ་, ཚོད་རྩིས་དུས་ཚོད་, % Done དང་ སྒེར་གྱི་ས་སྒོ་ཚུ་ སྒེར་གྱི་ས་སྒོ་ལུ་འགྱུརཝ་ཨིན།",
   "import-board-instruction-orgmode": "Emacs, Orgzly ཡང་ན་ Beorg གིས་འབྲི་དོ་བཟུམ་གྱི་ Org mode ཡིག་སྣོད་ཅིག་སྦྱར། གོང་རིམ་གྱི་མགོ་ཡིག་ཚུ་ཐོ་ཡིག་ལུ་འགྱུར་ཏེ་ རིམ་པ་གཉིས་པའི་མགོ་ཡིག་ཚུ་ཤོག་བྱང་ལུ་འགྱུརཝ་ཨིན། TODO དང་ DONE, གཙོ་རིམ་, ཁ་ཡིག་, SCHEDULED, DEADLINE དང་ CLOSED ཚུ་བཞག་འོང་ དེ་ལས་ ཞིབ་རྟགས་སྒྲོམ་དང་ གཏིང་ཟབ་པའི་མགོ་ཡིག་ཚུ་ཞིབ་ཐོ་ལུ་འགྱུརཝ་ཨིན།",
   "import-board-instruction-focalboard": ".boardarchive ཡིག་སྣོད་ཀྱི་སྡུད་སྒྲིལ་བཤིག་སྟེ་ བྱང་གཞིའི་ board.jsonl སྦྱར། ཐོན་རིམ་གྱི་གྲལ་ཐིག་ཡོད་རུང་མེད་རུང་བཏུབ། བྱང་གཞི་མཐོང་སྣང་གི་སྡེ་ཚན་བཟོ་ནིའི་ཁྱད་ཆོས་དེ་ཐོ་ཡིག་ལུ་འགྱུརཝ་ཨིན། གདམ་ཁ་རྐྱབ་ནིའི་ཁྱད་ཆོས་གཞན་ཚུ་ཁ་ཡིག་ལུ་འགྱུརཝ་ཨིན། ཚིག་ཡིག་དང་རྟགས་བཀལ་སྒྲོམ་གྱི་དུམ་བུ་ཚུ་འགྲེལ་བཤད་དང་ཞིབ་དཔྱད་ཐོ་ཡིག་ལུ་འགྱུརཝ་ཨིནམ་དང་ བསམ་འཆར་ཚུ་བཞགཔ་ཨིན། པར་དང་ཟུར་སྦྲགས་ཚུ་ནང་འདྲེན་མི་འབད།",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ཀ་ཐིག་ག་འདི་ག་ཅི་ཨིན?",
+  "csv-mapping-description": "ཤོག་བྱང་ས་སྒོ་རེ་རེ་འཆང་མི་ ཡིག་སྣོད་ཀྱི་ཀ་ཐིག་འདི་གདམ། གདམ་ཁ་ཚུ་ ཀ་ཐིག་གི་མིང་ལས་བཟོ་ཡོདཔ་ཨིན། ནོར་བ་ག་ཅི་ཡོད་རུང་བསྒྱུར་ དེ་ལས་ ཡིག་སྣོད་ནང་མེད་པའི་ས་སྒོ་ཅིག་གི་དོན་ལུ་ (ཡིག་སྣོད་ནང་མེད) གདམ།",
+  "csv-mapping-not-in-file": "(ཡིག་སྣོད་ནང་མེད)",
+  "csv-mapping-column-number": "ཀ་ཐིག་ __number__",
+  "csv-mapping-list-missing": "ཡིག་སྣོད་ནང་ ཐོ་ཡིག་གི་དོན་ལུ་ཀ་ཐིག་མེད། གོང་ལས་ཅིག་གདམ་ ཡང་ན་ ཤོག་བྱང་ག་ར་འགྱོ་སའི་ཐོ་ཡིག་གཅིག་གི་མིང་ཡིག་དཔར་རྐྱབ།",
+  "csv-mapping-list-name": "ཤོག་བྱང་ག་ར་གི་དོན་ལུ་ཐོ་ཡིག",
+  "csv-mapping-custom-fields": "ཚིག་ཡིག་སྒེར་གྱི་ས་སྒོ་སྦེ་ནང་འདྲེན་འབད་ནིའི་ཀ་ཐིག་གཞན་ཚུ།",
+  "csv-mapping-boards": "ཤོག་ལེབ་རེ་རེ་ རང་སོའི་བྱང་གཞི་ལུ་འགྱུརཝ་ཨིན།",
+  "csv-mapping-skipped-sheets": "ནང་འདྲེན་མ་འབད་བའི་ཤོག་ལེབ་ཚུ།",
+  "csv-mapping-title-required": "ཤོག་བྱང་གི་མགོ་མིང་ཚུ་འཆང་མི་ཀ་ཐིག་འདི་གདམ།",
+  "csv-mapping-list-required": "ཤོག་བྱང་ག་ར་འགྱོ་སའི་ཐོ་ཡིག་གི་མིང་ཡིག་དཔར་རྐྱབ་ ཡང་ན་ ཐོ་ཡིག་འཆང་མི་ཀ་ཐིག་འདི་གདམ།"
 }

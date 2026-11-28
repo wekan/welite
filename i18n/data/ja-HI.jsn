@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine で ぷろじぇくとの Issues を ひらき、いちらんの したに ある Also available in: CSV を えらび、れつを えらんで（All columns、Description を ふくむ）えくすぽおとし、その CSV を はりつけます。Redmine は つかっている げんごで れつの なまえを つけるため、えくすぽおとの まえに My account で げんごを English に せっていしてください。それぞれの すてえたすは りすとに、かだいは らべるに かわった とらっかあ、たんとうしゃ、さくせいしゃ、ひづけ、おやたすく、かんれんする かだいを ふくむ かあどに なります。ゆうせんど、かてごり、たいしょうばあじょん、よていこうすう、% Done、かすたむふぃいるどは かすたむふぃいるどに なります。",
   "import-board-instruction-orgmode": "Emacs、Orgzly、Beorgなどが つくった Org modeふぁいるを はりつけてください。いちばん うえの みだしは りすと、ふたつめの かいそうの みだしは かーどに なります。TODOと DONE、ゆうせんど、たぐ、SCHEDULED、DEADLINE、CLOSEDは たもたれ、ちぇっくぼっくすと さらに ふかい みだしは ちぇっくりすとに なります。",
   "import-board-instruction-focalboard": ".boardarchive ファイルをかいとうし、ボードの board.jsonl のないようをはりつけてください。バージョンぎょうはあってもなくてもかまいません。ボードビューのグループかプロパティはリストに、そのほかのせんたくプロパティはラベルに、テキストとチェックボックスのブロックはせつめいとチェックリストにへんかんされ、コメントはほじされます。がぞうとてんぷファイルはインポートされません。",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "それぞれの れつは どの ふぃーるどですか？",
+  "csv-mapping-description": "それぞれの かーどふぃーるどに たいおうする ふぁいるの れつを えらんでください。れつの なまえに もとづいて えらばれています。まちがいが あれば なおし、ふぁいるに ない ふぃーるどは「ふぁいるに ない」を えらんでください。",
+  "csv-mapping-not-in-file": "（ふぁいるに ない）",
+  "csv-mapping-column-number": "れつ __number__",
+  "csv-mapping-list-missing": "ふぁいるに りすとの れつが ありません。うえで れつを えらぶか、すべての かーどを いれる ひとつの りすとの なまえを にゅうりょくしてください。",
+  "csv-mapping-list-name": "すべての かーどを いれる りすと",
+  "csv-mapping-custom-fields": "てきすとがたの かすたむふぃーるどとして いんぽーとする ほかの れつ:",
+  "csv-mapping-boards": "それぞれの しーとを べつべつの ぼーどに します:",
+  "csv-mapping-skipped-sheets": "いんぽーとしない しーと:",
+  "csv-mapping-title-required": "かーどめいが はいっている れつを えらんでください。",
+  "csv-mapping-list-required": "すべての かーどを いれる りすとの なまえを にゅうりょくするか、りすとが はいっている れつを えらんでください。"
 }

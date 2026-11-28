@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "ʻI Redmine, fakaava ʻa e Issues ʻo e poloseki, fili ʻa e Also available in: CSV ʻi lalo ʻo e lisi, fili ʻa e ngaahi kōlomu (All columns, mo e Description) pea ʻave ki tuʻa, pea pēsiti ʻa e CSV. ʻOku fakahingoa ʻe Redmine ʻa e ngaahi kōlomu ʻi hoʻo lea, ko ia fokotuʻu hoʻo lea ki he faka-Pilitānia ʻi he My account ki muʻa ke ʻave ki tuʻa. Ko e tuʻunga takitaha ʻoku hoko ko ha lisi pea ko e ngaahi ʻīsiu ʻoku hoko ko e ngaahi kaati, mo e tracker ko ha fakaʻilonga, tokotaha vahe, tokotaha faʻu, ʻaho, ngāue tefito mo e ngaahi ʻīsiu fekauʻaki; ko e muʻomuʻa, kalasi, tatau taumuʻa, taimi fakafuofua, % Done mo e ngaahi konga fakafoʻituitui ʻoku hoko ko e ngaahi konga fakafoʻituitui.",
   "import-board-instruction-orgmode": "Pēsiti ha faile Org mode, ʻo hangē ko hono tohi ʻe Emacs, Orgzly pe Beorg. Ko e ngaahi kaveinga ʻi he tuʻunga ʻolunga ʻoku hoko ko e ngaahi lisi pea ko e ngaahi kaveinga ʻi he tuʻunga ua ʻoku hoko ko e ngaahi kaati. ʻOku tauhi ʻa e TODO mo e DONE, ngaahi muʻomuʻa, ngaahi fakaʻilonga, SCHEDULED, DEADLINE mo e CLOSED, pea ko e ngaahi puha sivi mo e ngaahi kaveinga ʻi lalo ange ʻoku hoko ko e ngaahi lisi sivi.",
   "import-board-instruction-focalboard": "Fakaava ʻa e faile .boardarchive mei he zip pea fakapipiki ʻa e kanotohi ʻo e board.jsonl ʻo e papa, fakataha mo e laine ʻo e tatau pe ʻikai. ʻOku hoko ʻa e ʻulungaanga fakakulupu ʻo e vakai papa ko e ngaahi lisi, ngaahi ʻulungaanga fili kehe ko e ngaahi fakaʻilonga, ngaahi konga tohi mo e puha fakaʻilonga ko e fakamatala mo e lisi sivi, pea tauhi ʻa e ngaahi fakakaukau. ʻOku ʻikai fakahū mai ʻa e ngaahi ʻata mo e ngaahi faile fakapipiki.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Ko e kōlomu fē ʻoku fē?",
+  "csv-mapping-description": "Fili ʻa e kōlomu ʻo e faile ʻoku ʻi ai ʻa e konga kaati takitaha. Naʻe fili ʻa e ngaahi fili mei he ngaahi hingoa kōlomu; liliu ha meʻa ʻoku hala, pea fili ʻa e (ʻikai ʻi he faile) ki ha konga ʻoku ʻikai ʻi he faile.",
+  "csv-mapping-not-in-file": "(ʻikai ʻi he faile)",
+  "csv-mapping-column-number": "Kōlomu __number__",
+  "csv-mapping-list-missing": "ʻOku ʻikai ha kōlomu ʻi he faile ki he lisi. Fili ha taha ʻi ʻolunga, pe tohi ʻa e hingoa ʻo e lisi ʻe taha ʻoku ʻalu ki ai ʻa e kaati kotoa pē.",
+  "csv-mapping-list-name": "Lisi ki he kaati kotoa pē",
+  "csv-mapping-custom-fields": "Ngaahi kōlomu kehe ke hū mai ko e ngaahi konga fakafoʻituitui tohi:",
+  "csv-mapping-boards": "Ko e laʻipepa takitaha ʻoku hoko ko hono papa pē ʻoʻona:",
+  "csv-mapping-skipped-sheets": "Ngaahi laʻipepa ʻoku ʻikai hū mai:",
+  "csv-mapping-title-required": "Fili ʻa e kōlomu ʻoku ʻi ai ʻa e ngaahi hingoa kaati.",
+  "csv-mapping-list-required": "Tohi ʻa e hingoa ʻo e lisi ʻoku ʻalu ki ai ʻa e kaati kotoa pē, pe fili ʻa e kōlomu ʻoku ʻi ai ʻa e lisi."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Yn Redmine, egorewgh Issues an ragdres, dewisewgh Also available in: CSV yn goles an rol, dewisewgh an kolovenyow (All columns, gans Description) hag esperthewgh, ena glusewgh an CSV. Redmine a henow an kolovenyow yn agas yeth, ytho settyewgh agas yeth dhe Sowsnek yn My account kyns esperthi. Pub studh a dhe ha bos rol ha kudynnow a dhe ha bos kartennow, gans an tracker avel label, apoyntys, awtour, dedhyasow, ober kerens ha kudynnow kelmys; rakwir, klass, versyon kost, termyn amontys, % Done ha gwelyow personel a dhe ha bos gwelyow personel.",
   "import-board-instruction-orgmode": "Glusewgh restren Org mode, kepar dell skrif Emacs, Orgzly po Beorg. Pennlinennow an nivel ughella a dhe ha bos rolyow ha pennlinennow an nessa nivel a dhe ha bos kartennow. TODO ha DONE, rakwiryow, labellow, SCHEDULED, DEADLINE ha CLOSED a vydh gwithys, ha boksow checkya ha pennlinennow downna a dhe ha bos rolyow checkya.",
   "import-board-instruction-focalboard": "Digor an restren .boardarchive ha glena board.jsonl an estyllen, gans po heb hy linen versyon. An gnas a gronna gwel an estyllen a dheu ha bos rolyow, gnasow dewis erel a dheu ha bos labellow, treylyow tekst ha kistow checkya a dheu ha bos an deskrifans hag unn rol checkya, ha kampoellyansow yw gwithys. Skeusennow ha stagellow nyns yw ynperthys.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Py koloven yw pyneyl?",
+  "csv-mapping-description": "Dewisewgh an koloven a'n restren a syns pub gwel karten. An dewisyansow a veu gwrys dhyworth henwyn an kolovenyow; chanjyewgh neb a vo kamm, ha dewisewgh (ny'n restren) rag gwel nag eus dhe'n restren.",
+  "csv-mapping-not-in-file": "(ny'n restren)",
+  "csv-mapping-column-number": "Koloven __number__",
+  "csv-mapping-list-missing": "Nyns eus koloven rag an rol y'n restren. Dewisewgh onan a-ugh, po skrifewgh hanow an unn rol may ha pub karten ynni.",
+  "csv-mapping-list-name": "Rol rag pub karten",
+  "csv-mapping-custom-fields": "Kolovenyow erell dhe ynperthi avel gwelyow personel tekst:",
+  "csv-mapping-boards": "Pub folen a dhe ha bos hy estyllen hy honan:",
+  "csv-mapping-skipped-sheets": "Folennow nag yns ynperthys:",
+  "csv-mapping-title-required": "Dewisewgh an koloven a syns titlys an kartennow.",
+  "csv-mapping-list-required": "Skrifewgh hanow an rol may ha pub karten ynni, po dewisewgh an koloven a syns an rol."
 }

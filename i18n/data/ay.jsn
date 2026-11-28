@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine ukan, proyecto Issues jist'araña, listan aynacht'ap Also available in: CSV ajlliña, columnanak ajlliña (All columns, Description ukamp chika) ukat mistuyaña, ukat CSV qillqaqaña. Redmine ukax columnanak arumaruw sutichi, ukhamax mistuyañat nayraqat My account ukan arum inglés aruru uchaña. Sapa estado mä listaruw tuku, issues ukanakax tarjetanakaruw tuku, tracker chimpujama, lurayiri, qillqiri, urunaka, awki lurawi ukat chikt'ata issues ukanakamp chika; nayrïr lurañ, categoría, target version, estimated time, % Done ukat pachpa camponakax pachpa camponakaruw tuku.",
   "import-board-instruction-orgmode": "Org mode qillqat qillqaqaña, kunjamatix Emacs, Orgzly jan ukax Beorg qillqki ukhama. Nayrïr thakhin p'iqi sutinakax listanakaruw tuku, payïr thakhin p'iqi sutinakax tarjetanakaruw tuku. TODO ukat DONE, nayrïr lurañanaka, chimpunaka, SCHEDULED, DEADLINE ukat CLOSED ukanakax imasiwa, ukat uñakipañ chimpunakas juk'amp manqhan p'iqi sutinakas uñakipañ listanakaruw tuku.",
   "import-board-instruction-focalboard": ".boardarchive q'ipi jist'araña ukatxa pirqana board.jsonl ukapa lip'katayaña, versión siqimpi jan ukaxa jan uka siqinisa. Pirqa uñjäwina qutuchañataki kastapaxa suti siqinakaru tuku, yaqha ajlliña kastanakaxa unanchanakaru tukupxi, qillqata ukhamaraki chimpuña kajuna t'aqanakaxa qhananchawiru ukhamaraki uñakipaña sutinakaru tukupxi, arxatanakaxa imatäpxiwa. Uñacht'äwinakasa yapxatatanakasa janiwa apanitäkiti.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kawkïr columnas kawkïrisa?",
+  "csv-mapping-description": "Sapa tarjeta campo katxaruki uka qillqatan columna ajlliña. Ajllitanakax columna sutinakat luratawa; kawkïrinakatix pantjata ukanak mayjt'ayaña, ukat qillqatan jan utjki uka campotakix (not in the file) ajlliña.",
+  "csv-mapping-not-in-file": "(qillqatan janiw utjkiti)",
+  "csv-mapping-column-number": "Columna __number__",
+  "csv-mapping-list-missing": "Qillqatan janiw lista columnas utjkiti. Patan mayni ajlliña, jan ukax taqi tarjetanakax mantki uka mä lista sutip qillqaña.",
+  "csv-mapping-list-name": "Taqi tarjetatak lista",
+  "csv-mapping-custom-fields": "Yaqha columnanaka, qillqa pachpa camponakjama apaniñataki:",
+  "csv-mapping-boards": "Sapa hojax pachpa pirqaparuw tuku:",
+  "csv-mapping-skipped-sheets": "Jan apanitäki uka hojanaka:",
+  "csv-mapping-title-required": "Tarjeta sutinak katxaruki uka columna ajlliña.",
+  "csv-mapping-list-required": "Taqi tarjetanakax mantki uka lista sutip qillqaña, jan ukax lista katxaruki uka columna ajlliña."
 }

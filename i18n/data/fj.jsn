@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ena Redmine, dolava na Issues ni parokaramu, digitaka na Also available in: CSV e ra ni lisi, digitaka na kolomu (All columns, vata kei na Description) ka vakauta yani, oti biuta mai na CSV. Na Redmine e vakayacana na kolomu ena nomu vosa, o koya mo vakatulewataka na nomu vosa me vosa vaka-Vavalagi ena My account ni bera ni o vakauta yani. Yadua na ituvaki e yaco me lisi ka na leqa e yaco me kadi, vata kei na tracker me ivakatakilakila, dauvakayacori, dauvola, siga, cakacaka tina kei na leqa veiwekani; na ka bibi, mataqali, target version, gauna e vakatautauvatataki, % Done kei na tikina digitaki e yaco me tikina digitaki.",
   "import-board-instruction-orgmode": "Biuta e dua na faile ni Org mode, me vaka e volai mai Emacs, Orgzly se Beorg. Na ulutaga e cake sara e yaco me lisi ka na ulutaga ni ikarua ni vakatagedegede e yaco me kadi. Na TODO kei na DONE, na ka bibi, na ivakatakilakila, na SCHEDULED, DEADLINE kei na CLOSED e maroroi, ka na kato ni digidigi kei na ulutaga e toka e ra e yaco me lisi ni vakadinadina.",
   "import-board-instruction-focalboard": "Dolava na faile .boardarchive mai na zip ka kabita na lewenivola ni board.jsonl ni papa, kei na yatu ni kena ivakadewa se sega. Na ivakarau ni wasewase vakailawalawa ena rai ni papa e yaco me lisi, na ivakarau ni digidigi tale eso me ivakatakilakila, na veitiki ni volavola kei na kato ni maka me ivakamacala kei na lisi ni veidikevi, ka maroroi na veika e tukuni. Na iyaloyalo kei na faile e kabi e sega ni vakacurumi.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kolomu cava e vaka cava?",
+  "csv-mapping-description": "Digitaka na kolomu ni faile e taura yadua na tikina ni kadi. Na digidigi a cakava mai na yaca ni kolomu; veisautaka na kena e cala, ka digitaka (sega ena faile) me baleta e dua na tikina e sega ni tu ena faile.",
+  "csv-mapping-not-in-file": "(sega ena faile)",
+  "csv-mapping-column-number": "Kolomu __number__",
+  "csv-mapping-list-missing": "E sega ni dua na kolomu ni lisi ena faile. Digitaka e dua e cake, se volia na yaca ni dua ga na lisi e lako kina na kadi kece.",
+  "csv-mapping-list-name": "Lisi me baleta na kadi kece",
+  "csv-mapping-custom-fields": "Kolomu tale eso me kauta mai me tikina digitaki ni vosa:",
+  "csv-mapping-boards": "Yadua na pepa e yaco me nona vola:",
+  "csv-mapping-skipped-sheets": "Pepa e sega ni kauta mai:",
+  "csv-mapping-title-required": "Digitaka na kolomu e taura na ulutaga ni kadi.",
+  "csv-mapping-list-required": "Volia na yaca ni lisi e lako kina na kadi kece, se digitaka na kolomu e taura na lisi."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Dins Redmine, drovoz les Issues do pordjet, tchoezixhoz Also available in: CSV al valeye del djivêye, prindoz les colones (All columns, avou Description) eyet ebaguez, pwis aclapez l' CSV. Redmine lome les colones dins vosse lingaedje, adon metoz vosse lingaedje en inglès dins My account divant d' ebaguer. Tchaeke estat divint ene djivêye eyet les bouyes divnèt des cåtes, avou l' tracker come etikète, responsåbe, oteur, dates, bouye parint eyet bouyes raloyeyes; li prioritè, categoreye, modêye cibe, tins preyjhî, % Done eyet tchamps da vosse divnèt des tchamps da vosse.",
   "import-board-instruction-orgmode": "Aclapez on fitchî Org mode, come Emacs, Orgzly ou Beorg l' scrijhèt. Les tites do prumî livea divnèt des djivêyes eyet les tites do deujhinme livea divnèt des cåtes. TODO eyet DONE, les prioritès, les etikètes, SCHEDULED, DEADLINE eyet CLOSED sont wårdés, eyet les boesses a cotchî eyet les tites pus bas divnèt des djivêyes di verifiaedje.",
   "import-board-instruction-focalboard": "Disrastrindoz l’ fitchî .boardarchive et aclapez l’ contnou do board.jsonl do tåvlea, avou ou sins l’ roye di modêye. Li prôpieté d’ regroupaedje del vuwe do tåvlea divént des djivêyes, les ôtes prôpietés di tchuze divnèt des etiketes, les bloks di tecse et d’ boesses a clitchî divnèt li discrijhaedje et ene djivêye di verifiaedje, et les rimåkes sont wårdés. Les imådjes et les fitchîs djondous n’ sont nén abagués.",
-  "import-board-instruction-todoist": "Dins Todoist, drovoz l' pordjet, tchoezixhoz l' menu ⋯ a hôt a droete, pwis Manage data > Export as CSV, et aclapez l' fitchî CSV. Les seccions divnèt des djivêyes, les bouyes divnèt des cåtes, les dzo-bouyes divnèt ene djivêye di verifiaedje, les notes divnèt des rimåkes, eyet les @labels et les prumiristés p1 a p3 divnèt des etiketes."
+  "import-board-instruction-todoist": "Dins Todoist, drovoz l' pordjet, tchoezixhoz l' menu ⋯ a hôt a droete, pwis Manage data > Export as CSV, et aclapez l' fitchî CSV. Les seccions divnèt des djivêyes, les bouyes divnèt des cåtes, les dzo-bouyes divnèt ene djivêye di verifiaedje, les notes divnèt des rimåkes, eyet les @labels et les prumiristés p1 a p3 divnèt des etiketes.",
+  "csv-mapping-title": "Kéne colone est kéne?",
+  "csv-mapping-description": "Tchoezixhoz li colone do fitchî ki tént tchaeke tchamp del cåte. Les tchoes ont stî fwaits a pårti des nos des colones; candjîz ceus ki sont mwais, eyet tchoezixhoz (nén dins l' fitchî) po on tchamp ki l' fitchî n' a nén.",
+  "csv-mapping-not-in-file": "(nén dins l' fitchî)",
+  "csv-mapping-column-number": "Colone __number__",
+  "csv-mapping-list-missing": "Li fitchî n' a nole colone po l' djivêye. Tchoezixhoz ene pa dzeu, ou tapez l' no del seule djivêye wice ki totes les cåtes vont.",
+  "csv-mapping-list-name": "Djivêye po totes les cåtes",
+  "csv-mapping-custom-fields": "Ôtes colones a abaguer come tchamps da vosse di tecse:",
+  "csv-mapping-boards": "Tchaeke foye divint si prôpe tåvlea:",
+  "csv-mapping-skipped-sheets": "Foyes ki ni sont nén abaguêyes:",
+  "csv-mapping-title-required": "Tchoezixhoz li colone ki tént les tites des cåtes.",
+  "csv-mapping-list-required": "Tapez l' no del djivêye wice ki totes les cåtes vont, ou tchoezixhoz li colone ki tént l' djivêye."
 }

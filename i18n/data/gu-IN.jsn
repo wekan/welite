@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmineમાં પ્રોજેક્ટના Issues ખોલો, યાદીના તળિયે Also available in: CSV પસંદ કરો, કૉલમો પસંદ કરો (All columns, Description સાથે) અને નિકાસ કરો, પછી CSV પેસ્ટ કરો. Redmine કૉલમોનાં નામ તમારી ભાષામાં રાખે છે, તેથી નિકાસ કરતાં પહેલાં My accountમાં ભાષા અંગ્રેજી કરો. દરેક સ્થિતિ યાદી અને મુદ્દાઓ કાર્ડ બને છે, જેમાં લેબલ તરીકે ટ્રૅકર, સોંપાયેલી વ્યક્તિ, લેખક, તારીખો, પેરેન્ટ કાર્ય અને સંબંધિત મુદ્દાઓ જળવાય છે; પ્રાથમિકતા, શ્રેણી, લક્ષ્ય આવૃત્તિ, અંદાજિત સમય, % Done અને કસ્ટમ ક્ષેત્રો કસ્ટમ ક્ષેત્રો બને છે.",
   "import-board-instruction-orgmode": "Emacs, Orgzly અથવા Beorg લખે તેવી Org mode ફાઇલ પેસ્ટ કરો. ઉપરના સ્તરનાં શીર્ષકો યાદીઓ અને બીજા સ્તરનાં શીર્ષકો કાર્ડ બને છે. TODO અને DONE, પ્રાથમિકતાઓ, ટૅગ, SCHEDULED, DEADLINE અને CLOSED જળવાય છે, તથા ચેકબોક્સ અને વધુ ઊંડા સ્તરનાં શીર્ષકો ચેકલિસ્ટ બને છે.",
   "import-board-instruction-focalboard": ".boardarchive ફાઇલને અનઝિપ કરો અને બોર્ડની board.jsonl ની સામગ્રી આવૃત્તિની પંક્તિ સાથે અથવા તેના વિના પેસ્ટ કરો. બોર્ડ દૃશ્યનો જૂથ બનાવવાનો ગુણધર્મ યાદીઓમાં, અન્ય પસંદગીના ગુણધર્મો લેબલમાં, લખાણ અને ચેકબોક્સ બ્લોક વર્ણન અને ચેકલિસ્ટમાં ફેરવાય છે, અને ટિપ્પણીઓ જળવાય છે. ચિત્રો અને જોડાણો આયાત કરવામાં આવતાં નથી.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "કઈ કૉલમ કયા ક્ષેત્રની છે?",
+  "csv-mapping-description": "કાર્ડનું દરેક ક્ષેત્ર ધરાવતી ફાઇલની કૉલમ પસંદ કરો. પસંદગીઓ કૉલમના નામ પરથી કરવામાં આવી છે; ખોટી પસંદગીઓ સુધારો અને ફાઇલમાં ન હોય તેવા ક્ષેત્ર માટે “ફાઇલમાં નથી” પસંદ કરો.",
+  "csv-mapping-not-in-file": "(ફાઇલમાં નથી)",
+  "csv-mapping-column-number": "કૉલમ __number__",
+  "csv-mapping-list-missing": "ફાઇલમાં યાદી માટેની કૉલમ નથી. ઉપર એક પસંદ કરો, અથવા બધા કાર્ડ જે એક યાદીમાં જશે તેનું નામ લખો.",
+  "csv-mapping-list-name": "બધા કાર્ડ માટેની યાદી",
+  "csv-mapping-custom-fields": "લખાણવાળા કસ્ટમ ક્ષેત્રો તરીકે આયાત કરવાની બીજી કૉલમો:",
+  "csv-mapping-boards": "દરેક શીટનું પોતાનું અલગ બોર્ડ બને છે:",
+  "csv-mapping-skipped-sheets": "આયાત ન થતી શીટો:",
+  "csv-mapping-title-required": "કાર્ડનાં શીર્ષકો ધરાવતી કૉલમ પસંદ કરો.",
+  "csv-mapping-list-required": "બધા કાર્ડ જે યાદીમાં જશે તેનું નામ લખો, અથવા યાદી ધરાવતી કૉલમ પસંદ કરો."
 }

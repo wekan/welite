@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Eka Redmine, pfula Issues ta phurojeke, hlawula Also available in: CSV ehansi ka nxaxamelo, hlawula tikhalomu (All columns, na Description) u humesa, kutani u namarhela CSV. Redmine yi thya tikhalomu hi ririmi ra wena, hikwalaho veka ririmi ra wena ri va Xinghezi eka My account u nga si humesa. Xiyimo xin'wana na xin'wana xi va nxaxamelo naswona swiphiqo swi va makhadi, swin'we na tracker tanihi xikombiso, muaveriwa, mutsari, masiku, ntirho wa mutswari na swiphiqo leswi yelanaka; nkoka, xiyenge, vhezheni leyi kongomisiweke, nkarhi lowu ringanyetiweke, % Done na swivandla swa ku tiendlela swi va swivandla swa ku tiendlela.",
   "import-board-instruction-orgmode": "Namarhela fayili ya Org mode, hilaha Emacs, Orgzly kumbe Beorg swi yi tsalaka hakona. Tinhloko ta le henhla ti va minxaxamelo naswona tinhloko ta xiyimo xa vumbirhi ti va makhadi. TODO na DONE, nkoka, swikombiso, SCHEDULED, DEADLINE na CLOSED swa hlayisiwa, naswona swibokisana swo funghela na tinhloko ta le hansi swi va minxaxamelo yo kambela.",
   "import-board-instruction-focalboard": "Humesa fayili ya .boardarchive eka vuhlayiselo byo tshikileriwa kutani u namarheta leswi nga eka board.jsonl ya bodo, ni layini ya vuhundzuluxeri kumbe handle ka yona. Xihlawulekisi xo hlanganisa hi mintlawa eka xivono xa bodo xi hundzuka minxaxamelo, swihlawulekisi swin’wana swo hlawula swi hundzuka swikombiso, swiphemu swa tsalwa ni mabokisi yo fungha swi hundzuka nhlamuselo ni nxaxamelo wo kambela, naswona mavonelo ma hlayisiwa. Swifaniso ni swiengetelo a swi nghenisiwi.",
-  "import-board-instruction-todoist": "Eka Todoist, pfula phurojeke, hlawula menyu ya ⋯ ehenhla exineneni ka yona, kutani Manage data > Export as CSV, u namarheta fayili ya CSV. Swiyenge swi va minxaxamelo, mintirho yi va tikhadi, mintirho leyitsongo yi va nxaxamelo wo kambela, swilemukiso swi va mimbulavulo, naswona @labels na swirhangisiwa p1 ku ya eka p3 swi va swikombiso."
+  "import-board-instruction-todoist": "Eka Todoist, pfula phurojeke, hlawula menyu ya ⋯ ehenhla exineneni ka yona, kutani Manage data > Export as CSV, u namarheta fayili ya CSV. Swiyenge swi va minxaxamelo, mintirho yi va tikhadi, mintirho leyitsongo yi va nxaxamelo wo kambela, swilemukiso swi va mimbulavulo, naswona @labels na swirhangisiwa p1 ku ya eka p3 swi va swikombiso.",
+  "csv-mapping-title": "Xana khalomu yihi i yihi?",
+  "csv-mapping-description": "Hlawula khalomu ya fayili leyi khomaka xivandla xin'wana na xin'wana xa khadi. Swihlawulo swi endliwile hi ku ya hi mavito ya tikhalomu; cinca leswi hoxeke, naswona hlawula (a yi kona eka fayili) eka xivandla lexi fayili yi nga riki na xona.",
+  "csv-mapping-not-in-file": "(a yi kona eka fayili)",
+  "csv-mapping-column-number": "Khalomu __number__",
+  "csv-mapping-list-missing": "Fayili a yi na khalomu ya nxaxamelo. Hlawula yin'we laha henhla, kumbe u tsala vito ra nxaxamelo wun'we lowu makhadi hinkwawo ma yaka eka wona.",
+  "csv-mapping-list-name": "Nxaxamelo wa khadi rin'wana na rin'wana",
+  "csv-mapping-custom-fields": "Tikhalomu tin'wana to nghenisa tanihi swivandla swa ku tiendlela swa tsalwa:",
+  "csv-mapping-boards": "Tluka rin'wana na rin'wana ri va bodo ya rona:",
+  "csv-mapping-skipped-sheets": "Matluka lama nga nghenisiwiki:",
+  "csv-mapping-title-required": "Hlawula khalomu leyi khomaka tinhloko-mhaka ta makhadi.",
+  "csv-mapping-list-required": "Tsala vito ra nxaxamelo lowu makhadi hinkwawo ma yaka eka wona, kumbe u hlawula khalomu leyi khomaka nxaxamelo."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-ҥа бырайыак Issues арый, испииһэк аллараа Also available in: CSV тал, колонкалары тал (All columns, Description кытта) уонна таһаар, онтон CSV-ны киллэр. Redmine колонкалары эн тылгынан ааттыыр, ол иһин таһаарыах иннинэ My account-ка тылгын английскайга туруор. Хас биирдии турук испииһэк, боппуруостар карточка буолаллар, трекер бэлиэ курдук, эппиэттиир, ааптар, күннэр, төрүт сорудах уонна сыһыаннаах боппуруостар кытта; приоритет, категория, сыал барыла, сыаналаммыт бириэмэ, % Done уонна ураты паалалар ураты паалата буолаллар.",
   "import-board-instruction-orgmode": "Org mode билэтин киллэр, Emacs, Orgzly эбэтэр Beorg суруйарын курдук. Үрдүкү таһымнаах баһылар испииһэк, иккис таһымнаах баһылар карточка буолаллар. TODO уонна DONE, приоритеттар, тэгтэр, SCHEDULED, DEADLINE уонна CLOSED хаалаллар, бэлиэ квадраттар уонна дириҥ баһылар бэрэбиэркэ испииһэгэ буолаллар.",
   "import-board-instruction-focalboard": ".boardarchive билэ архивын арый уонна дуоска board.jsonl билэтин ис хоһоонун уган биэр, барыл устуруокатынан эбэтэр ону суох. Дуоска көрүнүн бөлөхтүүр уратыта испииһэктэр буолар, атын талыы уратылар бэлиэлэр буолаллар, тиэкис уонна бэлиэ туруорар кылааттар блоктара быһаарыы уонна бэрэбиэркэ испииһэгэ буолаллар, быһаарыылар хараллаллар. Ойуулар уонна сыһыарыылар киллэриллибэттэр.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Ханнык колонка тугуй?",
+  "csv-mapping-description": "Карточка хас биирдии паалатын тутар билэ колонкатын тал. Талыылар колонка ааттарыттан оҥоһулуннулар; сыыһаларын уларыт, онтон билэҕэ суох паалаҕа (билэҕэ суох) тал.",
+  "csv-mapping-not-in-file": "(билэҕэ суох)",
+  "csv-mapping-column-number": "Колонка __number__",
+  "csv-mapping-list-missing": "Билэҕэ испииһэк колонката суох. Үөһэ биири тал, эбэтэр бары карточкалар киирэр биир испииһэк аатын суруй.",
+  "csv-mapping-list-name": "Бары карточкаларга испииһэк",
+  "csv-mapping-custom-fields": "Текст ураты паалата курдук киллэриллэр атын колонкалар:",
+  "csv-mapping-boards": "Хас биирдии лиист бэйэтин дуоската буолар:",
+  "csv-mapping-skipped-sheets": "Киллэриллибэт лиистэр:",
+  "csv-mapping-title-required": "Карточка ааттарын тутар колонканы тал.",
+  "csv-mapping-list-required": "Бары карточкалар киирэр испииһэк аатын суруй, эбэтэр испииһэги тутар колонканы тал."
 }

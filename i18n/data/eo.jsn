@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "En Redmine, malfermu Issues de la projekto, elektu Also available in: CSV ĉe la malsupro de la listo, elektu la kolumnojn (All columns, kun Description) kaj eksportu, poste algluu la CSV-dosieron. Redmine nomas la kolumnojn en via lingvo, do agordu vian lingvon al la angla en My account antaŭ ol eksporti. Ĉiu stato fariĝas listo kaj aferoj fariĝas kartoj kun la spurilo kiel etikedo, asignito, aŭtoro, datoj, gepatra tasko kaj rilataj aferoj; prioritato, kategorio, celversio, taksita tempo, % Done kaj propraj kampoj fariĝas propraj kampoj.",
   "import-board-instruction-orgmode": "Algluu Org mode-dosieron verkitan de Emacs, Orgzly aŭ Beorg. Plejaltnivelaj titoloj fariĝas listoj kaj duanivelaj titoloj fariĝas kartoj. TODO kaj DONE, prioritatoj, etikedoj, SCHEDULED, DEADLINE kaj CLOSED estas konservataj, kaj markobutonoj kaj pli profundaj titoloj fariĝas kontrollistoj.",
   "import-board-instruction-focalboard": "Malkunpremu la dosieron .boardarchive kaj algluu la enhavon de board.jsonl de la tabulo, kun aŭ sen ĝia versia linio. La grupiga eco de la tabula vido fariĝas listoj, aliaj elektecoj fariĝas etikedoj, tekstaj kaj markobutonaj blokoj fariĝas la priskribo kaj kontrollisto, kaj komentoj estas konservataj. Bildoj kaj aldonaĵoj ne estas importataj.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kiu kolumno estas kiu?",
+  "csv-mapping-description": "Elektu la kolumnon de la dosiero, kiu enhavas ĉiun kartokampon. La elektoj estis faritaj laŭ la kolumnonomoj; ŝanĝu la malĝustajn, kaj elektu (ne en la dosiero) por kampo, kiun la dosiero ne havas.",
+  "csv-mapping-not-in-file": "(ne en la dosiero)",
+  "csv-mapping-column-number": "Kolumno __number__",
+  "csv-mapping-list-missing": "La dosiero ne havas kolumnon por la listo. Elektu unu supre, aŭ tajpu la nomon de la sola listo, en kiun ĉiuj kartoj iros.",
+  "csv-mapping-list-name": "Listo por ĉiuj kartoj",
+  "csv-mapping-custom-fields": "Aliaj kolumnoj importotaj kiel tekstaj propraj kampoj:",
+  "csv-mapping-boards": "Ĉiu folio fariĝas aparta tabulo:",
+  "csv-mapping-skipped-sheets": "Folioj, kiuj ne estas importitaj:",
+  "csv-mapping-title-required": "Elektu la kolumnon, kiu enhavas la kartotitolojn.",
+  "csv-mapping-list-required": "Tajpu la nomon de la listo, en kiun ĉiuj kartoj iros, aŭ elektu la kolumnon, kiu enhavas la liston."
 }

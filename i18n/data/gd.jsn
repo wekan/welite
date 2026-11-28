@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ann an Redmine, fosgail Issues a’ phròiseict, tagh Also available in: CSV aig bonn na liosta, tagh na colbhan (All columns, le Description) agus às-phortaich, agus cuir a-steach an CSV an uair sin. Ainmichidh Redmine na colbhan sa chànan agad, mar sin suidhich do chànan gu Beurla ann am My account mus às-phortaich thu. Thèid gach staid na liosta agus cùisean nan cairtean, leis an tracaiche mar leubail, neach-obrach, ùghdar, cinn-là, gnìomh pàrant agus cùisean co-cheangailte; thèid prìomhachas, roinn-seòrsa, tionndadh targaid, ùine thuairmseach, % Done agus raointean gnàthaichte nan raointean gnàthaichte.",
   "import-board-instruction-orgmode": "Cuir a-steach faidhle Org mode, mar a sgrìobhas Emacs, Orgzly no Beorg e. Thèid cinn aig an ìre as àirde nan liostaichean agus cinn aig an dàrna ìre nan cairtean. Thèid TODO agus DONE, prìomhachasan, tagaichean, SCHEDULED, DEADLINE agus CLOSED a chumail, agus thèid bogsaichean-cromaige agus cinn nas doimhne nan liostaichean-dearbhaidh.",
   "import-board-instruction-focalboard": "Dì-dhùmhlaich am faidhle .boardarchive agus cuir ann susbaint board.jsonl a’ bhùird, leis an loidhne tionndaidh no às a h-aonais. Bidh buadh a’ bhuidhneachaidh ann an sealladh a’ bhùird na liostaichean, buadhan taghaidh eile nan leubailean, blocaichean teacsa agus bogsaichean-comharraidh nan tuairisgeul agus liosta-dearbhaidh, agus thèid na beachdan a ghlèidheadh. Cha tèid dealbhan no ceanglachain ion-phortadh.",
-  "import-board-instruction-todoist": "Ann an Todoist, fosgail am pròiseact, tagh an clàr-taice ⋯ aig a’ mhullach air an làimh dheis, an uair sin Stiùirich dàta > Às-phortaich mar CSV, agus cuir susbaint an fhaidhle CSV ann. Thèid earrannan nan liostaichean, gnìomhan nan cairtean, fo-ghnìomhan nan liosta-dearbhaidh, notaichean nam beachdan, agus @leubailean agus prìomhachasan p1 gu p3 nan leubailean."
+  "import-board-instruction-todoist": "Ann an Todoist, fosgail am pròiseact, tagh an clàr-taice ⋯ aig a’ mhullach air an làimh dheis, an uair sin Stiùirich dàta > Às-phortaich mar CSV, agus cuir susbaint an fhaidhle CSV ann. Thèid earrannan nan liostaichean, gnìomhan nan cairtean, fo-ghnìomhan nan liosta-dearbhaidh, notaichean nam beachdan, agus @leubailean agus prìomhachasan p1 gu p3 nan leubailean.",
+  "csv-mapping-title": "Dè an colbh a fhreagras ri gach raon?",
+  "csv-mapping-description": "Tagh colbh an fhaidhle anns a bheil gach raon cairt. Chaidh na roghainnean a dhèanamh a-rèir ainmean nan colbhan; atharraich gin a tha ceàrr, agus tagh (chan eil san fhaidhle) airson raon nach eil san fhaidhle.",
+  "csv-mapping-not-in-file": "(chan eil san fhaidhle)",
+  "csv-mapping-column-number": "Colbh __number__",
+  "csv-mapping-list-missing": "Chan eil colbh airson na liosta san fhaidhle. Tagh fear gu h-àrd, no sgrìobh ainm na h-aon liosta dhan tèid gach cairt.",
+  "csv-mapping-list-name": "Liosta airson gach cairt",
+  "csv-mapping-custom-fields": "Colbhan eile ri ion-phortadh mar raointean teacsa gnàthaichte:",
+  "csv-mapping-boards": "Thèid gach siota na bhòrd fa leth:",
+  "csv-mapping-skipped-sheets": "Siotaichean nach tèid ion-phortadh:",
+  "csv-mapping-title-required": "Tagh an colbh anns a bheil tiotalan nan cairtean.",
+  "csv-mapping-list-required": "Sgrìobh ainm na liosta dhan tèid gach cairt, no tagh an colbh anns a bheil an liosta."
 }

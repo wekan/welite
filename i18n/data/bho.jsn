@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine में, प्रोजेक्ट के Issues खोलीं, सूची के नीचे Also available in: CSV चुनीं, कॉलम चुनीं (All columns, Description के साथे) आ निर्यात करीं, फेर CSV चिपकाईं। Redmine कॉलम के नाम रउआ भाषा में रखेला, एह से निर्यात से पहिले My account में आपन भाषा अंग्रेजी करीं। हर स्टेटस एगो सूची बनेला आ इश्यू कार्ड बनेला, लेबल के रूप में ट्रैकर, जिम्मेदार, लेखक, तारीख, मूल टास्क आ संबंधित इश्यू के साथे; प्राथमिकता, श्रेणी, लक्ष्य संस्करण, अनुमानित समय, % Done आ कस्टम क्षेत्र कस्टम क्षेत्र बनेला।",
   "import-board-instruction-orgmode": "Org mode फाइल चिपकाईं, जइसे Emacs, Orgzly भा Beorg लिखेलन। सबसे ऊपर के शीर्षक सूची बनेला आ दूसरा स्तर के शीर्षक कार्ड बनेला। TODO आ DONE, प्राथमिकता, टैग, SCHEDULED, DEADLINE आ CLOSED बचल रहेला, आ चेकबॉक्स आ अउरी गहिर शीर्षक जाँच सूची बनेला।",
   "import-board-instruction-focalboard": ".boardarchive फाइल अनजिप करीं आ बोर्ड के board.jsonl के सामग्री संस्करण लाइन के साथ भा ओकरा बिना पेस्ट करीं। बोर्ड व्यू के समूह बनावे वाला गुण सूची में, बाकी चयन गुण लेबल में, पाठ आ चेकबॉक्स ब्लॉक विवरण आ जाँच सूची में बदल जालें, आ टिप्पणी बचल रहेली। तस्वीर आ संलग्न फाइल आयात ना होखेली।",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "कवन कॉलम का ह?",
+  "csv-mapping-description": "फाइल के ऊ कॉलम चुनीं जवन हर कार्ड क्षेत्र के रखेला। चुनाव कॉलम के नाम से कइल गइल बा; जवन गलत बा ओकरा के बदलीं, आ जवन क्षेत्र फाइल में नइखे ओकरा खातिर (फाइल में नइखे) चुनीं।",
+  "csv-mapping-not-in-file": "(फाइल में नइखे)",
+  "csv-mapping-column-number": "कॉलम __number__",
+  "csv-mapping-list-missing": "फाइल में सूची खातिर कवनो कॉलम नइखे। ऊपर एगो चुनीं, भा ओह एगो सूची के नाम लिखीं जेमें हर कार्ड जाई।",
+  "csv-mapping-list-name": "हर कार्ड खातिर सूची",
+  "csv-mapping-custom-fields": "दोसर कॉलम जवन टेक्स्ट कस्टम क्षेत्र के रूप में आयात होई:",
+  "csv-mapping-boards": "हर शीट आपन अलग बोर्ड बनेला:",
+  "csv-mapping-skipped-sheets": "शीट जवन आयात ना होई:",
+  "csv-mapping-title-required": "ऊ कॉलम चुनीं जवन कार्ड के शीर्षक रखेला।",
+  "csv-mapping-list-required": "ओह सूची के नाम लिखीं जेमें हर कार्ड जाई, भा ऊ कॉलम चुनीं जवन सूची रखेला।"
 }

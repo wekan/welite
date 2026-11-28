@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Në Redmine, hapni Issues të projektit, zgjidhni Also available in: CSV në fund të listës, përzgjidhni kolonat (All columns, me Description) dhe eksportoni, pastaj ngjitni CSV-në. Redmine i emërton kolonat në gjuhën tuaj, prandaj vendosni gjuhën English te My account përpara eksportimit. Çdo gjendje bëhet një listë dhe çështjet bëhen karta, me gjurmuesin si etiketë, personin e caktuar, autorin, datat, detyrën prind dhe çështjet e lidhura; përparësia, kategoria, versioni i synuar, koha e vlerësuar, % Done dhe fushat e personalizuara bëhen fusha të personalizuara.",
   "import-board-instruction-orgmode": "Ngjitni një skedar Org mode, siç e krijojnë Emacs, Orgzly ose Beorg. Titujt e nivelit të parë bëhen lista dhe titujt e nivelit të dytë bëhen karta. Ruhen TODO dhe DONE, përparësitë, etiketat, SCHEDULED, DEADLINE dhe CLOSED, ndërsa kutitë e zgjedhjes dhe titujt më të thellë bëhen lista kontrolli.",
   "import-board-instruction-focalboard": "Çngjeshni skedarin .boardarchive dhe ngjitni përmbajtjen e board.jsonl të tabelës, me ose pa rreshtin e versionit. Vetia e grupimit e pamjes së tabelës bëhet lista, vetitë e tjera të përzgjedhjes bëhen etiketa, blloqet e tekstit dhe të kutive të shënimit bëhen përshkrimi dhe një listë kontrolli, ndërsa komentet ruhen. Figurat dhe bashkëngjitjet nuk importohen.",
-  "import-board-instruction-todoist": "Në Todoist, hapni menunë e projektit dhe zgjidhni eksportimin si model, pastaj ngjitni skedarin CSV. Seksionet bëhen lista, detyrat bëhen karta, nën-detyrat bëhen një listë kontrolli, shënimet bëhen komente dhe @labels e përparësitë p1 deri në p3 bëhen etiketa."
+  "import-board-instruction-todoist": "Në Todoist, hapni menunë e projektit dhe zgjidhni eksportimin si model, pastaj ngjitni skedarin CSV. Seksionet bëhen lista, detyrat bëhen karta, nën-detyrat bëhen një listë kontrolli, shënimet bëhen komente dhe @labels e përparësitë p1 deri në p3 bëhen etiketa.",
+  "csv-mapping-title": "Cila kolonë i përket cilës fushë?",
+  "csv-mapping-description": "Zgjidhni kolonën e skedarit që përmban secilën fushë të kartës. Zgjedhjet u bënë nga emrat e kolonave; korrigjoni ato që janë të gabuara dhe zgjidhni (nuk është në skedar) për një fushë që mungon në skedar.",
+  "csv-mapping-not-in-file": "(nuk është në skedar)",
+  "csv-mapping-column-number": "Kolona __number__",
+  "csv-mapping-list-missing": "Skedari nuk ka kolonë për listën. Zgjidhni një më sipër, ose shkruani emrin e listës së vetme ku do të vendosen të gjitha kartat.",
+  "csv-mapping-list-name": "Lista për të gjitha kartat",
+  "csv-mapping-custom-fields": "Kolona të tjera për t'u importuar si fusha të personalizuara teksti:",
+  "csv-mapping-boards": "Çdo fletë bëhet tabelë më vete:",
+  "csv-mapping-skipped-sheets": "Fletët që nuk importohen:",
+  "csv-mapping-title-required": "Zgjidhni kolonën që përmban titujt e kartave.",
+  "csv-mapping-list-required": "Shkruani emrin e listës ku do të vendosen të gjitha kartat, ose zgjidhni kolonën që përmban listën."
 }

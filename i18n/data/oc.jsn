@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Dins Redmine, dobrissètz las Issues del projècte, causissètz Also available in: CSV al pè de la lista, causissètz las colomnas (All columns, amb Description) e exportatz, puèi pegatz lo CSV. Redmine nomena las colomnas dins vòstra lenga, doncas metètz vòstra lenga en anglés dins My account abans d'exportar. Cada estat ven una lista e las issues venon de cartas, amb lo tracker coma etiqueta, responsable, autor, datas, tasca parenta e issues ligadas ; la prioritat, la categoria, la version cibla, lo temps estimat, % Done e los camps personalizats venon de camps personalizats.",
   "import-board-instruction-orgmode": "Pegatz un fichièr Org mode, coma l'escrivon Emacs, Orgzly o Beorg. Los títols de primièr nivèl venon de listas e los títols de segond nivèl venon de cartas. TODO e DONE, las prioritats, las etiquetas, SCHEDULED, DEADLINE e CLOSED son gardats, e las casas de marcar e los títols pus prigonds venon de listas de verificacion.",
   "import-board-instruction-focalboard": "Descompressatz lo fichièr .boardarchive e pegatz lo contengut del board.jsonl del tablèu, amb o sens sa linha de version. La proprietat de gropament de la vista del tablèu ven de listas, las autras proprietats de seleccion venon d’etiquetas, los blòts de tèxte e de casas de marcar venon la descripcion e una lista de verificacion, e los comentaris son conservats. Los imatges e las pèças juntas son pas importats.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Quina colomna es quina ?",
+  "csv-mapping-description": "Causissètz la colomna del fichièr que conten cada camp de la carta. Las causidas son estadas fachas a partir dels noms de las colomnas ; cambiatz las que son falsas, e causissètz (pas dins lo fichièr) per un camp que lo fichièr a pas.",
+  "csv-mapping-not-in-file": "(pas dins lo fichièr)",
+  "csv-mapping-column-number": "Colomna __number__",
+  "csv-mapping-list-missing": "Lo fichièr a pas de colomna per la lista. Causissètz-ne una çai-sus, o picatz lo nom de l'unica lista ont va cada carta.",
+  "csv-mapping-list-name": "Lista per cada carta",
+  "csv-mapping-custom-fields": "Autras colomnas d'importar coma camps personalizats de tèxte :",
+  "csv-mapping-boards": "Cada fuèlh ven son pròpri tablèu :",
+  "csv-mapping-skipped-sheets": "Fuèlhs que son pas importats :",
+  "csv-mapping-title-required": "Causissètz la colomna que conten los títols de las cartas.",
+  "csv-mapping-list-required": "Picatz lo nom de la lista ont va cada carta, o causissètz la colomna que conten la lista."
 }

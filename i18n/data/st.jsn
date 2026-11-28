@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ho Redmine, bula Issues ya projeke, kgetha Also available in: CSV botlaseng ba lenane, kgetha dikholomo (All columns, ka Description) mme o ntshe data, ebe o manamisa CSV. Redmine e reha dikholomo ka puo ya hao, kahoo beha puo ya hao ho Senyesemane ho My account pele o ntsha data. Boemo ka bong bo fetoha lenane mme ditaba di fetoha dikarete, ka tracker e le leibole, motho ya abetsweng, mongodi, matsatsi, mosebetsi wa motswadi le ditaba tse amanang; bohlokwa, sehlopha, mofuta o rerilweng, nako e hakantsweng, % Done le dikarolo tse ikgethileng di fetoha dikarolo tse ikgethileng.",
   "import-board-instruction-orgmode": "Manamisa faele ya Org mode, jwalo ka ha Emacs, Orgzly kapa Beorg e e ngola. Dihlooho tsa boemo bo hodimo di fetoha manane mme tsa boemo ba bobedi di fetoha dikarete. TODO le DONE, dintho tse tlang pele, ditheke, SCHEDULED, DEADLINE le CLOSED di a bolokwa, mme mabokose a ho tshwaya le dihlooho tse tebileng ho feta di fetoha manane a tlhahlobo.",
   "import-board-instruction-focalboard": "Ntsha faele ya .boardarchive pokellong e peteditsweng mme o behe dikahare tsa board.jsonl ya boto, ka mola wa mofuta kapa ntle le wona. Thepa ya ho arola ka dihlopha ponong ya boto e fetoha manane, thepa e meng ya kgetho e fetoha dileibole, dikarolo tsa mongolo le mabokose a ho tshwaya di fetoha tlhaloso le lenane la ho hlahloba, mme maikutlo a bolokwa. Ditshwantsho le difaele tse hoketsweng ha di kenngwe.",
-  "import-board-instruction-todoist": "Ho Todoist, bula projeke, kgetha lenane la ⋯ ka hodimo ka ho le letona, ebe Manage data > Export as CSV, mme o manamise faele ya CSV. Dikarolo di fetoha manane, mesebetsi e fetoha dikarete, mesebetsi e menyenyane e fetoha lenane la tlhahlobo, dinoutu di fetoha ditshwaelo, mme @labels le bohlokwa ba p1 ho isa p3 di fetoha dileibole."
+  "import-board-instruction-todoist": "Ho Todoist, bula projeke, kgetha lenane la ⋯ ka hodimo ka ho le letona, ebe Manage data > Export as CSV, mme o manamise faele ya CSV. Dikarolo di fetoha manane, mesebetsi e fetoha dikarete, mesebetsi e menyenyane e fetoha lenane la tlhahlobo, dinoutu di fetoha ditshwaelo, mme @labels le bohlokwa ba p1 ho isa p3 di fetoha dileibole.",
+  "csv-mapping-title": "Kholomo ka nngwe ke efe?",
+  "csv-mapping-description": "Kgetha kholomo ya faele e nang le karolo ka nngwe ya karete. Dikgetho di entswe ho latela mabitso a dikholomo; fetola tse fosahetseng, mme o kgethe (ha e yo faeleng) bakeng sa karolo eo faele e se nang yona.",
+  "csv-mapping-not-in-file": "(ha e yo faeleng)",
+  "csv-mapping-column-number": "Kholomo __number__",
+  "csv-mapping-list-missing": "Faele ha e na kholomo ya lenane. Kgetha e nngwe ka hodimo, kapa ngola lebitso la lenane le le leng leo dikarete tsohle di yang ho lona.",
+  "csv-mapping-list-name": "Lenane la dikarete tsohle",
+  "csv-mapping-custom-fields": "Dikholomo tse ding tse kenngwang e le dikarolo tse ikgethileng tsa mongolo:",
+  "csv-mapping-boards": "Leqephe ka leng le fetoha boto ya lona:",
+  "csv-mapping-skipped-sheets": "Maqephe a sa kenngweng:",
+  "csv-mapping-title-required": "Kgetha kholomo e nang le dihlooho tsa dikarete.",
+  "csv-mapping-list-required": "Ngola lebitso la lenane leo dikarete tsohle di yang ho lona, kapa kgetha kholomo e nang le lenane."
 }

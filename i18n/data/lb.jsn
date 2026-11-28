@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Maacht am Redmine d'Issues vum Projet op, wielt ënnen an der Lëscht Also available in: CSV, wielt d'Kolonnen (All columns, mat Description) an exportéiert, a füügt dann den CSV an. Redmine benennt d'Kolonnen an Ärer Sprooch, stellt also virum Export Är Sprooch am My account op Englesch. All Status gëtt eng Lëscht an Issues gi Kaarten, mam Tracker als Etikett, Zoustännegen, Auteur, Datumer, iwwergeuerdneter Aufgab a verbonnen Issues; Prioritéit, Kategorie, Zilversioun, geschate Zäit, % Done an eege Felder gi eege Felder.",
   "import-board-instruction-orgmode": "Füügt en Org-mode-Fichier an, esou wéi Emacs, Orgzly oder Beorg e schreiwen. Iwwerschrëften op der éischter Ebene gi Lëschten an op der zweeter Ebene gi Kaarten. TODO an DONE, Prioritéiten, Tags, SCHEDULED, DEADLINE an CLOSED bleiwen erhalen, a Kontrollkëschtercher an déiwer Iwwerschrëfte gi Checklëschten.",
   "import-board-instruction-focalboard": "Entpaakt d’Datei .boardarchive a füügt den Inhalt vun der board.jsonl vum Board an, mat oder ouni Versiounszeil. D’Gruppéierungseegenschaft vun der Boardusiicht gëtt Lëschten, aner Auswieleegenschafte ginn Etiketten, Text- a Kontrollkëschtebléck ginn d’Beschreiwung an eng Checklëscht, an d’Kommentaren bleiwen erhalen. Biller an Unhäng ginn net importéiert.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Wéi eng Kolonn ass wéi eng?",
+  "csv-mapping-description": "Wielt d'Kolonn vum Fichier, déi all Kaartefeld enthält. D'Auswiel gouf no de Kolonnennimm gemaach; ännert déi, déi falsch sinn, a wielt (net am Fichier) fir e Feld, dat de Fichier net huet.",
+  "csv-mapping-not-in-file": "(net am Fichier)",
+  "csv-mapping-column-number": "Kolonn __number__",
+  "csv-mapping-list-missing": "De Fichier huet keng Kolonn fir d'Lëscht. Wielt eng uewen, oder tippt den Numm vun där enger Lëscht, an déi all Kaart kënnt.",
+  "csv-mapping-list-name": "Lëscht fir all Kaart",
+  "csv-mapping-custom-fields": "Aner Kolonnen, fir als eege Textfelder z'importéieren:",
+  "csv-mapping-boards": "All Blat gëtt seng eege Tafel:",
+  "csv-mapping-skipped-sheets": "Blieder, déi net importéiert ginn:",
+  "csv-mapping-title-required": "Wielt d'Kolonn, déi d'Kaartentitelen enthält.",
+  "csv-mapping-list-required": "Tippt den Numm vun der Lëscht, an déi all Kaart kënnt, oder wielt d'Kolonn, déi d'Lëscht enthält."
 }

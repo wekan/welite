@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ku-Redmine, vula ema-Issues ephrojekthi, khetsa Also available in: CSV ngentansi yeluhlu, khetsa tinsika (All columns, kanye ne-Description) bese uyatfumela, bese unamatsisela i-CSV. I-Redmine itsa tinsika ngelulwimi lwakho, ngako setha lulwimi lwakho lube sisiNgisi ku-My account ngaphambi kwekutfumela. Simo ngasinye siba luhlu kantsi tinkinga tiba ngemakhadi, kanye ne-tracker njengelebula, lonikwe umsebenti, umbhali, emalanga, umsebenti lomtali netinkinga letihlobene; kubaluleka, sigaba, inguculo lehlosiwe, sikhatsi lesilinganisiwe, % Done netindzawo letikhetsekile kuba tindzawo letikhetsekile.",
   "import-board-instruction-orgmode": "Namatsisela lifayela le-Org mode, njengobe Emacs, Orgzly noma Beorg ilibhala. Tihloko tesigaba sekucala tiba luhlu kantsi tihloko tesigaba sesibili tiba emakhadi. TODO na-DONE, kubaluleka, ematheg, SCHEDULED, DEADLINE na-CLOSED kuyagcinwa, kantsi emabhokisi ekuhlola netihloko letijulile kuba luhlu lwekuhlola.",
   "import-board-instruction-focalboard": "Khipha lifayela le-.boardarchive endzaweni lecindzetelwe bese unamatselisa lokuse-board.jsonl yebhodi, nemugca wenguqulo noma ngaphandle kwawo. Sici sekuhlanganisa ngemacembu ekubukweni kwebhodi siba tinhla, letinye tici tekukhetsa tibe emalebula, emabhulokhi embhalo nemabhokisi ekumaka abe inchazelo neluhla lwekuhlola, bese imibono iyagcinwa. Titfombe netinamatsiselo atingeniswa.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Nguyiphi insika leyini?",
+  "csv-mapping-description": "Khetsa insika yelifayela lephetse indzawo ngayinye yelikhadi. Kukhetsa kwentiwe ngekwemabito etinsika; shintja lokungalungi, bese ukhetsa (akukho kulifayela) endzaweni lelifayela lingenayo.",
+  "csv-mapping-not-in-file": "(akukho kulifayela)",
+  "csv-mapping-column-number": "Insika __number__",
+  "csv-mapping-list-missing": "Lifayela alinayo insika yeluhlu. Khetsa leyinye ngenhla, noma bhala libito leluhlu lunye lapho onkhe emakhadi aya khona.",
+  "csv-mapping-list-name": "Luhlu lwalo lonkhe likhadi",
+  "csv-mapping-custom-fields": "Letinye tinsika letingeniswa njengetindzawo letikhetsekile tembhalo:",
+  "csv-mapping-boards": "Lishidi ngalinye liba libhodi lalo:",
+  "csv-mapping-skipped-sheets": "Emashidi langangeniswa:",
+  "csv-mapping-title-required": "Khetsa insika lephetse tihloko temakhadi.",
+  "csv-mapping-list-required": "Bhala libito leluhlu lapho onkhe emakhadi aya khona, noma khetsa insika lephetse luhlu."
 }

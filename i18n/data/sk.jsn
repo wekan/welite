@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "V Redmine otvorte Issues projektu, dole v zozname vyberte Also available in: CSV, vyberte stĺpce (All columns vrátane Description) a exportujte. Potom CSV vložte. Redmine pomenúva stĺpce vo vašom jazyku, preto pred exportom nastavte jazyk na English v My account. Každý stav sa zmení na zoznam a požiadavky na karty s typom požiadavky ako štítkom, priradenou osobou, autorom, dátumami, nadradenou úlohou a súvisiacimi požiadavkami; priorita, kategória, cieľová verzia, odhadovaný čas, % Done a vlastné polia sa zmenia na vlastné polia.",
   "import-board-instruction-orgmode": "Vložte súbor Org mode zapísaný aplikáciou Emacs, Orgzly alebo Beorg. Nadpisy najvyššej úrovne sa stanú zoznamami a nadpisy druhej úrovne kartami. TODO a DONE, priority, štítky, SCHEDULED, DEADLINE a CLOSED sa zachovajú; začiarkavacie políčka a hlbšie nadpisy sa stanú kontrolnými zoznamami.",
   "import-board-instruction-focalboard": "Rozbaľte súbor .boardarchive a vložte obsah súboru board.jsonl tabule, s riadkom verzie alebo bez neho. Vlastnosť zoskupovania v zobrazení tabule sa zmení na zoznamy, ostatné výberové vlastnosti na štítky, bloky textu a začiarkavacích polí na popis a kontrolný zoznam a komentáre sa zachovajú. Obrázky a prílohy sa neimportujú.",
-  "import-board-instruction-todoist": "V Todoist otvorte ponuku projektu a vyberte export ako šablónu. Potom vložte súbor CSV. Sekcie sa stanú zoznamami, úlohy kartami, podúlohy kontrolným zoznamom, poznámky komentármi a @labels a priority p1 až p3 štítkami."
+  "import-board-instruction-todoist": "V Todoist otvorte ponuku projektu a vyberte export ako šablónu. Potom vložte súbor CSV. Sekcie sa stanú zoznamami, úlohy kartami, podúlohy kontrolným zoznamom, poznámky komentármi a @labels a priority p1 až p3 štítkami.",
+  "csv-mapping-title": "Ktorý stĺpec je ktorý?",
+  "csv-mapping-description": "Vyberte stĺpec súboru pre každé pole karty. Stĺpce boli vybrané podľa názvov; nesprávne voľby opravte a pre pole, ktoré v súbore nie je, vyberte (nie je v súbore).",
+  "csv-mapping-not-in-file": "(nie je v súbore)",
+  "csv-mapping-column-number": "Stĺpec __number__",
+  "csv-mapping-list-missing": "Súbor nemá stĺpec pre zoznam. Vyberte ho vyššie alebo zadajte názov jediného zoznamu, do ktorého sa vložia všetky karty.",
+  "csv-mapping-list-name": "Zoznam pre všetky karty",
+  "csv-mapping-custom-fields": "Ďalšie stĺpce na import ako vlastné textové polia:",
+  "csv-mapping-boards": "Každý hárok sa stane samostatnou nástenkou:",
+  "csv-mapping-skipped-sheets": "Hárky, ktoré sa neimportujú:",
+  "csv-mapping-title-required": "Vyberte stĺpec s názvami kariet.",
+  "csv-mapping-list-required": "Zadajte názov zoznamu pre všetky karty alebo vyberte stĺpec obsahujúci zoznam."
 }

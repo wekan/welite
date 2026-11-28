@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-da taslamanyň Issues bölümini açyň, sanawyň aşagynda Also available in: CSV saýlaň, sütünleri saýlaň (All columns, Description bilen) we eksport ediň, soňra CSV-ni goýuň. Redmine sütünleri siziň diliňizde atlandyrýar, şonuň üçin eksportdan öň My account-da diliňizi iňlis diline düzüň. Her ýagdaý sanawa, meseleler bolsa tracker bellik hökmünde, jogapkäri, awtory, seneleri, ene meselesi we baglanyşykly meseleleri bilen kartlara öwrülýär; ileri tutulma, kategoriýa, maksat wersiýasy, çaklanan wagt, % Done we ýörite meýdanlar ýörite meýdanlara öwrülýär.",
   "import-board-instruction-orgmode": "Emacs, Orgzly ýa-da Beorg ýazyşy ýaly Org mode faýlyny goýuň. Birinji derejeli sözbaşylar sanawlara, ikinji derejeli sözbaşylar kartlara öwrülýär. TODO we DONE, ileri tutulmalar, tegler, SCHEDULED, DEADLINE we CLOSED saklanýar, belgi gutujyklary we has çuňňur sözbaşylar barlag sanawlaryna öwrülýär.",
   "import-board-instruction-focalboard": ".boardarchive faýlyny arhiwden çykaryň we tagtanyň board.jsonl mazmunyny wersiýa setiri bilen ýa-da onsuz goýuň. Tagta görnüşiniň toparlama häsiýeti sanawlara, beýleki saýlaw häsiýetleri belliklere, tekst we bellik gutusy bloklary düşündirişe we barlag sanawyna öwrülýär, teswirler bolsa saklanýar. Suratlar we goşundylar import edilmeýär.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Haýsy sütün haýsy?",
+  "csv-mapping-description": "Her kart meýdanyny saklaýan faýlyň sütünini saýlaň. Saýlawlar sütün atlaryndan edildi; ýalňyşlaryny üýtgediň, faýlda ýok meýdan üçin (faýlda ýok) saýlaň.",
+  "csv-mapping-not-in-file": "(faýlda ýok)",
+  "csv-mapping-column-number": "__number__ sütün",
+  "csv-mapping-list-missing": "Faýlda sanaw üçin sütün ýok. Ýokardan birini saýlaň ýa-da ähli kartlaryň girýän ýeke sanawynyň adyny ýazyň.",
+  "csv-mapping-list-name": "Her kart üçin sanaw",
+  "csv-mapping-custom-fields": "Tekst ýörite meýdanlary hökmünde import ediljek beýleki sütünler:",
+  "csv-mapping-boards": "Her sahypa öz tagtasyna öwrülýär:",
+  "csv-mapping-skipped-sheets": "Import edilmeýän sahypalar:",
+  "csv-mapping-title-required": "Kart atlaryny saklaýan sütüni saýlaň.",
+  "csv-mapping-list-required": "Ähli kartlaryň girýän sanawynyň adyny ýazyň ýa-da sanawy saklaýan sütüni saýlaň."
 }

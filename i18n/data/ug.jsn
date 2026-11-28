@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine دا تۈرنىڭ Issues بېتىنى ئېچىپ، تىزىملىكنىڭ ئاستىدىكى Also available in: CSV نى تاللاڭ، ستونلارنى تاللاپ (All columns، Description بىلەن) ئېكسپورت قىلىڭ، ئاندىن CSV نى چاپلاڭ. Redmine ستونلارنى سىزنىڭ تىلىڭىزدا ئاتايدۇ، شۇڭا ئېكسپورت قىلىشتىن بۇرۇن My account تا تىلىڭىزنى ئىنگلىزچىغا تەڭشەڭ. ھەر بىر ھالەت تىزىملىككە، مەسىلىلەر بەلگە سۈپىتىدىكى tracker، مەسئۇل، ئاپتور، چېسلا، ئاتا ۋەزىپە ۋە مۇناسىۋەتلىك مەسىلىلىرى بىلەن كارتىغا ئايلىنىدۇ؛ ئالدىنلىق، تۈر، نىشان نەشرى، مۆلچەرلەنگەن ۋاقىت، % Done ۋە ئىختىيارىي مەيدانلار ئىختىيارىي مەيدانغا ئايلىنىدۇ.",
   "import-board-instruction-orgmode": "Emacs، Orgzly ياكى Beorg يازغان Org mode ھۆججىتىنى چاپلاڭ. ئەڭ يۇقىرى قاتلامدىكى ماۋزۇلار تىزىملىككە، ئىككىنچى قاتلامدىكى ماۋزۇلار كارتىغا ئايلىنىدۇ. TODO ۋە DONE، ئالدىنلىق، بەلگىلەر، SCHEDULED، DEADLINE ۋە CLOSED ساقلىنىدۇ، تاللاش رامكىلىرى ۋە تېخىمۇ چوڭقۇر ماۋزۇلار تەكشۈرۈش تىزىملىكىگە ئايلىنىدۇ.",
   "import-board-instruction-focalboard": ".boardarchive ھۆججىتىنى يېشىپ، تاختىنىڭ board.jsonl مەزمۇنىنى نەشر قۇرى بىلەن ياكى ئۇنىڭسىز چاپلاڭ. تاختا كۆرۈنۈشىنىڭ گۇرۇپپىلاش خاسلىقى تىزىملىكلەرگە، باشقا تاللاش خاسلىقلىرى بەلگىلەرگە، تېكىست ۋە تاللاش رامكىسى بۆلەكلىرى چۈشەندۈرۈش ۋە تەكشۈرۈش تىزىملىكىگە ئايلىنىدۇ، ئىنكاسلار ساقلىنىدۇ. رەسىملەر ۋە قوشۇمچە ھۆججەتلەر ئىمپورت قىلىنمايدۇ.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "قايسى ستون قايسى؟",
+  "csv-mapping-description": "ھەر بىر كارتا مەيدانىنى ساقلايدىغان ھۆججەت ستونىنى تاللاڭ. تاللاشلار ستون ئىسىملىرىدىن قىلىندى؛ خاتالىرىنى ئۆزگەرتىڭ، ھۆججەتتە يوق مەيدان ئۈچۈن (ھۆججەتتە يوق) نى تاللاڭ.",
+  "csv-mapping-not-in-file": "(ھۆججەتتە يوق)",
+  "csv-mapping-column-number": "ستون __number__",
+  "csv-mapping-list-missing": "ھۆججەتتە تىزىملىك ئۈچۈن ستون يوق. يۇقىرىدىن بىرنى تاللاڭ، ياكى ھەممە كارتا كىرىدىغان بىر تىزىملىكنىڭ ئىسمىنى كىرگۈزۈڭ.",
+  "csv-mapping-list-name": "ھەممە كارتا ئۈچۈن تىزىملىك",
+  "csv-mapping-custom-fields": "تېكىست ئىختىيارىي مەيدانى سۈپىتىدە ئەكىرىلىدىغان باشقا ستونلار:",
+  "csv-mapping-boards": "ھەر بىر جەدۋەل ئۆزىنىڭ تاختىسىغا ئايلىنىدۇ:",
+  "csv-mapping-skipped-sheets": "ئەكىرىلمەيدىغان جەدۋەللەر:",
+  "csv-mapping-title-required": "كارتا ماۋزۇلىرىنى ساقلايدىغان ستوننى تاللاڭ.",
+  "csv-mapping-list-required": "ھەممە كارتا كىرىدىغان تىزىملىكنىڭ ئىسمىنى كىرگۈزۈڭ، ياكى تىزىملىكنى ساقلايدىغان ستوننى تاللاڭ."
 }

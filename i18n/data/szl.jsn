@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "W Redmine ôtwōrz Issues projektu, wybier Also available in: CSV na dole listy, wybier kolumny (All columns, z Description) i eksportuj, potym wklej CSV. Redmine mianuje kolumny w twojij gŏdce, to przed eksportym naszteluj angelski w My account. Kożdy status stŏwŏ sie listōm, a zgłoszynia kartami, z trackerym jako etyketōm, ôdpowiedzialnym, autorym, datumami, nadrzyndnym zadaniym i połōnczōnymi zgłoszyniami; priorytet, kategoryjŏ, docylowŏ wersyjŏ, ôszacowany czas, % Done i włŏsne pola stŏwajōm sie włŏsnymi polami.",
   "import-board-instruction-orgmode": "Wklej zbiōr Org mode, tak jak go piszōm Emacs, Orgzly abo Beorg. Nagłōwki z wiyrchnigo poziōmu stŏwajōm sie listami, a nagłōwki drugigo poziōmu kartami. TODO i DONE, priorytety, tagi, SCHEDULED, DEADLINE i CLOSED ôstŏwajōm, a checkboxy i głymbsze nagłōwki stŏwajōm sie listami kōntrolnymi.",
   "import-board-instruction-focalboard": "Rozpakuj plik .boardarchive i wkludź zawartość board.jsonl tabule, z linijkōm wersyje abo bez nij. Włŏsność grupowanio widoku tabule robi sie listami, inksze włŏsności ôbierania etyketami, bloki tekstu i pola zaznaczanio ôpisym i listōm kōntrole, a kōmyntorze sōm zachowane. Ôbrŏzki i załōnczniki niy sōm importowane.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kerŏ kolumna je kerŏ?",
+  "csv-mapping-description": "Wybier kolumna zbioru, kerŏ trzimie kożde pole karty. Wybory zrobiōno po mianach kolumn; zmiyń te, kere sōm źle, i wybier (niy ma w zbiorze) dlŏ pola, kerego zbiōr niy mŏ.",
+  "csv-mapping-not-in-file": "(niy ma w zbiorze)",
+  "csv-mapping-column-number": "Kolumna __number__",
+  "csv-mapping-list-missing": "Zbiōr niy mŏ kolumny dlŏ listy. Wybier jedna wyżyj abo napisz miano tyj jednyj listy, do keryj idzie kożdŏ karta.",
+  "csv-mapping-list-name": "Lista dlŏ kożdyj karty",
+  "csv-mapping-custom-fields": "Inksze kolumny do importu jako tekstowe włŏsne pola:",
+  "csv-mapping-boards": "Kożdy arkusz stŏwŏ sie włŏsnōm tabulōm:",
+  "csv-mapping-skipped-sheets": "Arkusze, kere niy sōm importowane:",
+  "csv-mapping-title-required": "Wybier kolumna, kerŏ trzimie titly kart.",
+  "csv-mapping-list-required": "Napisz miano listy, do keryj idzie kożdŏ karta, abo wybier kolumna, kerŏ trzimie lista."
 }

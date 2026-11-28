@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine ਵਿੱਚ, ਪ੍ਰੋਜੈਕਟ ਦੇ Issues ਖੋਲ੍ਹੋ, ਸੂਚੀ ਦੇ ਹੇਠਾਂ Also available in: CSV ਚੁਣੋ, ਕਾਲਮ ਚੁਣੋ (All columns, Description ਨਾਲ) ਅਤੇ ਨਿਰਯਾਤ ਕਰੋ, ਫਿਰ CSV ਪੇਸਟ ਕਰੋ। Redmine ਕਾਲਮਾਂ ਦੇ ਨਾਮ ਤੁਹਾਡੀ ਭਾਸ਼ਾ ਵਿੱਚ ਰੱਖਦਾ ਹੈ, ਇਸ ਲਈ ਨਿਰਯਾਤ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ My account ਵਿੱਚ ਆਪਣੀ ਭਾਸ਼ਾ ਅੰਗਰੇਜ਼ੀ 'ਤੇ ਸੈੱਟ ਕਰੋ। ਹਰ ਸਥਿਤੀ ਇੱਕ ਸੂਚੀ ਬਣ ਜਾਂਦੀ ਹੈ ਅਤੇ ਮੁੱਦੇ tracker ਨੂੰ ਲੇਬਲ ਵਜੋਂ, ਨਿਯੁਕਤ ਵਿਅਕਤੀ, ਲੇਖਕ, ਤਾਰੀਖਾਂ, ਮੂਲ ਕਾਰਜ ਅਤੇ ਸੰਬੰਧਿਤ ਮੁੱਦਿਆਂ ਨਾਲ ਕਾਰਡ ਬਣ ਜਾਂਦੇ ਹਨ; ਤਰਜੀਹ, ਸ਼੍ਰੇਣੀ, ਟੀਚਾ ਸੰਸਕਰਣ, ਅਨੁਮਾਨਿਤ ਸਮਾਂ, % Done ਅਤੇ ਕਸਟਮ ਖੇਤਰ ਕਸਟਮ ਖੇਤਰ ਬਣ ਜਾਂਦੇ ਹਨ।",
   "import-board-instruction-orgmode": "Org mode ਫ਼ਾਈਲ ਪੇਸਟ ਕਰੋ, ਜਿਵੇਂ Emacs, Orgzly ਜਾਂ Beorg ਇਸਨੂੰ ਲਿਖਦੇ ਹਨ। ਸਿਖਰਲੇ ਪੱਧਰ ਦੇ ਸਿਰਲੇਖ ਸੂਚੀਆਂ ਬਣ ਜਾਂਦੇ ਹਨ ਅਤੇ ਦੂਜੇ ਪੱਧਰ ਦੇ ਸਿਰਲੇਖ ਕਾਰਡ ਬਣ ਜਾਂਦੇ ਹਨ। TODO ਅਤੇ DONE, ਤਰਜੀਹਾਂ, ਟੈਗ, SCHEDULED, DEADLINE ਅਤੇ CLOSED ਰੱਖੇ ਜਾਂਦੇ ਹਨ, ਅਤੇ ਚੈੱਕਬਾਕਸ ਅਤੇ ਹੋਰ ਡੂੰਘੇ ਸਿਰਲੇਖ ਚੈੱਕਲਿਸਟਾਂ ਬਣ ਜਾਂਦੇ ਹਨ।",
   "import-board-instruction-focalboard": ".boardarchive ਫਾਈਲ ਨੂੰ ਅਨਜ਼ਿਪ ਕਰੋ ਅਤੇ ਬੋਰਡ ਦੀ board.jsonl ਦੀ ਸਮੱਗਰੀ ਵਰਜਨ ਲਾਈਨ ਨਾਲ ਜਾਂ ਉਸ ਤੋਂ ਬਿਨਾਂ ਚਿਪਕਾਓ। ਬੋਰਡ ਦ੍ਰਿਸ਼ ਦੀ ਗਰੁੱਪ ਬਣਾਉਣ ਵਾਲੀ ਵਿਸ਼ੇਸ਼ਤਾ ਸੂਚੀਆਂ ਵਿੱਚ, ਹੋਰ ਚੋਣ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਲੇਬਲਾਂ ਵਿੱਚ, ਟੈਕਸਟ ਅਤੇ ਚੈੱਕਬਾਕਸ ਬਲਾਕ ਵੇਰਵੇ ਅਤੇ ਚੈੱਕਲਿਸਟ ਵਿੱਚ ਬਦਲਦੇ ਹਨ, ਅਤੇ ਟਿੱਪਣੀਆਂ ਰੱਖੀਆਂ ਜਾਂਦੀਆਂ ਹਨ। ਤਸਵੀਰਾਂ ਅਤੇ ਨੱਥੀਆਂ ਫਾਈਲਾਂ ਆਯਾਤ ਨਹੀਂ ਕੀਤੀਆਂ ਜਾਂਦੀਆਂ।",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ਕਿਹੜਾ ਕਾਲਮ ਕੀ ਹੈ?",
+  "csv-mapping-description": "ਫ਼ਾਈਲ ਦਾ ਉਹ ਕਾਲਮ ਚੁਣੋ ਜਿਸ ਵਿੱਚ ਹਰ ਕਾਰਡ ਖੇਤਰ ਹੈ। ਚੋਣਾਂ ਕਾਲਮਾਂ ਦੇ ਨਾਵਾਂ ਤੋਂ ਕੀਤੀਆਂ ਗਈਆਂ ਸਨ; ਜੋ ਗਲਤ ਹਨ ਉਹਨਾਂ ਨੂੰ ਬਦਲੋ, ਅਤੇ ਜੋ ਖੇਤਰ ਫ਼ਾਈਲ ਵਿੱਚ ਨਹੀਂ ਹੈ ਉਸ ਲਈ (ਫ਼ਾਈਲ ਵਿੱਚ ਨਹੀਂ) ਚੁਣੋ।",
+  "csv-mapping-not-in-file": "(ਫ਼ਾਈਲ ਵਿੱਚ ਨਹੀਂ)",
+  "csv-mapping-column-number": "ਕਾਲਮ __number__",
+  "csv-mapping-list-missing": "ਫ਼ਾਈਲ ਵਿੱਚ ਸੂਚੀ ਲਈ ਕੋਈ ਕਾਲਮ ਨਹੀਂ ਹੈ। ਉੱਪਰ ਇੱਕ ਚੁਣੋ, ਜਾਂ ਉਸ ਇੱਕ ਸੂਚੀ ਦਾ ਨਾਮ ਲਿਖੋ ਜਿਸ ਵਿੱਚ ਹਰ ਕਾਰਡ ਜਾਂਦਾ ਹੈ।",
+  "csv-mapping-list-name": "ਹਰ ਕਾਰਡ ਲਈ ਸੂਚੀ",
+  "csv-mapping-custom-fields": "ਟੈਕਸਟ ਕਸਟਮ ਖੇਤਰਾਂ ਵਜੋਂ ਆਯਾਤ ਕਰਨ ਲਈ ਹੋਰ ਕਾਲਮ:",
+  "csv-mapping-boards": "ਹਰ ਸ਼ੀਟ ਆਪਣਾ ਵੱਖਰਾ ਬੋਰਡ ਬਣ ਜਾਂਦੀ ਹੈ:",
+  "csv-mapping-skipped-sheets": "ਸ਼ੀਟਾਂ ਜੋ ਆਯਾਤ ਨਹੀਂ ਹੁੰਦੀਆਂ:",
+  "csv-mapping-title-required": "ਉਹ ਕਾਲਮ ਚੁਣੋ ਜਿਸ ਵਿੱਚ ਕਾਰਡਾਂ ਦੇ ਸਿਰਲੇਖ ਹਨ।",
+  "csv-mapping-list-required": "ਉਸ ਸੂਚੀ ਦਾ ਨਾਮ ਲਿਖੋ ਜਿਸ ਵਿੱਚ ਹਰ ਕਾਰਡ ਜਾਂਦਾ ਹੈ, ਜਾਂ ਉਹ ਕਾਲਮ ਚੁਣੋ ਜਿਸ ਵਿੱਚ ਸੂਚੀ ਹੈ।"
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Sa Redmine, buksan ang Issues ng proyekto, piliin ang Also available in: CSV sa ibaba ng listahan, piliin ang mga column (All columns, kasama ang Description) at i-export, saka i-paste ang CSV. Pinapangalanan ng Redmine ang mga column sa iyong wika, kaya itakda sa Ingles ang iyong wika sa My account bago mag-export. Ang bawat status ay magiging isang listahan at ang mga isyu ay magiging mga kard, kasama ang tracker bilang etiketa, nakatalaga, may-akda, petsa, parent na gawain at kaugnay na isyu; ang priyoridad, kategorya, target na bersiyon, tinantiyang oras, % Done at mga pasadyang field ay magiging mga pasadyang field.",
   "import-board-instruction-orgmode": "Mag-paste ng Org mode file, gaya ng isinusulat ng Emacs, Orgzly o Beorg. Ang mga heading sa pinakamataas na antas ay magiging mga listahan at ang mga heading sa ikalawang antas ay magiging mga kard. Pinapanatili ang TODO at DONE, mga priyoridad, tag, SCHEDULED, DEADLINE at CLOSED, at ang mga checkbox at mas malalalim na heading ay magiging mga tsek-listahan.",
   "import-board-instruction-focalboard": "I-unzip ang .boardarchive file at idikit ang nilalaman ng board.jsonl ng board, mayroon man o walang linya ng bersyon. Ang katangian para sa pagpapangkat ng view ng board ay magiging mga listahan, ang ibang katangian ng pagpili ay magiging mga etiketa, ang mga bloke ng teksto at checkbox ay magiging paglalarawan at tsek-listahan, at pananatilihin ang mga komento. Hindi ini-import ang mga larawan at kalakip.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Aling column ang alin?",
+  "csv-mapping-description": "Piliin ang column ng file na naglalaman ng bawat field ng kard. Ang mga pagpili ay ginawa mula sa mga pangalan ng column; palitan ang mga mali, at piliin ang (wala sa file) para sa field na wala sa file.",
+  "csv-mapping-not-in-file": "(wala sa file)",
+  "csv-mapping-column-number": "Kolum __number__",
+  "csv-mapping-list-missing": "Walang column ang file para sa listahan. Pumili ng isa sa itaas, o i-type ang pangalan ng iisang listahan na paglalagyan ng bawat kard.",
+  "csv-mapping-list-name": "Listahan para sa bawat kard",
+  "csv-mapping-custom-fields": "Iba pang column na i-import bilang mga pasadyang field na teksto:",
+  "csv-mapping-boards": "Ang bawat sheet ay magiging sariling pisara:",
+  "csv-mapping-skipped-sheets": "Mga sheet na hindi ini-import:",
+  "csv-mapping-title-required": "Piliin ang column na naglalaman ng mga pamagat ng kard.",
+  "csv-mapping-list-required": "I-type ang pangalan ng listahan na paglalagyan ng bawat kard, o piliin ang column na naglalaman ng listahan."
 }

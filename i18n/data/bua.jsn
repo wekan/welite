@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine дээрэ түсэлэй Issues нээжэ, жагсаалай доодо талада Also available in: CSV шэлэгты, багананууд шэлээд (All columns, Description-тэй) гаргагты, тиигээд CSV оруулагты. Redmine багануудые таанарай хэлэн дээрэ нэрлэдэг тула гаргахаһаа урда My account соо хэлээ англи болгогты. Байдал бүхэн жагсаал болоно, асуудалнууд tracker-ые тэмдэг болгон, хариуцагша, автор, үдэрнүүд, эхэ даабари болон холбогдохо асуудалнуудтаяа карточка болоно; шухалын зэргэ, ангилал, зорилгын хэлбэри, тооссон саг, % Done болон тусхай талмайнууд тусхай талмай болоно.",
   "import-board-instruction-orgmode": "Emacs, Orgzly али Beorg-ой бэшэдэг Org mode файл оруулагты. Дээдэ шатын гаршагууд жагсаал, хоёрдохи шатын гаршагууд карточка болоно. TODO болон DONE, шухалын зэргэ, тагууд, SCHEDULED, DEADLINE болон CLOSED хадагалагдана, тэмдэглэхэ хайрсагууд болон гүнзэгы гаршагууд шалгалтын жагсаал болоно.",
   "import-board-instruction-focalboard": ".boardarchive файлай архивые задалаад, самбарай board.jsonl файлай удхые хубилбариин мүртэй гү, али тэрээнгүйгөөр буулгагты. Самбарай харагдасын бүлэглэхэ шэнжэ жагсаалтанууд болоно, бусад шэлэлгын шэнжэнүүд тэмдэгүүд болоно, текстын болон тэмдэглэхэ дүрбэлжэнүүдэй блогууд тайлбари болон шалгалтын жагсаалта болоно, һанамжанууд хадагалагдана. Зурагууд болон хабсаргалтанууд оруулагдахагүй.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Аль багана юун бэ?",
+  "csv-mapping-description": "Карточкын талмай бүхэниие агуулһан файлай багана шэлэгты. Шэлэлгэнүүд баганануудай нэрэһээ хэгдээ; буруу байгааень хубилгажа, файлда үгы талмайда (файлда үгы) шэлэгты.",
+  "csv-mapping-not-in-file": "(файлда үгы)",
+  "csv-mapping-column-number": "Багана __number__",
+  "csv-mapping-list-missing": "Файлда жагсаалай багана үгы. Дээрэһээ нэгые шэлэгты, али карточка бүхэн ороходо нэгэ жагсаалай нэрэ бэшэгты.",
+  "csv-mapping-list-name": "Карточка бүхэнэй жагсаал",
+  "csv-mapping-custom-fields": "Текст тусхай талмай болгожо оруулха бусад багананууд:",
+  "csv-mapping-boards": "Хуудаһан бүхэн өөрын самбар болоно:",
+  "csv-mapping-skipped-sheets": "Оруулагдахагүй хуудаһанууд:",
+  "csv-mapping-title-required": "Карточкануудай нэрэ агуулһан багана шэлэгты.",
+  "csv-mapping-list-required": "Карточка бүхэн ороходо жагсаалай нэрэ бэшэгты, али жагсаал агуулһан багана шэлэгты."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "En Redmine, abre Issues do proxecto, escolle Also available in: CSV ao final da lista, selecciona as columnas (All columns, con Description) e exporta; despois pega o CSV. Redmine pon os nomes das columnas na túa lingua, polo que antes de exportar debes establecer a lingua English en My account. Cada estado convértese nunha lista e as incidencias en tarxetas, co tipo de incidencia como etiqueta, persoa asignada, autor, datas, tarefa principal e incidencias relacionadas; a prioridade, categoría, versión de destino, tempo estimado, % Done e campos personalizados convértense en campos personalizados.",
   "import-board-instruction-orgmode": "Pega un ficheiro Org mode, tal como o crean Emacs, Orgzly ou Beorg. Os títulos do primeiro nivel convértense en listas e os do segundo nivel en tarxetas. Consérvanse TODO e DONE, prioridades, etiquetas, SCHEDULED, DEADLINE e CLOSED, e as caixas de selección e os títulos máis profundos convértense en listas de verificación.",
   "import-board-instruction-focalboard": "Descomprima o ficheiro .boardarchive e pegue o contido do board.jsonl do taboleiro, coa liña de versión ou sen ela. A propiedade de agrupación da vista do taboleiro convértese en listas, as outras propiedades de selección en etiquetas, os bloques de texto e de caixas de verificación na descrición e nunha lista de verificación, e os comentarios consérvanse. As imaxes e os anexos non se importan.",
-  "import-board-instruction-todoist": "En Todoist, abre o menú do proxecto e escolle Export as a template; despois pega o contido do ficheiro CSV. As seccións convértense en listas, as tarefas en tarxetas, as subtarefas nunha lista de verificación, as notas en comentarios e @labels e as prioridades de p1 a p3 en etiquetas."
+  "import-board-instruction-todoist": "En Todoist, abre o menú do proxecto e escolle Export as a template; despois pega o contido do ficheiro CSV. As seccións convértense en listas, as tarefas en tarxetas, as subtarefas nunha lista de verificación, as notas en comentarios e @labels e as prioridades de p1 a p3 en etiquetas.",
+  "csv-mapping-title": "Que columna corresponde a cada campo?",
+  "csv-mapping-description": "Escolla a columna do ficheiro que contén cada campo da tarxeta. As opcións escolléronse a partir dos nomes das columnas; corrixa as incorrectas e escolla (non está no ficheiro) para os campos que o ficheiro non teña.",
+  "csv-mapping-not-in-file": "(non está no ficheiro)",
+  "csv-mapping-column-number": "Columna __number__",
+  "csv-mapping-list-missing": "O ficheiro non ten unha columna para a lista. Escolla unha máis arriba ou escriba o nome da única lista á que irán todas as tarxetas.",
+  "csv-mapping-list-name": "Lista para todas as tarxetas",
+  "csv-mapping-custom-fields": "Outras columnas para importar como campos personalizados de texto:",
+  "csv-mapping-boards": "Cada folla convértese nun taboleiro propio:",
+  "csv-mapping-skipped-sheets": "Follas que non se importan:",
+  "csv-mapping-title-required": "Escolla a columna que contén os títulos das tarxetas.",
+  "csv-mapping-list-required": "Escriba o nome da lista á que irán todas as tarxetas ou escolla a columna que contén a lista."
 }

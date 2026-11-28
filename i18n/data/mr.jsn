@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine मध्ये प्रकल्पाचे Issues उघडा, यादीच्या तळाशी Also available in: CSV निवडा, स्तंभ निवडून (All columns, Description सह) निर्यात करा, नंतर CSV पेस्ट करा. Redmine तुमच्या भाषेत स्तंभांची नावे देतो, म्हणून निर्यातीपूर्वी My account मध्ये भाषा English करा. प्रत्येक स्थितीची यादी व इश्यूंची कार्डे होतात; ट्रॅकरचे लेबल होते आणि जबाबदार व्यक्ती, लेखक, तारखा, मूळ कार्य व संबंधित इश्यू कायम राहतात. प्राधान्य, वर्ग, लक्ष्य आवृत्ती, अंदाजित वेळ, % Done व सानुकूल क्षेत्रांची सानुकूल क्षेत्रे होतात.",
   "import-board-instruction-orgmode": "Emacs, Orgzly किंवा Beorg ने लिहिलेली Org mode फाइल पेस्ट करा. सर्वोच्च स्तरावरील शीर्षकांच्या याद्या व दुसऱ्या स्तरावरील शीर्षकांची कार्डे होतात. TODO व DONE, प्राधान्ये, टॅग, SCHEDULED, DEADLINE आणि CLOSED कायम राहतात; निवडपेट्या व आणखी खालच्या स्तरावरील शीर्षकांच्या तपासणी याद्या होतात.",
   "import-board-instruction-focalboard": ".boardarchive फाइल अनझिप करा आणि बोर्डच्या board.jsonl मधील मजकूर आवृत्तीच्या ओळीसह किंवा त्याशिवाय पेस्ट करा. बोर्ड दृश्याचा गट बनवणारा गुणधर्म याद्यांमध्ये, इतर निवड गुणधर्म लेबलमध्ये, मजकूर आणि चेकबॉक्स ब्लॉक वर्णन आणि तपासणी यादीमध्ये बदलतात आणि टिप्पण्या जतन होतात. प्रतिमा आणि संलग्नक आयात केले जात नाहीत.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "कोणता स्तंभ कशासाठी आहे?",
+  "csv-mapping-description": "कार्डचे प्रत्येक क्षेत्र असलेला फाइलमधील स्तंभ निवडा. स्तंभांच्या नावांवरून निवडी केल्या आहेत; चुकीच्या निवडी बदला आणि फाइलमध्ये नसलेल्या क्षेत्रासाठी (फाइलमध्ये नाही) निवडा.",
+  "csv-mapping-not-in-file": "(फाइलमध्ये नाही)",
+  "csv-mapping-column-number": "स्तंभ __number__",
+  "csv-mapping-list-missing": "फाइलमध्ये यादीचा स्तंभ नाही. वर एक निवडा, किंवा सर्व कार्डे ज्या एकाच यादीत ठेवायची आहेत तिचे नाव लिहा.",
+  "csv-mapping-list-name": "सर्व कार्डांसाठी यादी",
+  "csv-mapping-custom-fields": "मजकूर प्रकारची सानुकूल क्षेत्रे म्हणून आयात करायचे इतर स्तंभ:",
+  "csv-mapping-boards": "प्रत्येक शीटचा स्वतंत्र फलक होतो:",
+  "csv-mapping-skipped-sheets": "आयात न होणारी शीट:",
+  "csv-mapping-title-required": "कार्डची शीर्षके असलेला स्तंभ निवडा.",
+  "csv-mapping-list-required": "सर्व कार्डे ज्या यादीत ठेवायची आहेत तिचे नाव लिहा, किंवा यादी असलेला स्तंभ निवडा."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Öppna projektets Issues i Redmine, välj Also available in: CSV längst ned i listan, välj kolumnerna (All columns, med Description) och exportera. Klistra sedan in CSV-filen. Redmine ger kolumnerna namn på ditt språk, så ställ in språket på English i My account före exporten. Varje status blir en lista och ärenden blir kort med ärendetyp som etikett, tilldelad person, författare, datum, överordnad uppgift och relaterade ärenden; prioritet, kategori, målversion, uppskattad tid, % Done och anpassade fält blir anpassade fält.",
   "import-board-instruction-orgmode": "Klistra in en Org mode-fil som skrivits av Emacs, Orgzly eller Beorg. Rubriker på översta nivån blir listor och rubriker på andra nivån blir kort. TODO och DONE, prioriteringar, etiketter, SCHEDULED, DEADLINE och CLOSED bevaras, och kryssrutor och djupare rubriker blir checklistor.",
   "import-board-instruction-focalboard": "Packa upp .boardarchive-filen och klistra in tavlans board.jsonl, med eller utan versionsraden. Tavlevyns grupperingsegenskap blir listor, andra valegenskaper blir etiketter, text- och kryssruteblock blir beskrivningen och en checklista, och kommentarer bevaras. Bilder och bilagor importeras inte.",
-  "import-board-instruction-todoist": "Öppna projektmenyn i Todoist och välj Exportera som mall. Klistra sedan in CSV-filen. Avsnitt blir listor, uppgifter blir kort, deluppgifter blir en checklista, anteckningar blir kommentarer och @labels och prioriteringarna p1 till p3 blir etiketter."
+  "import-board-instruction-todoist": "Öppna projektmenyn i Todoist och välj Exportera som mall. Klistra sedan in CSV-filen. Avsnitt blir listor, uppgifter blir kort, deluppgifter blir en checklista, anteckningar blir kommentarer och @labels och prioriteringarna p1 till p3 blir etiketter.",
+  "csv-mapping-title": "Vilken kolumn är vilken?",
+  "csv-mapping-description": "Välj den kolumn i filen som innehåller varje kortfält. Valen gjordes utifrån kolumnnamnen; ändra de som är fel och välj (finns inte i filen) för ett fält som filen saknar.",
+  "csv-mapping-not-in-file": "(finns inte i filen)",
+  "csv-mapping-column-number": "Kolumn __number__",
+  "csv-mapping-list-missing": "Filen saknar en kolumn för listan. Välj en ovan, eller skriv namnet på den enda lista som alla kort ska hamna i.",
+  "csv-mapping-list-name": "Lista för alla kort",
+  "csv-mapping-custom-fields": "Andra kolumner att importera som anpassade textfält:",
+  "csv-mapping-boards": "Varje kalkylblad blir en egen tavla:",
+  "csv-mapping-skipped-sheets": "Kalkylblad som inte importeras:",
+  "csv-mapping-title-required": "Välj den kolumn som innehåller kortens titlar.",
+  "csv-mapping-list-required": "Skriv namnet på listan som alla kort ska hamna i, eller välj den kolumn som innehåller listan."
 }

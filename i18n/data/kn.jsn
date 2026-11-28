@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine ನಲ್ಲಿ ಯೋಜನೆಯ Issues ತೆರೆಯಿರಿ, ಪಟ್ಟಿಯ ಕೆಳಗಿನ Also available in: CSV ಆಯ್ಕೆಮಾಡಿ, ಕಾಲಮ್‌ಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ (All columns, Description ಜೊತೆಗೆ) ಮತ್ತು ರಫ್ತು ಮಾಡಿ, ನಂತರ CSV ಅಂಟಿಸಿ. Redmine ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ ಕಾಲಮ್‌ಗಳಿಗೆ ಹೆಸರಿಡುತ್ತದೆ; ಆದ್ದರಿಂದ ರಫ್ತು ಮಾಡುವ ಮೊದಲು My account ನಲ್ಲಿ ಭಾಷೆಯನ್ನು English ಎಂದು ಹೊಂದಿಸಿ. ಪ್ರತಿ ಸ್ಥಿತಿಯು ಪಟ್ಟಿಯಾಗುತ್ತದೆ ಮತ್ತು ಸಮಸ್ಯೆಗಳು ಕಾರ್ಡ್‌ಗಳಾಗುತ್ತವೆ. ಟ್ರ್ಯಾಕರ್ ಲೇಬಲ್ ಆಗುತ್ತದೆ; ನಿಯೋಜಿತರು, ರಚಿಸಿದವರು, ದಿನಾಂಕಗಳು, ಮೂಲ ಕಾರ್ಯ ಮತ್ತು ಸಂಬಂಧಿತ ಸಮಸ್ಯೆಗಳು ಸೇರಿಕೊಳ್ಳುತ್ತವೆ. ಆದ್ಯತೆ, ವರ್ಗ, ಗುರಿ ಆವೃತ್ತಿ, ಅಂದಾಜು ಸಮಯ, % Done ಮತ್ತು ಕಸ್ಟಮ್ ಕ್ಷೇತ್ರಗಳು ಕಸ್ಟಮ್ ಕ್ಷೇತ್ರಗಳಾಗುತ್ತವೆ.",
   "import-board-instruction-orgmode": "Emacs, Orgzly ಅಥವಾ Beorg ರಚಿಸುವ Org mode ಕಡತವನ್ನು ಅಂಟಿಸಿ. ಮೇಲ್ಮಟ್ಟದ ಶೀರ್ಷಿಕೆಗಳು ಪಟ್ಟಿಗಳಾಗುತ್ತವೆ ಮತ್ತು ಎರಡನೇ ಮಟ್ಟದ ಶೀರ್ಷಿಕೆಗಳು ಕಾರ್ಡ್‌ಗಳಾಗುತ್ತವೆ. TODO, DONE, ಆದ್ಯತೆಗಳು, ಟ್ಯಾಗ್‌ಗಳು, SCHEDULED, DEADLINE ಮತ್ತು CLOSED ಉಳಿಯುತ್ತವೆ; ಆಯ್ಕೆ ಪೆಟ್ಟಿಗೆಗಳು ಮತ್ತು ಕೆಳಮಟ್ಟದ ಶೀರ್ಷಿಕೆಗಳು ಪರಿಶೀಲನಾ ಪಟ್ಟಿಗಳಾಗುತ್ತವೆ.",
   "import-board-instruction-focalboard": ".boardarchive ಫೈಲ್ ಅನ್ನು ಅನ್‌ಜಿಪ್ ಮಾಡಿ ಮತ್ತು ಬೋರ್ಡ್‌ನ board.jsonl ವಿಷಯವನ್ನು ಆವೃತ್ತಿಯ ಸಾಲಿನೊಂದಿಗೆ ಅಥವಾ ಅದು ಇಲ್ಲದೆ ಅಂಟಿಸಿ. ಬೋರ್ಡ್ ನೋಟದ ಗುಂಪು ಮಾಡುವ ಗುಣಲಕ್ಷಣವು ಪಟ್ಟಿಗಳಾಗಿ, ಇತರ ಆಯ್ಕೆ ಗುಣಲಕ್ಷಣಗಳು ಲೇಬಲ್‌ಗಳಾಗಿ, ಪಠ್ಯ ಮತ್ತು ಚೆಕ್‌ಬಾಕ್ಸ್ ಬ್ಲಾಕ್‌ಗಳು ವಿವರಣೆ ಮತ್ತು ಪರಿಶೀಲನಾ ಪಟ್ಟಿಯಾಗಿ ಬದಲಾಗುತ್ತವೆ. ಕಾಮೆಂಟ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗುತ್ತದೆ. ಚಿತ್ರಗಳು ಮತ್ತು ಲಗತ್ತುಗಳನ್ನು ಆಮದು ಮಾಡಲಾಗುವುದಿಲ್ಲ.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ಯಾವ ಕಾಲಮ್ ಯಾವ ಕ್ಷೇತ್ರಕ್ಕೆ ಸೇರಿದೆ?",
+  "csv-mapping-description": "ಪ್ರತಿ ಕಾರ್ಡ್ ಕ್ಷೇತ್ರದ ಮಾಹಿತಿಯನ್ನು ಹೊಂದಿರುವ ಕಡತದ ಕಾಲಮ್ ಆಯ್ಕೆಮಾಡಿ. ಕಾಲಮ್ ಹೆಸರುಗಳ ಆಧಾರದಲ್ಲಿ ಆಯ್ಕೆಗಳನ್ನು ಮಾಡಲಾಗಿದೆ; ತಪ್ಪಾದವುಗಳನ್ನು ಬದಲಾಯಿಸಿ, ಮತ್ತು ಕಡತದಲ್ಲಿಲ್ಲದ ಕ್ಷೇತ್ರಕ್ಕೆ (ಕಡತದಲ್ಲಿಲ್ಲ) ಆಯ್ಕೆಮಾಡಿ.",
+  "csv-mapping-not-in-file": "(ಕಡತದಲ್ಲಿಲ್ಲ)",
+  "csv-mapping-column-number": "ಕಾಲಮ್ __number__",
+  "csv-mapping-list-missing": "ಕಡತದಲ್ಲಿ ಪಟ್ಟಿಗಾಗಿ ಕಾಲಮ್ ಇಲ್ಲ. ಮೇಲಿನಿಂದ ಒಂದನ್ನು ಆಯ್ಕೆಮಾಡಿ, ಅಥವಾ ಎಲ್ಲಾ ಕಾರ್ಡ್‌ಗಳು ಸೇರಬೇಕಾದ ಒಂದೇ ಪಟ್ಟಿಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ.",
+  "csv-mapping-list-name": "ಎಲ್ಲಾ ಕಾರ್ಡ್‌ಗಳಿಗೆ ಪಟ್ಟಿ",
+  "csv-mapping-custom-fields": "ಪಠ್ಯ ಕಸ್ಟಮ್ ಕ್ಷೇತ್ರಗಳಾಗಿ ಆಮದು ಮಾಡಬೇಕಾದ ಇತರ ಕಾಲಮ್‌ಗಳು:",
+  "csv-mapping-boards": "ಪ್ರತಿಯೊಂದು ಶೀಟ್ ಪ್ರತ್ಯೇಕ ಫಲಕವಾಗುತ್ತದೆ:",
+  "csv-mapping-skipped-sheets": "ಆಮದು ಮಾಡದ ಶೀಟ್‌ಗಳು:",
+  "csv-mapping-title-required": "ಕಾರ್ಡ್ ಶೀರ್ಷಿಕೆಗಳನ್ನು ಹೊಂದಿರುವ ಕಾಲಮ್ ಆಯ್ಕೆಮಾಡಿ.",
+  "csv-mapping-list-required": "ಎಲ್ಲಾ ಕಾರ್ಡ್‌ಗಳು ಸೇರಬೇಕಾದ ಪಟ್ಟಿಯ ಹೆಸರನ್ನು ನಮೂದಿಸಿ, ಅಥವಾ ಪಟ್ಟಿಯನ್ನು ಹೊಂದಿರುವ ಕಾಲಮ್ ಆಯ್ಕೆಮಾಡಿ."
 }

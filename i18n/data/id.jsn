@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Di Redmine, buka Issues proyek, pilih Also available in: CSV di bagian bawah daftar, pilih kolom (All columns, termasuk Description), lalu ekspor dan tempelkan CSV tersebut. Redmine memberi nama kolom dalam bahasa Anda, jadi sebelum mengekspor atur bahasa ke English di My account. Setiap status menjadi daftar dan isu menjadi kartu dengan jenis isu sebagai label, penerima tugas, penulis, tanggal, tugas induk, dan isu terkait; prioritas, kategori, versi tujuan, perkiraan waktu, % Done, dan bidang khusus menjadi bidang khusus.",
   "import-board-instruction-orgmode": "Tempel berkas Org mode yang ditulis oleh Emacs, Orgzly, atau Beorg. Judul tingkat teratas menjadi daftar dan judul tingkat kedua menjadi kartu. TODO dan DONE, prioritas, tag, SCHEDULED, DEADLINE, dan CLOSED dipertahankan; kotak centang dan judul yang lebih dalam menjadi daftar periksa.",
   "import-board-instruction-focalboard": "Ekstrak berkas .boardarchive dan tempelkan isi board.jsonl papan, dengan atau tanpa baris versinya. Properti pengelompokan tampilan papan menjadi daftar, properti pilihan lainnya menjadi label, blok teks dan kotak centang menjadi deskripsi dan daftar periksa, sedangkan komentar tetap disimpan. Gambar dan lampiran tidak diimpor.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Kolom mana untuk setiap isian?",
+  "csv-mapping-description": "Pilih kolom berkas yang memuat setiap isian kartu. Pilihan dibuat berdasarkan nama kolom; perbaiki yang salah, dan pilih (tidak ada dalam berkas) untuk isian yang tidak terdapat dalam berkas.",
+  "csv-mapping-not-in-file": "(tidak ada dalam berkas)",
+  "csv-mapping-column-number": "Kolom __number__",
+  "csv-mapping-list-missing": "Berkas tidak memiliki kolom untuk daftar. Pilih kolom di atas, atau ketik nama satu daftar yang akan menampung semua kartu.",
+  "csv-mapping-list-name": "Daftar untuk semua kartu",
+  "csv-mapping-custom-fields": "Kolom lain untuk diimpor sebagai kolom khusus teks:",
+  "csv-mapping-boards": "Setiap lembar menjadi papan tersendiri:",
+  "csv-mapping-skipped-sheets": "Lembar yang tidak diimpor:",
+  "csv-mapping-title-required": "Pilih kolom yang memuat judul kartu.",
+  "csv-mapping-list-required": "Ketik nama daftar yang akan menampung semua kartu, atau pilih kolom yang memuat daftar."
 }

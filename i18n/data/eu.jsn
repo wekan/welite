@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-n, ireki proiektuaren Issues, aukeratu Also available in: CSV zerrendaren behealdean, hautatu zutabeak (All columns, Description barne) eta esportatu; gero itsatsi CSV fitxategia. Redmine-k zutabeak zure hizkuntzan izendatzen ditu; beraz, jarri hizkuntza ingelesez My account atalean esportatu aurretik. Egoera bakoitza zerrenda bihurtzen da eta arazoak txartela, jarraitzailea etiketa gisa, esleitua, egilea, datak, zeregin nagusia eta erlazionatutako arazoak mantenduta; lehentasuna, kategoria, helburuko bertsioa, aurreikusitako denbora, % Done eta eremu pertsonalizatuak eremu pertsonalizatu bihurtzen dira.",
   "import-board-instruction-orgmode": "Itsatsi Org mode fitxategi bat, Emacs, Orgzly edo Beorg aplikazioek idazten duten bezala. Goi-mailako izenburuak zerrenda bihurtzen dira eta bigarren mailakoak txartela. TODO eta DONE, lehentasunak, etiketak, SCHEDULED, DEADLINE eta CLOSED mantentzen dira, eta kontrol-laukiak eta sakonagoko izenburuak kontrol-zerrenda bihurtzen dira.",
   "import-board-instruction-focalboard": "Deskonprimitu .boardarchive fitxategia eta itsatsi arbelaren board.jsonl fitxategiaren edukia, bertsio-lerroarekin edo gabe. Arbel-ikuspegiaren taldekatze-propietatea zerrenda bihurtzen da, beste hautapen-propietateak etiketa, testu- eta kontrol-lauki blokeak deskribapen eta kontrol-zerrenda, eta iruzkinak mantentzen dira. Irudiak eta eranskinak ez dira inportatzen.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Zein da zutabe bakoitza?",
+  "csv-mapping-description": "Aukeratu txartelaren eremu bakoitza jasotzen duen fitxategiko zutabea. Aukerak zutabeen izenetatik egin dira; zuzendu okerrak eta aukeratu (ez dago fitxategian) fitxategiak ez duen eremu baterako.",
+  "csv-mapping-not-in-file": "(ez dago fitxategian)",
+  "csv-mapping-column-number": "__number__. zutabea",
+  "csv-mapping-list-missing": "Fitxategiak ez du zerrendaren zutaberik. Aukeratu bat goian, edo idatzi txartel guztiak jasoko dituen zerrenda bakarraren izena.",
+  "csv-mapping-list-name": "Txartel guztientzako zerrenda",
+  "csv-mapping-custom-fields": "Testu-eremu pertsonalizatu gisa inportatzeko beste zutabeak:",
+  "csv-mapping-boards": "Orri bakoitza bere arbel bihurtzen da:",
+  "csv-mapping-skipped-sheets": "Inportatzen ez diren orriak:",
+  "csv-mapping-title-required": "Aukeratu txartelen izenburuak dituen zutabea.",
+  "csv-mapping-list-required": "Idatzi txartel guztiak jasoko dituen zerrendaren izena, edo aukeratu zerrenda jasotzen duen zutabea."
 }

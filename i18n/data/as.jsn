@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-ত প্ৰকল্পৰ Issues খোলক, তালিকাৰ তলত Also available in: CSV বাছক, স্তম্ভসমূহ বাছক (All columns, Description-ৰ সৈতে) আৰু ৰপ্তানি কৰক, তাৰ পিছত CSV পেষ্ট কৰক। Redmine-এ স্তম্ভসমূহৰ নাম আপোনাৰ ভাষাত দিয়ে, গতিকে ৰপ্তানি কৰাৰ আগতে My account-ত আপোনাৰ ভাষা ইংৰাজী কৰক। প্ৰতিটো স্থিতি এটা তালিকা হয় আৰু সমস্যাসমূহ কাৰ্ড হয়, ট্ৰেকাৰক লেবেল হিচাপে, দায়িত্বপ্ৰাপ্ত, লেখক, তাৰিখ, অভিভাৱক কাম আৰু সম্পৰ্কিত সমস্যাৰ সৈতে; অগ্ৰাধিকাৰ, শ্ৰেণী, লক্ষ্য সংস্কৰণ, অনুমানিক সময়, % Done আৰু কাষ্টম ক্ষেত্ৰসমূহ কাষ্টম ক্ষেত্ৰ হয়।",
   "import-board-instruction-orgmode": "Emacs, Orgzly বা Beorg-এ লিখাৰ দৰে এটা Org mode ফাইল পেষ্ট কৰক। শীৰ্ষ স্তৰৰ শিৰোনামসমূহ তালিকা হয় আৰু দ্বিতীয় স্তৰৰ শিৰোনামসমূহ কাৰ্ড হয়। TODO আৰু DONE, অগ্ৰাধিকাৰ, টেগ, SCHEDULED, DEADLINE আৰু CLOSED ৰখা হয়, আৰু চেকবক্স আৰু গভীৰ শিৰোনামসমূহ পৰীক্ষা তালিকা হয়।",
   "import-board-instruction-focalboard": ".boardarchive ফাইলটো আনজিপ কৰি ব’ৰ্ডৰ board.jsonl ৰ বিষয়বস্তু সংস্কৰণৰ শাৰীসহ বা শাৰীটো নোহোৱাকৈ পেষ্ট কৰক। ব’ৰ্ড দৃশ্যৰ গোট কৰা বৈশিষ্ট্য তালিকালৈ, অন্য নিৰ্বাচন বৈশিষ্ট্যবোৰ লেবেললৈ, লিখনী আৰু চেকবক্সৰ ব্লকবোৰ বিৱৰণ আৰু পৰীক্ষা তালিকালৈ সলনি হয়, আৰু মন্তব্যবোৰ ৰখা হয়। ছবি আৰু সংলগ্ন ফাইল আমদানি কৰা নহয়।",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "কোনটো স্তম্ভ কি?",
+  "csv-mapping-description": "প্ৰতিটো কাৰ্ড ক্ষেত্ৰ ধাৰণ কৰা ফাইলৰ স্তম্ভটো বাছক। বাছনিসমূহ স্তম্ভৰ নামৰ পৰা কৰা হৈছে; ভুলবোৰ সলনি কৰক, আৰু ফাইলত নথকা ক্ষেত্ৰৰ বাবে (ফাইলত নাই) বাছক।",
+  "csv-mapping-not-in-file": "(ফাইলত নাই)",
+  "csv-mapping-column-number": "স্তম্ভ __number__",
+  "csv-mapping-list-missing": "ফাইলত তালিকাৰ বাবে কোনো স্তম্ভ নাই। ওপৰত এটা বাছক, বা প্ৰতিখন কাৰ্ড যোৱা এটা তালিকাৰ নাম লিখক।",
+  "csv-mapping-list-name": "প্ৰতিখন কাৰ্ডৰ বাবে তালিকা",
+  "csv-mapping-custom-fields": "পাঠ্য কাষ্টম ক্ষেত্ৰ হিচাপে আমদানি কৰিবলগীয়া অন্য স্তম্ভ:",
+  "csv-mapping-boards": "প্ৰতিখন শ্বীট নিজৰ ফলক হয়:",
+  "csv-mapping-skipped-sheets": "আমদানি নোহোৱা শ্বীটসমূহ:",
+  "csv-mapping-title-required": "কাৰ্ডৰ শিৰোনামসমূহ ধাৰণ কৰা স্তম্ভটো বাছক।",
+  "csv-mapping-list-required": "প্ৰতিখন কাৰ্ড যোৱা তালিকাৰ নাম লিখক, বা তালিকা ধাৰণ কৰা স্তম্ভটো বাছক।"
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "MuRedmine, vhura Issues dzepurojekiti, sarudza Also available in: CSV pasi perondedzero, sarudza makoramu (All columns, neDescription) wobuditsa, woisa CSV. Redmine inotumidza makoramu nemutauro wako, saka isa mutauro wako kuChirungu muMy account usati wabuditsa. Mamiriro ega ega anova rondedzero uye nyaya dzinova makadhi, netracker sereberu, akapihwa basa, munyori, mazuva, basa remubereki nenyaya dzakabatana; priority, category, target version, estimated time, % Done nendima dzakagadzirwa zvinova ndima dzakagadzirwa.",
   "import-board-instruction-orgmode": "Isa faira reOrg mode, sezvarinonyorwa neEmacs, Orgzly kana Beorg. Misoro yepamusoro-soro inova marondedzero uye misoro yechipiri inova makadhi. TODO ne DONE, kukosha, matagi, SCHEDULED, DEADLINE ne CLOSED zvinochengetwa, uye mabhokisi ekuongorora nemisoro yakadzika zvinova marondedzero ekuongorora.",
   "import-board-instruction-focalboard": "Vhura faira re-.boardarchive kubva mudura rakadzvanywa wonamira zviri mu-board.jsonl yebhodhi, nemutsara weshanduro kana pasina iwo. Chimiro chekuisa mumapoka pakuonekwa kwebhodhi chinova rondedzero, zvimwe zvimiro zvekusarudza zvinova mareberu, zvikamu zvemashoko nemabhokisi ekumaka zvinova tsananguro nerondedzero yekuongorora, uye mhinduro dzinochengetwa. Mifananidzo nemafaira akabatanidzwa hazvipinzwi.",
-  "import-board-instruction-todoist": "MuTodoist, vhura purojekiti, sarudza menyu ye ⋯ kumusoro kurudyi kwayo, wozoti Manage data > Export as CSV, woisa faira reCSV. Zvikamu zvinova marondedzero, mabasa anova makadhi, mabasa madiki anova rondedzero yekuongorora, zvinyorwa zvinova mhinduro, uye @labels nezvinokosha p1 kusvika p3 zvinova mareberu."
+  "import-board-instruction-todoist": "MuTodoist, vhura purojekiti, sarudza menyu ye ⋯ kumusoro kurudyi kwayo, wozoti Manage data > Export as CSV, woisa faira reCSV. Zvikamu zvinova marondedzero, mabasa anova makadhi, mabasa madiki anova rondedzero yekuongorora, zvinyorwa zvinova mhinduro, uye @labels nezvinokosha p1 kusvika p3 zvinova mareberu.",
+  "csv-mapping-title": "Koramu ipi ndeipi?",
+  "csv-mapping-description": "Sarudza koramu yefaira ine munda wega wega wekadhi. Sarudzo dzakaitwa kubva pamazita emakoramu; shandura dzisiri dzo, uye sarudza (haisi mufaira) pamunda usipo mufaira.",
+  "csv-mapping-not-in-file": "(haisi mufaira)",
+  "csv-mapping-column-number": "Koramu __number__",
+  "csv-mapping-list-missing": "Faira harina koramu yerondedzero. Sarudza imwe pamusoro apa, kana nyora zita rerondedzero imwe chete inopinda makadhi ese.",
+  "csv-mapping-list-name": "Rondedzero yemakadhi ese",
+  "csv-mapping-custom-fields": "Mamwe makoramu ekupinza seminda yakagadzirwa yemavara:",
+  "csv-mapping-boards": "Peji rega rega rinova bhodhi raro:",
+  "csv-mapping-skipped-sheets": "Mapeji asingapinzwi:",
+  "csv-mapping-title-required": "Sarudza koramu ine misoro yemakadhi.",
+  "csv-mapping-list-required": "Nyora zita rerondedzero inopinda makadhi ese, kana sarudza koramu ine rondedzero."
 }

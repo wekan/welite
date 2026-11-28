@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- CSV and TSV import offers a localized column mapping step for pasted or
+  uploaded data. It preserves multiline Unicode cells, accepts a list name
+  when the file omits the list column, and rejects invalid mappings before
+  creating a board.
+
 - Kanboard task links import as parent relationships and dependencies,
   deduplicating mirrored links and reporting links to tasks outside the export.
   Numeric IDs work for Kanboard tasks, columns, swimlanes and categories.

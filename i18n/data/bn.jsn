@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine-এ প্রকল্পের Issues খুলে তালিকার নিচে Also available in: CSV বেছে নিন। কলাম বেছে (All columns, Description-সহ) রপ্তানি করে CSV পেস্ট করুন। Redmine আপনার ভাষায় কলামের নাম দেয়, তাই রপ্তানির আগে My account-এ ভাষা English করুন। প্রতিটি অবস্থা তালিকা এবং ইস্যুগুলো কার্ড হয়; ট্র্যাকার লেবেল হয় এবং দায়িত্বপ্রাপ্ত, লেখক, তারিখ, মূল কাজ ও সম্পর্কিত ইস্যু বজায় থাকে। অগ্রাধিকার, বিভাগ, লক্ষ্য সংস্করণ, আনুমানিক সময়, % Done ও কাস্টম ক্ষেত্রগুলো কাস্টম ক্ষেত্র হয়।",
   "import-board-instruction-orgmode": "Emacs, Orgzly বা Beorg-এর লেখা Org mode ফাইল পেস্ট করুন। প্রথম স্তরের শিরোনামগুলো তালিকা এবং দ্বিতীয় স্তরের শিরোনামগুলো কার্ড হয়। TODO ও DONE, অগ্রাধিকার, ট্যাগ, SCHEDULED, DEADLINE ও CLOSED বজায় থাকে; চেকবক্স এবং আরও নিচের স্তরের শিরোনামগুলো যাচাইতালিকা হয়।",
   "import-board-instruction-focalboard": ".boardarchive ফাইলটি আনজিপ করে বোর্ডের board.jsonl-এর বিষয়বস্তু পেস্ট করুন, সংস্করণের লাইনসহ বা ছাড়া। বোর্ড দৃশ্যের দলবদ্ধ করার বৈশিষ্ট্য তালিকায় পরিণত হয়, অন্য নির্বাচন বৈশিষ্ট্যগুলো লেবেল হয়, পাঠ্য ও চেকবক্স ব্লকগুলো বিবরণ ও চেকলিস্ট হয় এবং মন্তব্যগুলো রাখা হয়। ছবি ও সংযুক্তি আমদানি করা হয় না।",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "কোনটি কোন কলাম?",
+  "csv-mapping-description": "প্রতিটি কার্ডের ক্ষেত্র যে কলামে আছে সেটি বেছে নিন। কলামের নাম দেখে প্রাথমিক নির্বাচন করা হয়েছে; ভুল নির্বাচন বদলান এবং ফাইলে না থাকা ক্ষেত্রের জন্য (ফাইলে নেই) বেছে নিন।",
+  "csv-mapping-not-in-file": "(ফাইলে নেই)",
+  "csv-mapping-column-number": "কলাম __number__",
+  "csv-mapping-list-missing": "ফাইলে তালিকার কলাম নেই। ওপরে একটি বেছে নিন, অথবা সব কার্ড যে একটিমাত্র তালিকায় যাবে তার নাম লিখুন।",
+  "csv-mapping-list-name": "সব কার্ডের জন্য তালিকা",
+  "csv-mapping-custom-fields": "পাঠ্য ধরনের কাস্টম ক্ষেত্র হিসেবে আমদানি করার অন্য কলামগুলো:",
+  "csv-mapping-boards": "প্রতিটি শিট আলাদা বোর্ড হয়:",
+  "csv-mapping-skipped-sheets": "যে শিটগুলো আমদানি হয় না:",
+  "csv-mapping-title-required": "কার্ডের শিরোনাম আছে এমন কলাম বেছে নিন।",
+  "csv-mapping-list-required": "সব কার্ড যে তালিকায় যাবে তার নাম লিখুন, অথবা তালিকা আছে এমন কলাম বেছে নিন।"
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Mu Redmine, ggulawo Issues za pulojekiti, londa Also available in: CSV wansi w'olukalala, londa empagi (All columns, ne Description) ofulumye, oluvannyuma oteekemu CSV. Redmine etuuma empagi mu lulimi lwo, kale teeka olulimi lwo ku Lungereza mu My account nga tonnafulumya. Buli mbeera efuuka olukalala n'ensonga zifuuka kaadi, ne tracker nga akabonero, aweereddwa omulimu, omuwandiisi, ennaku, omulimu omukulu n'ensonga ezikwatagana; obukulu, ekika, version egendererwa, obudde obubaliriddwa, % Done n'ennimiro ez'enjawulo bifuuka ennimiro ez'enjawulo.",
   "import-board-instruction-orgmode": "Teekamu fayiro ya Org mode, nga Emacs, Orgzly oba Beorg bwe bigiwandiika. Emitwe egy'oku ntikko gifuuka enkalala n'emitwe egy'omutendera ogwokubiri gifuuka kaadi. TODO ne DONE, obukulu, obubonero, SCHEDULED, DEADLINE ne CLOSED bikuumibwa, n'obusanduuko bw'okukebera n'emitwe egiri wansi ennyo bifuuka enkalala z'okukebera.",
   "import-board-instruction-focalboard": "Ggya fayiro ya .boardarchive mu zip era osseewo ebiri mu board.jsonl y’olubaawo, n’olunyiriri lw’ekika oba nga teruliiko. Ekintu ekigabanya mu bibinja mu ndabika y’olubaawo kifuuka enkalala, ebintu ebirala eby’okulonda bifuuka obubonero, ebitundu by’ebiwandiiko n’obubokisi obw’okuteekamu akabonero bifuuka ennyonyola n’olukalala lw’okukebera, era endowooza zikuumibwa. Ebifaananyi ne fayiro ezigattiddwako tebiyingizibwa.",
-  "import-board-instruction-todoist": "Mu Todoist, ggulawo pulojekiti, londa menyu ya ⋯ waggulu ku ddyo waayo, oluvannyuma Manage data > Export as CSV, era teekamu fayiro ya CSV. Ebitundu bifuuka enkalala, emirimu gifuuka amakaadi, emirimu emitono gifuuka olukalala lw'okukebera, ebiwandiiko bifuuka endowooza, era @labels n'ebikulembeza p1 okutuuka ku p3 bifuuka obubonero."
+  "import-board-instruction-todoist": "Mu Todoist, ggulawo pulojekiti, londa menyu ya ⋯ waggulu ku ddyo waayo, oluvannyuma Manage data > Export as CSV, era teekamu fayiro ya CSV. Ebitundu bifuuka enkalala, emirimu gifuuka amakaadi, emirimu emitono gifuuka olukalala lw'okukebera, ebiwandiiko bifuuka endowooza, era @labels n'ebikulembeza p1 okutuuka ku p3 bifuuka obubonero.",
+  "csv-mapping-title": "Empagi eriwa y'eriwa?",
+  "csv-mapping-description": "Londa empagi ya fayiro erimu buli nnimiro ya kaadi. Ebirondeddwa byakolebwa okuva ku mannya g'empagi; kyusa byonna ebikyamu, era londa (tekiri mu fayiro) ku nnimiro fayiro gy'etalina.",
+  "csv-mapping-not-in-file": "(tekiri mu fayiro)",
+  "csv-mapping-column-number": "Empagi __number__",
+  "csv-mapping-list-missing": "Fayiro terina mpagi ya lukalala. Londa emu waggulu, oba wandiika erinnya ly'olukalala olumu buli kaadi mw'egenda.",
+  "csv-mapping-list-name": "Olukalala lwa buli kaadi",
+  "csv-mapping-custom-fields": "Empagi endala ez'okuyingiza nga ennimiro ez'enjawulo ez'ebigambo:",
+  "csv-mapping-boards": "Buli lupapula lufuuka olubaawo lwalwo:",
+  "csv-mapping-skipped-sheets": "Empapula ezitayingizibwa:",
+  "csv-mapping-title-required": "Londa empagi erimu amannya ga kaadi.",
+  "csv-mapping-list-required": "Wandiika erinnya ly'olukalala buli kaadi mw'egenda, oba londa empagi erimu olukalala."
 }

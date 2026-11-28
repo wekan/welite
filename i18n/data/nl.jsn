@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Open in Redmine Issues van het project, kies Also available in: CSV onderaan de lijst, selecteer de kolommen (All columns, met Description) en exporteer. Plak vervolgens de CSV. Redmine benoemt de kolommen in jouw taal, dus stel vóór het exporteren je taal in op English in My account. Elke status wordt een lijst en issues worden kaarten, met de tracker als label, toegewezen persoon, auteur, datums, bovenliggende taak en gerelateerde issues; prioriteit, categorie, doelversie, geschatte tijd, % Done en aangepaste velden worden aangepaste velden.",
   "import-board-instruction-orgmode": "Plak een Org mode-bestand zoals Emacs, Orgzly of Beorg dat schrijft. Koppen op het hoogste niveau worden lijsten en koppen op het tweede niveau worden kaarten. TODO en DONE, prioriteiten, labels, SCHEDULED, DEADLINE en CLOSED blijven behouden; selectievakjes en diepere koppen worden controlelijsten.",
   "import-board-instruction-focalboard": "Pak het .boardarchive-bestand uit en plak de inhoud van het board.jsonl-bestand van het bord, met of zonder versieregel. De groeperingseigenschap van de bordweergave wordt lijsten, andere selectie-eigenschappen worden aanduidingsmarkeringen, tekst- en selectievakblokken worden de beschrijving en een controlelijst, en opmerkingen blijven behouden. Afbeeldingen en bijlagen worden niet geïmporteerd.",
-  "import-board-instruction-todoist": "Open in Todoist het projectmenu en kies Exporteren als sjabloon. Plak daarna het CSV-bestand. Secties worden lijsten, taken worden kaarten, subtaken worden een controlelijst, notities worden opmerkingen en @labels en prioriteiten p1 tot en met p3 worden labels."
+  "import-board-instruction-todoist": "Open in Todoist het projectmenu en kies Exporteren als sjabloon. Plak daarna het CSV-bestand. Secties worden lijsten, taken worden kaarten, subtaken worden een controlelijst, notities worden opmerkingen en @labels en prioriteiten p1 tot en met p3 worden labels.",
+  "csv-mapping-title": "Welke kolom hoort bij welk veld?",
+  "csv-mapping-description": "Kies de kolom van het bestand die elk kaartveld bevat. De keuzes zijn gemaakt op basis van de kolomnamen; corrigeer onjuiste keuzes en kies (niet in het bestand) voor een veld dat het bestand niet bevat.",
+  "csv-mapping-not-in-file": "(niet in het bestand)",
+  "csv-mapping-column-number": "Kolom __number__",
+  "csv-mapping-list-missing": "Het bestand heeft geen kolom voor de lijst. Kies er hierboven een, of typ de naam van de ene lijst waarin alle kaarten terechtkomen.",
+  "csv-mapping-list-name": "Lijst voor alle kaarten",
+  "csv-mapping-custom-fields": "Andere kolommen die als maatwerkvelden voor tekst worden geïmporteerd:",
+  "csv-mapping-boards": "Elk werkblad wordt een afzonderlijk bord:",
+  "csv-mapping-skipped-sheets": "Werkbladen die niet worden geïmporteerd:",
+  "csv-mapping-title-required": "Kies de kolom die de kaarttitels bevat.",
+  "csv-mapping-list-required": "Typ de naam van de lijst waarin alle kaarten terechtkomen, of kies de kolom die de lijst bevat."
 }

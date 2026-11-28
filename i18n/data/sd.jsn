@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine ۾، پروجيڪٽ جا Issues کوليو، فهرست جي هيٺان Also available in: CSV چونڊيو، ڪالم چونڊيو (All columns، Description سان) ۽ برآمد ڪريو، پوءِ CSV پيسٽ ڪريو. Redmine ڪالمن جا نالا توهان جي ٻولي ۾ رکي ٿو، تنهن ڪري برآمد ڪرڻ کان اڳ My account ۾ پنهنجي ٻولي انگريزي تي سيٽ ڪريو. هر حالت هڪ فهرست ۽ مسئلا ڪارڊ بڻجن ٿا، tracker کي ليبل طور، ذميوار، ليکڪ، تاريخن، والدين ڪم ۽ لاڳاپيل مسئلن سان؛ ترجيح، درجو، ٽارگيٽ ورزن، اندازي وقت، % Done ۽ ڪسٽم فيلڊون ڪسٽم فيلڊون بڻجن ٿيون.",
   "import-board-instruction-orgmode": "Org mode فائل پيسٽ ڪريو، جيئن Emacs، Orgzly يا Beorg لکن ٿا. مٿين سطح جا عنوان فهرستون ۽ ٻي سطح جا عنوان ڪارڊ بڻجن ٿا. TODO ۽ DONE، ترجيحون، ٽيگ، SCHEDULED، DEADLINE ۽ CLOSED رکيا وڃن ٿا، ۽ چيڪ باڪس ۽ اونها عنوان چڪاس فهرستون بڻجن ٿا.",
   "import-board-instruction-focalboard": ".boardarchive فائل کي ان زپ ڪريو ۽ بورڊ جي board.jsonl جو مواد ورزن واري سٽ سان يا ان کان سواءِ پيسٽ ڪريو. بورڊ جي ڏيک جي گروپ ٺاهڻ واري خاصيت فهرستن ۾، ٻيون چونڊ خاصيتون ليبلن ۾، متن ۽ چيڪ باڪس جا بلاڪ وضاحت ۽ چڪاس فهرست ۾ بدلجن ٿا، ۽ تبصرا محفوظ رهن ٿا. تصويرون ۽ منسلڪ فائلون درآمد نه ٿيون ڪيون وڃن.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ڪهڙو ڪالم ڪهڙو آهي؟",
+  "csv-mapping-description": "فائل جو اهو ڪالم چونڊيو جنهن ۾ هر ڪارڊ فيلڊ آهي. چونڊون ڪالمن جي نالن مان ڪيون ويون؛ جيڪي غلط آهن انهن کي بدلايو، ۽ جيڪا فيلڊ فائل ۾ ناهي ان لاءِ (فائل ۾ ناهي) چونڊيو.",
+  "csv-mapping-not-in-file": "(فائل ۾ ناهي)",
+  "csv-mapping-column-number": "ڪالم __number__",
+  "csv-mapping-list-missing": "فائل ۾ فهرست لاءِ ڪالم ناهي. مٿان هڪ چونڊيو، يا ان هڪ فهرست جو نالو لکو جنهن ۾ هر ڪارڊ ويندو.",
+  "csv-mapping-list-name": "هر ڪارڊ لاءِ فهرست",
+  "csv-mapping-custom-fields": "ٻيا ڪالم جيڪي متن جي ڪسٽم فيلڊن طور درآمد ڪرڻا آهن:",
+  "csv-mapping-boards": "هر شيٽ پنهنجو بورڊ بڻجي ٿي:",
+  "csv-mapping-skipped-sheets": "شيٽون جيڪي درآمد نه ٿيون ٿين:",
+  "csv-mapping-title-required": "اهو ڪالم چونڊيو جنهن ۾ ڪارڊن جا عنوان آهن.",
+  "csv-mapping-list-required": "ان فهرست جو نالو لکو جنهن ۾ هر ڪارڊ ويندو، يا اهو ڪالم چونڊيو جنهن ۾ فهرست آهي."
 }

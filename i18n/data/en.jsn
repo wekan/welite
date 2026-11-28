@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "In Redmine, open the project's Issues, choose Also available in: CSV at the bottom of the list, pick the columns (All columns, with Description) and export, then paste the CSV. Redmine names the columns in your language, so set your language to English in My account before exporting. Each status becomes a list and issues become cards, with the tracker as a label, assignee, author, dates, parent task and related issues; priority, category, target version, estimated time, % Done and custom fields become custom fields.",
   "import-board-instruction-orgmode": "Paste an Org mode file, as Emacs, Orgzly or Beorg write it. Top-level headings become lists and second-level headings become cards. TODO and DONE, priorities, tags, SCHEDULED, DEADLINE and CLOSED are kept, and checkboxes and deeper headings become checklists.",
   "import-board-instruction-focalboard": "Unzip the .boardarchive file and paste a board's board.jsonl, with or without its version line. The board view's group-by property becomes the lists, other select properties become labels, text and checkbox blocks become the description and a checklist, and comments are kept. Images and attachments are not imported.",
-  "import-board-instruction-todoist": "In Todoist, open the project, choose the ⋯ menu at its top right, then Manage data > Export as CSV, and paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project, choose the ⋯ menu at its top right, then Manage data > Export as CSV, and paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Which column is which?",
+  "csv-mapping-description": "Choose the column of the file that holds each card field. The choices were made from the column names; change any that are wrong, and choose (not in the file) for a field the file does not have.",
+  "csv-mapping-not-in-file": "(not in the file)",
+  "csv-mapping-column-number": "Column __number__",
+  "csv-mapping-list-missing": "The file has no column for the list. Choose one above, or type the name of the one list every card goes into.",
+  "csv-mapping-list-name": "List for every card",
+  "csv-mapping-custom-fields": "Other columns to import as text custom fields:",
+  "csv-mapping-boards": "Each sheet becomes its own board:",
+  "csv-mapping-skipped-sheets": "Sheets that are not imported:",
+  "csv-mapping-title-required": "Choose the column that holds the card titles.",
+  "csv-mapping-list-required": "Type the name of the list every card goes into, or choose the column that holds the list."
 }

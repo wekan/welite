@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Den Redmine, habri Issues di e proyekto, skohe Also available in: CSV na final di e lista, skohe e kolòmnan (All columns, ku Description) i eksportá, despues pega e CSV. Redmine ta nombra e kolòmnan den bo idioma, pues pone bo idioma na English den My account promé ku eksportá. Kada status ta bira un lista i asuntunan ta bira karchinan, ku e tracker komo un etiketa, persona asigná, outor, fechanan, tarea mayor i asuntunan relashoná; prioridat, kategoria, vershon meta, tempu estimá, % Done i kamponan personalisá ta bira kamponan personalisá.",
   "import-board-instruction-orgmode": "Plak un fail di Org mode, manera Emacs, Orgzly òf Beorg ta skirbié. Títulonan na e nivel di mas haltu ta bira lista i títulonan di e di dos nivel ta bira karchi. TODO i DONE, prioridat, etiketa, SCHEDULED, DEADLINE i CLOSED ta keda, i kaha di marka i títulonan mas profundo ta bira lista di kontrol.",
   "import-board-instruction-focalboard": "Deskomprimí e archivo .boardarchive i plak e kontenido di board.jsonl di e tabla, ku òf sin e liña di vershon. E propiedat di agrupashon di e bista di e tabla ta bira listanan, otro propiedatnan di selekshon ta bira etiketanan, blokinan di teksto i kahanan di marka ta bira e deskripshon i un lista di chèk, i e komentarionan ta keda warda. Imágennan i archivonan adjuntá no ta wordu importá.",
-  "import-board-instruction-todoist": "Den Todoist, habri e menú di proyekto i skohe Eksportá komo un modelo (Export as a template), despues plak e fail CSV. Sekshonnan ta bira lista, tareanan ta bira karchi, subtareanan ta bira un lista di kontrol, notanan ta bira komentario, i @labels i prioridat p1 te p3 ta bira etiketa."
+  "import-board-instruction-todoist": "Den Todoist, habri e menú di proyekto i skohe Eksportá komo un modelo (Export as a template), despues plak e fail CSV. Sekshonnan ta bira lista, tareanan ta bira karchi, subtareanan ta bira un lista di kontrol, notanan ta bira komentario, i @labels i prioridat p1 te p3 ta bira etiketa.",
+  "csv-mapping-title": "Kua kolòm ta representá kiko?",
+  "csv-mapping-description": "Skohe e kolòm di e fail ku tin kada kampo di karchi. E selekshonnan a wordu hasi segun e nòmbernan di kolòm; kambia esnan robes, i skohe (no ta den e fail) pa un kampo ku e fail no tin.",
+  "csv-mapping-not-in-file": "(no ta den e fail)",
+  "csv-mapping-column-number": "Kolòm __number__",
+  "csv-mapping-list-missing": "E fail no tin un kolòm pa e lista. Skohe unu ariba, òf skirbi e nòmber di e úniko lista den kua tur karchi ta bai.",
+  "csv-mapping-list-name": "Lista pa tur karchi",
+  "csv-mapping-custom-fields": "Otro kolòmnan pa importá komo kamponan personalisá di teksto:",
+  "csv-mapping-boards": "Kada blachi ta bira su mes tabla:",
+  "csv-mapping-skipped-sheets": "Blachinan ku no ta wordu importá:",
+  "csv-mapping-title-required": "Skohe e kolòm ku tin e títulonan di karchi.",
+  "csv-mapping-list-required": "Skirbi e nòmber di e lista den kua tur karchi ta bai, òf skohe e kolòm ku tin e lista."
 }

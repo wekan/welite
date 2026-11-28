@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "في Redmine، افتح Issues الخاصة بالمشروع واختر Also available in: CSV أسفل القائمة، وحدد الأعمدة (All columns مع Description) وصدّرها، ثم الصق CSV. يسمّي Redmine الأعمدة بلغتك، لذا اضبط لغتك على الإنجليزية في My account قبل التصدير. تتحول كل حالة إلى قائمة والمسائل إلى بطاقات مع نوع التتبع كتسمية والمكلّف والمؤلف والتواريخ والمهمة الأصل والمسائل المرتبطة؛ وتتحول الأولوية والفئة والإصدار المستهدف والوقت المقدر و% Done والحقول المخصصة إلى حقول مخصصة.",
   "import-board-instruction-orgmode": "الصق ملف Org mode كما تكتبه Emacs أو Orgzly أو Beorg. تتحول عناوين المستوى الأعلى إلى قوائم، وعناوين المستوى الثاني إلى بطاقات. تُحفظ TODO وDONE والأولويات والوسوم وSCHEDULED وDEADLINE وCLOSED، وتتحول مربعات الاختيار والعناوين الأعمق إلى قوائم تحقق.",
   "import-board-instruction-focalboard": "فك ضغط ملف .boardarchive وألصق محتوى board.jsonl الخاص باللوحة، مع سطر الإصدار أو بدونه. تصبح خاصية التجميع في عرض اللوحة قوائم، وتصبح خصائص الاختيار الأخرى علامات، وتصبح كتل النص ومربعات الاختيار الوصف وقائمة تحقق، وتُحفظ التعليقات. لا يتم استيراد الصور والمرفقات.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "أي عمود يقابل أي حقل؟",
+  "csv-mapping-description": "اختر عمود الملف الذي يحتوي على كل حقل من حقول البطاقة. حُددت الخيارات بناءً على أسماء الأعمدة؛ صحح الخيارات الخاطئة واختر (غير موجود في الملف) للحقل الذي لا يتضمنه الملف.",
+  "csv-mapping-not-in-file": "(غير موجود في الملف)",
+  "csv-mapping-column-number": "العمود __number__",
+  "csv-mapping-list-missing": "لا يتضمن الملف عمودًا للقائمة. اختر واحدًا أعلاه، أو اكتب اسم القائمة الواحدة التي ستوضع فيها جميع البطاقات.",
+  "csv-mapping-list-name": "قائمة لجميع البطاقات",
+  "csv-mapping-custom-fields": "أعمدة أخرى لاستيرادها كحقول نصية مخصصة:",
+  "csv-mapping-boards": "تتحول كل ورقة إلى لوحة مستقلة:",
+  "csv-mapping-skipped-sheets": "الأوراق التي لن تُستورد:",
+  "csv-mapping-title-required": "اختر العمود الذي يحتوي على عناوين البطاقات.",
+  "csv-mapping-list-required": "اكتب اسم القائمة التي ستوضع فيها جميع البطاقات، أو اختر العمود الذي يحتوي على القائمة."
 }

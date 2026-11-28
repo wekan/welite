@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "A Redmine-ban nyissa meg a projekt Issues oldalát, a lista alján válassza az Also available in: CSV lehetőséget, jelölje ki az oszlopokat (All columns, a Description mezővel együtt), majd exportáljon, és illessze be a CSV-t. A Redmine az Ön nyelvén nevezi el az oszlopokat, ezért exportálás előtt állítsa a nyelvet English értékre a My account oldalon. Minden állapotból lista, az ügyekből pedig kártyák lesznek az ügytípussal mint címkével, hozzárendelt személlyel, szerzővel, dátumokkal, szülőfeladattal és kapcsolódó ügyekkel; a prioritás, kategória, célverzió, becsült idő, % Done és az egyéni mezők egyéni mezővé válnak.",
   "import-board-instruction-orgmode": "Illesszen be egy Emacs, Orgzly vagy Beorg által írt Org mode-fájlt. A legfelső szint címsoraiból listák, a második szint címsoraiból kártyák lesznek. A TODO és DONE, a prioritások, a címkék, valamint a SCHEDULED, DEADLINE és CLOSED megmaradnak; a jelölőnégyzetekből és mélyebb címsorokból ellenőrzőlisták lesznek.",
   "import-board-instruction-focalboard": "Csomagolja ki a .boardarchive fájlt, és illessze be a tábla board.jsonl fájljának tartalmát a verziósorral együtt vagy anélkül. A táblanézet csoportosítási tulajdonságából listák, a többi választási tulajdonságból címkék, a szöveges és jelölőnégyzetes blokkokból leírás és ellenőrzőlista lesz, a megjegyzések pedig megmaradnak. A képek és mellékletek nem kerülnek importálásra.",
-  "import-board-instruction-todoist": "A Todoist alkalmazásban nyissa meg a projektmenüt, és válassza az exportálást sablonként, majd illessze be a CSV-fájlt. A szakaszokból listák, a feladatokból kártyák, az alfeladatokból ellenőrzőlista, a jegyzetekből hozzászólások, az @labels és a p1–p3 prioritásokból címkék lesznek."
+  "import-board-instruction-todoist": "A Todoist alkalmazásban nyissa meg a projektmenüt, és válassza az exportálást sablonként, majd illessze be a CSV-fájlt. A szakaszokból listák, a feladatokból kártyák, az alfeladatokból ellenőrzőlista, a jegyzetekből hozzászólások, az @labels és a p1–p3 prioritásokból címkék lesznek.",
+  "csv-mapping-title": "Melyik oszlop melyik mezőhöz tartozik?",
+  "csv-mapping-description": "Válassza ki a fájl megfelelő oszlopát minden kártyamezőhöz. A választások az oszlopnevek alapján készültek; javítsa ki a hibásakat, és válassza a (nincs a fájlban) lehetőséget azokhoz a mezőkhöz, amelyek nem szerepelnek a fájlban.",
+  "csv-mapping-not-in-file": "(nincs a fájlban)",
+  "csv-mapping-column-number": "__number__. oszlop",
+  "csv-mapping-list-missing": "A fájlban nincs a listát megadó oszlop. Válasszon egyet fent, vagy adja meg annak az egy listának a nevét, amelybe minden kártya kerül.",
+  "csv-mapping-list-name": "Lista az összes kártyához",
+  "csv-mapping-custom-fields": "További oszlopok importálása egyéni szövegmezőként:",
+  "csv-mapping-boards": "Minden munkalapból külön tábla lesz:",
+  "csv-mapping-skipped-sheets": "Nem importált munkalapok:",
+  "csv-mapping-title-required": "Válassza ki a kártyák címét tartalmazó oszlopot.",
+  "csv-mapping-list-required": "Adja meg annak a listának a nevét, amelybe minden kártya kerül, vagy válassza ki a listát megadó oszlopot."
 }

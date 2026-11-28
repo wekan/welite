@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Ku-Redmine, vula Issues yephrojekthi, khetha Also available in: CSV ngezansi kohlu, khetha amakholomu (All columns, ne-Description) bese ukhipha, bese unamathisela i-CSV. I-Redmine iqamba amakholomu ngolimi lwakho, ngakho setha ulimi lube English ku-My account ngaphambi kokukhipha. Isimo ngasinye siba uhlu nezinkinga zibe amakhadi, nesilandeleli njengelebula, umuntu owabelwe zona, umbhali, izinsuku, umsebenzi ongumzali nezinkinga ezihlobene; okubalulekile, isigaba, inguqulo ehlosiwe, isikhathi esilinganisiwe, % Done nezinkambu zangokwezifiso kuba izinkambu zangokwezifiso.",
   "import-board-instruction-orgmode": "Namathisela ifayela le-Org mode, njengoba libhalwa yi-Emacs, Orgzly noma Beorg. Izihloko ezisezingeni eliphezulu ziba izinhlu, kanti izihloko zezinga lesibili ziba amakhadi. TODO no-DONE, izinto eziza kuqala, amathegi, SCHEDULED, DEADLINE no-CLOSED kuyagcinwa, kanti amabhokisi okumaka nezihloko ezijulile ziba izinhlu zokuhlola.",
   "import-board-instruction-focalboard": "Khipha ifayela le-.boardarchive engobweni ecindezelwe bese unamathisela okuqukethwe kwe-board.jsonl yebhodi, nomugqa wenguqulo noma ngaphandle kwawo. Isici sokuqoqa ngamaqembu ekubukweni kwebhodi siba izinhlu, ezinye izici zokukhetha ziba amalebula, amabhulokhi ombhalo namabhokisi okuhlola aba incazelo nohlu lokuhlola, bese amazwana egcinwa. Izithombe nezinanyathiselwa azingeniswa.",
-  "import-board-instruction-todoist": "Ku-Todoist, vula imenyu yephrojekthi bese ukhetha Export as a template, bese unamathisela ifayela le-CSV. Izigaba ziba izinhlu, imisebenzi iba amakhadi, imisebenzi engaphansi iba uhlu lokuhlola, amanothi aba amazwana, kanti @labels nezinto eziza kuqala p1 kuya ku-p3 ziba amalebula."
+  "import-board-instruction-todoist": "Ku-Todoist, vula imenyu yephrojekthi bese ukhetha Export as a template, bese unamathisela ifayela le-CSV. Izigaba ziba izinhlu, imisebenzi iba amakhadi, imisebenzi engaphansi iba uhlu lokuhlola, amanothi aba amazwana, kanti @labels nezinto eziza kuqala p1 kuya ku-p3 ziba amalebula.",
+  "csv-mapping-title": "Iyiphi ikholomu emele ini?",
+  "csv-mapping-description": "Khetha ikholomu yefayela enenkambu ngayinye yekhadi. Izinketho zenziwe ngokwamagama amakholomu; lungisa ezingalungile, bese ukhetha (ayikho efayeleni) ngenkambu engekho efayeleni.",
+  "csv-mapping-not-in-file": "(ayikho efayeleni)",
+  "csv-mapping-column-number": "Ikholomu __number__",
+  "csv-mapping-list-missing": "Ifayela alinayo ikholomu yohlu. Khetha eyodwa ngenhla, noma uthayiphe igama lohlu olulodwa wonke amakhadi azofakwa kulo.",
+  "csv-mapping-list-name": "Uhlu lwawo wonke amakhadi",
+  "csv-mapping-custom-fields": "Amanye amakholomu azongeniswa njengezinkambu zombhalo zangokwezifiso:",
+  "csv-mapping-boards": "Ishidi ngalinye liba yibhodi lalo:",
+  "csv-mapping-skipped-sheets": "Amashidi angeke angeniswe:",
+  "csv-mapping-title-required": "Khetha ikholomu enezihloko zamakhadi.",
+  "csv-mapping-list-required": "Thayipha igama lohlu wonke amakhadi azofakwa kulo, noma ukhethe ikholomu enohlu."
 }

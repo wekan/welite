@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine'да проектның Issues бүлеген ачыгыз, исемлек астындагы «Also available in: CSV» сайлагыз, баганаларны сайлагыз (All columns, Description белән) һәм экспортлагыз, аннары CSV'ны кертегез. Redmine баганаларны сезнең телдә атый, шуңа күрә экспортлаганчы My account'та телне инглизчәгә куегыз. Һәр статус исемлеккә, мәсьәләләр карточкаларга әверелә, билге булган трекеры, җаваплысы, авторы, көннәре, ата биреме һәм бәйле мәсьәләләре белән; өстенлек, категория, максат версиясе, бәяләнгән вакыт, % Done һәм махсус кырлар махсус кырларга әверелә.",
   "import-board-instruction-orgmode": "Emacs, Orgzly яки Beorg язган Org mode файлын кертегез. Өске дәрәҗә башламнары исемлекләргә, икенче дәрәҗә башламнары карточкаларга әверелә. TODO һәм DONE, өстенлекләр, тэглар, SCHEDULED, DEADLINE һәм CLOSED саклана, ә билге куыклары һәм тирәнрәк башламнар тикшерү исемлекләренә әверелә.",
   "import-board-instruction-focalboard": ".boardarchive файлын архивтан чыгарыгыз һәм тактаның board.jsonl эчтәлеген версия юлы белән яки ансыз куегыз. Такта күренешенең төркемләү үзлеге исемлекләргә, башка сайлау үзлекләре билгеләргә, текст һәм тамгалау шакмаклары блоклары тасвирламага һәм тикшерү исемлегенә әйләнә, ә аңлатмалар саклана. Рәсемнәр һәм кушымталар импортланмый.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Кайсы багана нәрсә?",
+  "csv-mapping-description": "Һәр карточка кырын саклаган файл баганасын сайлагыз. Сайлаулар багана исемнәреннән ясалды; дөрес булмаганнарын үзгәртегез, ә файлда булмаган кыр өчен (файлда юк) сайлагыз.",
+  "csv-mapping-not-in-file": "(файлда юк)",
+  "csv-mapping-column-number": "__number__ багана",
+  "csv-mapping-list-missing": "Файлда исемлек өчен багана юк. Өстә берсен сайлагыз, яки һәр карточка керәчәк бердәнбер исемлекнең исемен языгыз.",
+  "csv-mapping-list-name": "Һәр карточка өчен исемлек",
+  "csv-mapping-custom-fields": "Текст махсус кырлары итеп импортланачак башка баганалар:",
+  "csv-mapping-boards": "Һәр бит үз тактасына әверелә:",
+  "csv-mapping-skipped-sheets": "Импортланмый торган битләр:",
+  "csv-mapping-title-required": "Карточка исемнәрен саклаган баганы сайлагыз.",
+  "csv-mapping-list-required": "Һәр карточка керәчәк исемлекнең исемен языгыз, яки исемлекне саклаган баганы сайлагыз."
 }

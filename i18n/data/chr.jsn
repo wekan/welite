@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine ᎠᏂ, ᏗᎦᎸᏫᏍᏓᏁᏗ Issues ᎯᏍᏚᎢᏍᏓ, Also available in: CSV ᎠᏎᏊᎢ ᎡᎳᏗᏢ ᎯᏑᏰᏍᏓ, ᏗᏍᏓᏯ ᎯᏑᏰᏍᏓ (All columns, Description ᎬᏗ) ᎠᎴ ᎭᏓᏅᏍᏓ, ᎿᏉ CSV ᎯᏂᏴ. Redmine ᏗᏍᏓᏯ ᏣᏤᎵ ᎦᏬᏂᎯᏍᏗ ᏚᏙᎥᏍᎪ, ᎾᏍᎩ ᎢᏳᏍᏗ My account ᎠᏂ ᏣᏤᎵ ᎦᏬᏂᎯᏍᏗ ᏲᏁᎦ ᎯᏁᏟᏴᏓ ᎠᏏᏉ ᏂᎭᏓᏅᏍᏗᏍᎬᎾ. ᏂᎦᏛ ᎨᏒ ᎠᏎᏊᎢ ᏂᎦᎵᏍᏗᏍᎪ ᎠᎴ ᏗᎦᎸᏫᏍᏓᏁᏗ ᏗᎪᏪᎵ ᏂᎦᎵᏍᏗᏍᎪ, tracker ᎪᏪᎳᏅᎯ, ᏗᎦᎸᏫᏍᏓᏁᎯ, ᎤᏬᏪᎳᏅ, ᎢᎦ, ᎤᏂᏍᏗ ᎦᎸᏫᏍᏓᏁᏗ ᎠᎴ ᏓᏓᏙᏓᏅ ᏗᎦᎸᏫᏍᏓᏁᏗ ᎬᏗ; ᎢᎬᏱᏗᏢ, ᎤᏍᏗ ᏗᏟᏍᏗ, target version, estimated time, % Done ᎠᎴ ᎤᏤᎵ ᏗᎦᏙᎯ ᎤᏤᎵ ᏗᎦᏙᎯ ᏂᎦᎵᏍᏗᏍᎪ.",
   "import-board-instruction-orgmode": "Org mode ᎪᏪᎸ ᎯᏂᏴ, Emacs, Orgzly ᎠᎴᏉ Beorg ᏚᏬᏪᎳᏅ ᏄᏍᏛ. ᎢᎬᏱ ᏓᎬᏔᏂ ᏗᎠᏎᏊᎢ ᏂᎦᎵᏍᏗᏍᎪ ᎠᎴ ᏔᎵᏁ ᏓᎬᏔᏂ ᏗᎪᏪᎵ ᏂᎦᎵᏍᏗᏍᎪ. TODO ᎠᎴ DONE, ᎢᎬᏱᏗᏢ, ᏗᎪᏪᎳᏅᎯ, SCHEDULED, DEADLINE ᎠᎴ CLOSED ᏓᏍᏆᏂᎪᏗ, ᎠᎴ ᏗᎪᎯᏳᏗ ᎠᎴ ᎡᎳᏗ ᏓᎬᏔᏂ ᎠᎦᏎᏍᏗ ᏗᎠᏎᏊᎢ ᏂᎦᎵᏍᏗᏍᎪ.",
   "import-board-instruction-focalboard": ".boardarchive ᎪᏪᎵ ᎠᏍᏚᎢᏍᏗ ᎠᎴ ᎦᏍᎩᎸ board.jsonl ᎦᏯᎸᏗ, ᎤᏓᏅᏅ ᎢᎪᎯ ᎢᎬᏁᎸ ᎢᏳᏓᎵᎭ ᎠᎴ ᏂᎨᏒᎾ. ᎦᏍᎩᎸ ᎠᎦᏙᎲᏍᏗ ᎾᎿ ᎠᏓᏟᏌᏅ ᎤᏑᏰᏍᏔᏅ ᏗᎠᏎᏊᎢ ᏓᎦᏁᎳ, ᏅᏩᏓᎴ ᏗᏑᏰᏍᏙᏗ ᏗᎪᏪᎳᏅᎯ ᏓᎦᏁᎳ, ᎪᏪᎵ ᎠᎴ ᎠᎦᏎᏍᏗ ᏗᎧᏁᏍᏔ ᏗᎦᏚᏓᎸ ᎧᏃᎮᏗ ᎠᎴ ᎠᎦᏎᏍᏗ ᎠᏎᏊᎢ ᏓᎦᏁᎳ, ᎠᎴ ᏗᎯᏬᏂᎯᏍᏗ ᏓᏓᏂᏴᏍᎦ. ᏗᏟᎶᏍᏔᏅ ᎠᎴ ᏗᏓᏁᏥ Ꮭ ᏱᏓᏓᏴᏍᎦ.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "ᎦᏙ ᎠᏍᏓᏯ ᎦᏙ ᎨᏒ?",
+  "csv-mapping-description": "ᎪᏪᎸ ᎠᏍᏓᏯ ᎯᏑᏰᏍᏓ ᎾᏍᎩ ᏂᎦᏛ ᎪᏪᎵ ᎦᏙᎯ ᎤᏍᏆᏂᎪᏗ. ᏗᏑᏰᏒ ᏗᏍᏓᏯ ᏚᎾᏙᎥ ᏓᏓᏁᎸ ᏂᎬᏁᎸ; ᎤᏲ ᏧᏍᏛ ᎯᏁᏟᏴᏓ, ᎠᎴ (ᎪᏪᎸ ᎠᏂ ᏂᎨᏒᎾ) ᎯᏑᏰᏍᏓ ᎦᏙᎯ ᎪᏪᎸ ᏄᏪᎲᎾ.",
+  "csv-mapping-not-in-file": "(ᎪᏪᎸ ᎠᏂ ᏂᎨᏒᎾ)",
+  "csv-mapping-column-number": "ᎠᏍᏓᏯ __number__",
+  "csv-mapping-list-missing": "ᎪᏪᎸ ᎠᏎᏊᎢ ᎤᏤᎵ ᎠᏍᏓᏯ Ꮭ ᏳᏪᎭ. ᎦᎸᎳᏗ ᏌᏊ ᎯᏑᏰᏍᏓ, ᎠᎴᏉ ᏌᏊ ᎠᏎᏊᎢ ᏚᏙᎥ ᎯᏪᎵᏍᎦ ᎾᎿ ᏂᎦᏛ ᏗᎪᏪᎵ ᏫᏓᏴᎯᎯ.",
+  "csv-mapping-list-name": "ᎠᏎᏊᎢ ᏂᎦᏛ ᏗᎪᏪᎵ ᎤᎾᏤᎵ",
+  "csv-mapping-custom-fields": "ᏅᏩᏓᎴ ᏗᏍᏓᏯ ᎪᏪᎵ ᎤᏤᎵ ᏗᎦᏙᎯ ᏗᎦᏴᏔᏗ:",
+  "csv-mapping-boards": "ᏂᎦᏛ ᎪᏪᎵ ᎦᏁᏌᎢ ᎤᏩᏒ ᏗᏟᎶᏍᏙᏗ ᏂᎦᎵᏍᏗᏍᎪ:",
+  "csv-mapping-skipped-sheets": "ᎪᏪᎵ ᏗᎦᏁᏌᎢ ᏂᏓᏴᏔᏂᏒᎾ:",
+  "csv-mapping-title-required": "ᎠᏍᏓᏯ ᎪᏪᎵ ᏚᎾᏙᎥ ᏧᏍᏆᏂᎪᏗ ᎯᏑᏰᏍᏓ.",
+  "csv-mapping-list-required": "ᎠᏎᏊᎢ ᏚᏙᎥ ᎯᏪᎵᏍᎦ ᎾᎿ ᏂᎦᏛ ᏗᎪᏪᎵ ᏫᏓᏴᎯᎯ, ᎠᎴᏉ ᎠᏍᏓᏯ ᎠᏎᏊᎢ ᎤᏍᏆᏂᎪᏗ ᎯᏑᏰᏍᏓ."
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "W Redmine òtemkni Issues projektu, wëbierzë Also available in: CSV na spòdkù lëstë, wëbierzë kòlumnë (All columns, z Description) i wëekspòrtëjë, pòtemù wklejë CSV. Redmine dôwô kòlumnóm miona w twòjim jãzëkù, tej przed ekspòrtã nastôwi anielsczi w My account. Kòżdi status stôwô sã lëstą, a zgłoszenia kôrtama, z trackerã jakno etikétą, òdpòwiedzalnym, ùsôdzcą, datumama, nadrzãdnym zadanim i sparłãczonyma zgłoszeniama; priorytet, kategòrëjô, docélowô wersjô, òcenioni czas, % Done i włôsné pòla stôwają sã włôsnyma pòlama.",
   "import-board-instruction-orgmode": "Wklejë lopk Org mode, tak jak gò piszą Emacs, Orgzly abò Beorg. Nôgłówczi z wiérzchnégò rówiznë stôwają sã lëstama, a nôgłówczi drëgégò rówiznë kôrtama. TODO i DONE, priorytetë, tagi, SCHEDULED, DEADLINE i CLOSED òstôwają, a pòla do òbznaczeniô i głãbszé nôgłówczi stôwają sã lëstama kòntrolë.",
   "import-board-instruction-focalboard": "Rozpakùj lopk .boardarchive i wklej zamkłosc board.jsonl tôblë, z rézą wersji abò bez ni. Swòjizna grëpòwaniô wëzdrzatkù tôblë stôwô sã lëstama, jinszé swòjiznë wëbiéraniô etikétama, blòczi tekstu i pòla zaznaczaniô òpisã i kòntrolną lëstą, a kòmentarze są zachòwóné. Òbrôzczi i przëdôwczi nie są impòrtowóné.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "Chtërna kòlumna je chtërna?",
+  "csv-mapping-description": "Wëbierzë kòlumnã lopka, chtërna trzimô kòżdé pòle kôrtë. Wëbiérë òstałë zrobioné pò mionach kòlumnów; zmieni te, co są lëchò, i wëbierzë (ni ma w lopkù) dlô pòla, chtërnégò lopk ni mô.",
+  "csv-mapping-not-in-file": "(ni ma w lopkù)",
+  "csv-mapping-column-number": "Kòlumna __number__",
+  "csv-mapping-list-missing": "Lopk ni mô kòlumnë dlô lëstë. Wëbierzë jedną wëżi abò napiszë miono ti jedny lëstë, do chtërny jidze kòżdô kôrta.",
+  "csv-mapping-list-name": "Lësta dlô kòżdi kôrtë",
+  "csv-mapping-custom-fields": "Jinszé kòlumnë do impòrtu jakno tekstowé włôsné pòla:",
+  "csv-mapping-boards": "Kòżdi arkùsz stôwô sã swòją tôflą:",
+  "csv-mapping-skipped-sheets": "Arkùsze, chtërné nie są impòrtowóné:",
+  "csv-mapping-title-required": "Wëbierzë kòlumnã, chtërna trzimô title kôrtów.",
+  "csv-mapping-list-required": "Napiszë miono lëstë, do chtërny jidze kòżdô kôrta, abò wëbierzë kòlumnã, chtërna trzimô lëstã."
 }

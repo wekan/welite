@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Lietotnē Redmine atveriet projekta Issues, saraksta apakšā izvēlieties Also available in: CSV, atlasiet kolonnas (All columns kopā ar Description) un eksportējiet, pēc tam ielīmējiet CSV saturu. Redmine nosauc kolonnas jūsu valodā, tāpēc pirms eksportēšanas sadaļā My account iestatiet valodu English. Katrs statuss kļūst par sarakstu, bet darba vienumi — par kartiņām ar darba veidu kā etiķeti, atbildīgo personu, autoru, datumiem, augstāka līmeņa uzdevumu un saistītajiem darba vienumiem; prioritāte, kategorija, mērķa versija, paredzamais laiks, % Done un pielāgotie lauki kļūst par pielāgotajiem laukiem.",
   "import-board-instruction-orgmode": "Ielīmējiet Org mode failu, kas izveidots ar Emacs, Orgzly vai Beorg. Augšējā līmeņa virsraksti kļūst par sarakstiem, bet otrā līmeņa virsraksti — par kartītēm. TODO un DONE, prioritātes, birkas, SCHEDULED, DEADLINE un CLOSED tiek saglabāti, bet izvēles rūtiņas un dziļāki virsraksti kļūst par kontrolsarakstiem.",
   "import-board-instruction-focalboard": "Izpakojiet .boardarchive failu un ielīmējiet tāfeles board.jsonl faila saturu ar versijas rindu vai bez tās. Tāfeles skata grupēšanas īpašība kļūst par sarakstiem, citas izvēles īpašības — par birkām, teksta un izvēles rūtiņu bloki — par aprakstu un kontrolsarakstu, bet komentāri tiek saglabāti. Attēli un pielikumi netiek importēti.",
-  "import-board-instruction-todoist": "Todoist atveriet projekta izvēlni un izvēlieties eksportēšanu kā veidni, pēc tam ielīmējiet CSV failu. Sadaļas kļūst par sarakstiem, uzdevumi — par kartītēm, apakšuzdevumi — par kontrolsarakstu, piezīmes — par komentāriem, bet @labels un prioritātes no p1 līdz p3 — par birkām."
+  "import-board-instruction-todoist": "Todoist atveriet projekta izvēlni un izvēlieties eksportēšanu kā veidni, pēc tam ielīmējiet CSV failu. Sadaļas kļūst par sarakstiem, uzdevumi — par kartītēm, apakšuzdevumi — par kontrolsarakstu, piezīmes — par komentāriem, bet @labels un prioritātes no p1 līdz p3 — par birkām.",
+  "csv-mapping-title": "Kura kolonna atbilst kuram laukam?",
+  "csv-mapping-description": "Izvēlieties faila kolonnu, kurā ir katrs kartiņas lauks. Izvēles tika noteiktas pēc kolonnu nosaukumiem; izlabojiet nepareizās un izvēlieties (nav failā) laukam, kura failā nav.",
+  "csv-mapping-not-in-file": "(nav failā)",
+  "csv-mapping-column-number": "Kolonna __number__",
+  "csv-mapping-list-missing": "Failā nav saraksta kolonnas. Izvēlieties to augstāk vai ievadiet tā viena saraksta nosaukumu, kurā ievietot visas kartiņas.",
+  "csv-mapping-list-name": "Saraksts visām kartiņām",
+  "csv-mapping-custom-fields": "Citas kolonnas, ko importēt kā pielāgotus teksta laukus:",
+  "csv-mapping-boards": "Katra darblapa kļūst par atsevišķu dēli:",
+  "csv-mapping-skipped-sheets": "Darblapas, kas netiek importētas:",
+  "csv-mapping-title-required": "Izvēlieties kolonnu ar kartiņu nosaukumiem.",
+  "csv-mapping-list-required": "Ievadiet tā saraksta nosaukumu, kurā ievietot visas kartiņas, vai izvēlieties kolonnu, kurā ir saraksts."
 }

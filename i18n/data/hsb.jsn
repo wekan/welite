@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "W Redmine wočińće Issues projekta, wubjerće Also available in: CSV deleka w lisćinje, wubjerće stołpy (All columns, z Description) a eksportujće, potom zasadźće CSV. Redmine pomjenuje stołpy we wašej rěči, tohodla nastajće swoju rěč w My account na jendźelšćinu, prjedy hač eksportujeće. Kóždy status budźe lisćina a problemy budu karty z trackerom jako etiketu, přirjadowanej wosobu, awtorom, datami, nadrjadowanym nadawkom a přisłušnymi problemami; priorita, kategorija, cilowa wersija, trochowany čas, % Done a swójske pola budu swójske pola.",
   "import-board-instruction-orgmode": "Zasadźće dataju Org mode, kaž ju Emacs, Orgzly abo Beorg pisaja. Nadpisma najwyšeje runiny budu lisćiny a nadpisma druheje runiny budu karty. TODO a DONE, priority, tagi, SCHEDULED, DEADLINE a CLOSED so wobchowaja, a kontrolne kašćiki a hłubše nadpisma budu kontrolne lisćiny.",
   "import-board-instruction-focalboard": "Rozpakujće dataju .boardarchive a zasadźće board.jsonl tafle, z wersijowej linku abo bjez njeje. Kajkosć zeskupjenja napohlada tafle so lisćiny stanu, druhe wuběrne kajkosće so etikety stanu, bloki teksta a kontrolnych kašćikow so wopisanje a kontrolna lisćina stanu a komentary so zachowaja. Wobrazy a přiwěški so njeimportuja.",
-  "import-board-instruction-todoist": "W Todoist wočińće projekt, wubjerće meni ⋯ horjeka naprawo, potom Manage data > Export as CSV, a zasadźće dataju CSV. Wotrězki so lisćiny stanu, nadawki so karty stanu, podnadawki so kontrolna lisćina stanu, noticy so komentary stanu, a @labels a priority p1 hač p3 so etikety stanu."
+  "import-board-instruction-todoist": "W Todoist wočińće projekt, wubjerće meni ⋯ horjeka naprawo, potom Manage data > Export as CSV, a zasadźće dataju CSV. Wotrězki so lisćiny stanu, nadawki so karty stanu, podnadawki so kontrolna lisćina stanu, noticy so komentary stanu, a @labels a priority p1 hač p3 so etikety stanu.",
+  "csv-mapping-title": "Kotry stołp je kotry?",
+  "csv-mapping-description": "Wubjerće stołp dataje, kotryž wobsahuje kóžde polo karty. Wuběr je so po mjenach stołpow stał; změńće, štož je wopak, a wubjerće (njeje w dataji) za polo, kotrež dataja nima.",
+  "csv-mapping-not-in-file": "(njeje w dataji)",
+  "csv-mapping-column-number": "Stołp __number__",
+  "csv-mapping-list-missing": "Dataja nima stołp za lisćinu. Wubjerće jedyn horjeka abo zapodajće mjeno jeneje lisćiny, do kotrejež kóžda karta póńdźe.",
+  "csv-mapping-list-name": "Lisćina za kóždu kartu",
+  "csv-mapping-custom-fields": "Druhe stołpy, kotrež so jako tekstowe swójske pola importuja:",
+  "csv-mapping-boards": "Kóžda tabela budźe swójska tafla:",
+  "csv-mapping-skipped-sheets": "Tabele, kotrež so njeimportuja:",
+  "csv-mapping-title-required": "Wubjerće stołp, kotryž wobsahuje titule kartow.",
+  "csv-mapping-list-required": "Zapodajće mjeno lisćiny, do kotrejež kóžda karta póńdźe, abo wubjerće stołp, kotryž lisćinu wobsahuje."
 }

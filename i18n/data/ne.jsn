@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Redmine मा परियोजनाको Issues खोलेर सूचीको तल Also available in: CSV छान्नुहोस्। स्तम्भहरू छानेर (All columns, Description सहित) निर्यात गर्नुहोस्, त्यसपछि CSV टाँस्नुहोस्। Redmine ले तपाईंको भाषामा स्तम्भको नाम राख्छ, त्यसैले निर्यातअघि My account मा भाषा English बनाउनुहोस्। हरेक स्थिति सूची र इस्युहरू कार्ड बन्छन्; ट्र्याकर लेबल बन्छ र जिम्मेवार व्यक्ति, लेखक, मिति, मूल कार्य र सम्बन्धित इस्यु कायम रहन्छन्। प्राथमिकता, वर्ग, लक्ष्य संस्करण, अनुमानित समय, % Done र अनुकूल क्षेत्रहरू अनुकूल क्षेत्र बन्छन्।",
   "import-board-instruction-orgmode": "Emacs, Orgzly वा Beorg ले लेखेको Org mode फाइल टाँस्नुहोस्। माथिल्लो तहका शीर्षक सूची र दोस्रो तहका शीर्षक कार्ड बन्छन्। TODO र DONE, प्राथमिकता, ट्याग, SCHEDULED, DEADLINE र CLOSED कायम रहन्छन्; चेकबाकस र अझ तलका शीर्षक जाँचसूची बन्छन्।",
   "import-board-instruction-focalboard": ".boardarchive फाइल अनजिप गर्नुहोस् र बोर्डको board.jsonl को सामग्री संस्करण पङ्क्तिसहित वा त्यसबिना टाँस्नुहोस्। बोर्ड दृश्यको समूह बनाउने गुण सूचीमा बदलिन्छ, अन्य छनोट गुणहरू लेबलमा, पाठ र चेकबक्स ब्लकहरू विवरण र जाँचसूचीमा बदलिन्छन्, र टिप्पणीहरू राखिन्छन्। तस्बिर र संलग्नकहरू आयात गरिँदैनन्।",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "कुन स्तम्भ कुन हो?",
+  "csv-mapping-description": "कार्डको हरेक क्षेत्र भएको फाइलको स्तम्भ छान्नुहोस्। स्तम्भका नामका आधारमा प्रारम्भिक छनोट गरिएको छ; गलत छनोट बदल्नुहोस् र फाइलमा नभएको क्षेत्रका लागि (फाइलमा छैन) छान्नुहोस्।",
+  "csv-mapping-not-in-file": "(फाइलमा छैन)",
+  "csv-mapping-column-number": "स्तम्भ __number__",
+  "csv-mapping-list-missing": "फाइलमा सूचीको स्तम्भ छैन। माथि एउटा छान्नुहोस्, वा सबै कार्ड जाने एउटै सूचीको नाम लेख्नुहोस्।",
+  "csv-mapping-list-name": "सबै कार्डका लागि सूची",
+  "csv-mapping-custom-fields": "पाठ प्रकारका अनुकूल क्षेत्रका रूपमा आयात गर्ने अरू स्तम्भहरू:",
+  "csv-mapping-boards": "हरेक पानाको आफ्नै बोर्ड बन्छ:",
+  "csv-mapping-skipped-sheets": "आयात नहुने पानाहरू:",
+  "csv-mapping-title-required": "कार्डका शीर्षकहरू भएको स्तम्भ छान्नुहोस्।",
+  "csv-mapping-list-required": "सबै कार्ड जाने सूचीको नाम लेख्नुहोस्, वा सूची भएको स्तम्भ छान्नुहोस्।"
 }

@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "In Redmine, aberi sos Issues de su progetu, sèbera Also available in: CSV in fundu de sa lista, sèbera sas colunnas (All columns, cun Description) e esporta, a pustis incolla su CSV. Redmine dat sos nùmenes a sas colunnas in sa limba tua, duncas imposta s'inglesu in My account prima de esportare. Cada istadu diventat una lista e sos problemas diventant cartas, cun su tracker comente eticheta, assignadu, autore, datas, atividade printzipale e problemas relatados; prioridade, categoria, versione obietivu, tempus istimadu, % Done e campos personalizados diventant campos personalizados.",
   "import-board-instruction-orgmode": "Incolla unu file Org mode, comente lu iscrient Emacs, Orgzly o Beorg. Sos tìtulos de primu livellu diventant listas e sos de segundu livellu diventant cartas. TODO e DONE, prioridades, etichetas, SCHEDULED, DEADLINE e CLOSED sunt mantesos, e sas casellas de controllu e sos tìtulos prus fundos diventant listas de controllu.",
   "import-board-instruction-focalboard": "Descumprime su documentu .boardarchive e incolla su cuntenutu de su board.jsonl de sa tàula, cun o chene sa lìnia de versione. Sa propriedade de agrupamentu de sa vista de sa tàula diventat listas, sas àteras propriedades de seletzione diventant etichetas, sos blocos de testu e de casellas de marcadura diventant sa descritzione e una lista de controllu, e sos cummentos sunt conservados. Sas imàgines e sos allegados non sunt importados.",
-  "import-board-instruction-todoist": "In Todoist, aberi su progetu, sèbera su menù ⋯ in artu a dereta, a pustis Manage data > Export as CSV, e incolla su file CSV. Sas setziones diventant listas, sas atividades diventant cartas, sas suta-atividades diventant una lista de controllu, sas notas diventant cummentos, e sas @etichetas e sas prioridades dae p1 a p3 diventant etichetas."
+  "import-board-instruction-todoist": "In Todoist, aberi su progetu, sèbera su menù ⋯ in artu a dereta, a pustis Manage data > Export as CSV, e incolla su file CSV. Sas setziones diventant listas, sas atividades diventant cartas, sas suta-atividades diventant una lista de controllu, sas notas diventant cummentos, e sas @etichetas e sas prioridades dae p1 a p3 diventant etichetas.",
+  "csv-mapping-title": "Cale colunna est cale?",
+  "csv-mapping-description": "Sèbera sa colunna de su file chi cuntenet cada campu de sa carta. Sas seberadas sunt istadas fatas dae sos nùmenes de sas colunnas; cambia cussas chi sunt isballiadas, e sèbera (no est in su file) pro unu campu chi su file non tenet.",
+  "csv-mapping-not-in-file": "(no est in su file)",
+  "csv-mapping-column-number": "Colunna __number__",
+  "csv-mapping-list-missing": "Su file non tenet una colunna pro sa lista. Sèbera·nde una inoghe subra, o iscrie su nùmene de s'ùnica lista in ue andant totu sas cartas.",
+  "csv-mapping-list-name": "Lista pro totu sas cartas",
+  "csv-mapping-custom-fields": "Àteras colunnas de importare comente campos personalizados de testu:",
+  "csv-mapping-boards": "Cada fògiu diventat una tàula sua:",
+  "csv-mapping-skipped-sheets": "Fògios chi non sunt importados:",
+  "csv-mapping-title-required": "Sèbera sa colunna chi cuntenet sos tìtulos de sas cartas.",
+  "csv-mapping-list-required": "Iscrie su nùmene de sa lista in ue andant totu sas cartas, o sèbera sa colunna chi cuntenet sa lista."
 }

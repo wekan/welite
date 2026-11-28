@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "No Redmine, abra as Issues do projeto, escolha Also available in: CSV no fundo da lista, selecione as colunas (All columns, com Description) e exporte; depois cole o CSV. O Redmine dá nomes às colunas no seu idioma, por isso escolha English em My account antes de exportar. Cada estado torna-se uma lista e os problemas tornam-se cartões, com o tipo de acompanhamento como etiqueta, responsável, autor, datas, tarefa superior e problemas relacionados; a prioridade, categoria, versão de destino, tempo estimado, % Done e campos personalizados tornam-se campos personalizados.",
   "import-board-instruction-orgmode": "Cole um arquivo Org mode escrito pelo Emacs, Orgzly ou Beorg. Os títulos de primeiro nível tornam-se listas e os de segundo nível tornam-se cartões. TODO e DONE, prioridades, etiquetas, SCHEDULED, DEADLINE e CLOSED são mantidos; as caixas de seleção e os títulos mais profundos tornam-se listas de verificação.",
   "import-board-instruction-focalboard": "Descompacte o arquivo .boardarchive e cole o conteúdo do board.jsonl do quadro, com ou sem a linha de versão. A propriedade de agrupamento da visualização do quadro se torna listas, as outras propriedades de seleção se tornam etiquetas, os blocos de texto e de caixas de seleção se tornam a descrição e uma lista de verificação, e os comentários são mantidos. As imagens e os anexos não são importados.",
-  "import-board-instruction-todoist": "No Todoist, abra o menu do projeto e escolha Exportar como modelo; depois cole o arquivo CSV. As seções tornam-se listas, as tarefas tornam-se cartões, as subtarefas tornam-se uma lista de verificação, as notas tornam-se comentários e @labels e as prioridades de p1 a p3 tornam-se etiquetas."
+  "import-board-instruction-todoist": "No Todoist, abra o menu do projeto e escolha Exportar como modelo; depois cole o arquivo CSV. As seções tornam-se listas, as tarefas tornam-se cartões, as subtarefas tornam-se uma lista de verificação, as notas tornam-se comentários e @labels e as prioridades de p1 a p3 tornam-se etiquetas.",
+  "csv-mapping-title": "Que coluna corresponde a cada campo?",
+  "csv-mapping-description": "Escolha a coluna do arquivo que contém cada campo do cartão. As opções foram escolhidas a partir dos nomes das colunas; corrija as incorretas e escolha (não está no arquivo) para um campo que o arquivo não contém.",
+  "csv-mapping-not-in-file": "(não está no arquivo)",
+  "csv-mapping-column-number": "Coluna __number__",
+  "csv-mapping-list-missing": "O arquivo não tem uma coluna para a lista. Escolha uma acima, ou escreva o nome da única lista onde serão colocados todos os cartões.",
+  "csv-mapping-list-name": "Lista para todos os cartões",
+  "csv-mapping-custom-fields": "Outras colunas a importar como campos customizados de texto:",
+  "csv-mapping-boards": "Cada planilha torna-se um quadro separado:",
+  "csv-mapping-skipped-sheets": "Planilhas que não são importadas:",
+  "csv-mapping-title-required": "Escolha a coluna que contém os títulos dos cartões.",
+  "csv-mapping-list-required": "Escreva o nome da lista onde serão colocados todos os cartões, ou escolha a coluna que contém a lista."
 }

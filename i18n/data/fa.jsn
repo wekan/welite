@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "در Redmine بخش Issues پروژه را باز کنید، پایین لیست Also available in: CSV را انتخاب کنید، ستون‌ها را انتخاب کنید (All columns همراه با Description) و خروجی بگیرید، سپس CSV را بچسبانید. Redmine ستون‌ها را به زبان شما نام‌گذاری می‌کند؛ بنابراین پیش از خروجی گرفتن، زبان را در My account روی انگلیسی بگذارید. هر وضعیت به لیست و مسئله‌ها به کارت همراه با ردیاب به‌عنوان برچسب، فرد محول‌شده، نویسنده، تاریخ‌ها، وظیفه والد و مسئله‌های مرتبط تبدیل می‌شوند؛ اولویت، دسته، نسخه هدف، زمان برآوردشده، % Done و فیلدهای شخصی به فیلدهای شخصی تبدیل می‌شوند.",
   "import-board-instruction-orgmode": "فایل Org mode را به شکلی که Emacs، Orgzly یا Beorg می‌نویسند بچسبانید. عنوان‌های سطح اول به لیست و عنوان‌های سطح دوم به کارت تبدیل می‌شوند. TODO و DONE، اولویت‌ها، برچسب‌ها، SCHEDULED، DEADLINE و CLOSED حفظ می‌شوند و کادرهای انتخاب و عنوان‌های عمیق‌تر به چک‌لیست تبدیل می‌شوند.",
   "import-board-instruction-focalboard": "فایل .boardarchive را از حالت فشرده خارج کنید و محتوای board.jsonl تابلو را با خط نسخه یا بدون آن بچسبانید. ویژگی گروه‌بندی نمای تابلو به فهرست‌ها، سایر ویژگی‌های انتخابی به برچسب‌ها و بلوک‌های متن و کادر انتخاب به توضیحات و چک‌لیست تبدیل می‌شوند و دیدگاه‌ها حفظ می‌شوند. تصاویر و پیوست‌ها وارد نمی‌شوند.",
-  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels.",
+  "csv-mapping-title": "هر ستون کدام است؟",
+  "csv-mapping-description": "ستونی از فایل را که حاوی هر فیلد کارت است انتخاب کنید. انتخاب‌ها بر اساس نام ستون‌ها انجام شده‌اند؛ موارد نادرست را اصلاح کنید و برای فیلدی که در فایل نیست، «در فایل نیست» را انتخاب کنید.",
+  "csv-mapping-not-in-file": "(در فایل نیست)",
+  "csv-mapping-column-number": "ستون __number__",
+  "csv-mapping-list-missing": "فایل ستونی برای لیست ندارد. یکی را در بالا انتخاب کنید یا نام تنها لیستی را که همه کارت‌ها در آن قرار می‌گیرند بنویسید.",
+  "csv-mapping-list-name": "لیست برای همه کارت‌ها",
+  "csv-mapping-custom-fields": "ستون‌های دیگری که به‌صورت فیلدهای شخصی متنی وارد می‌شوند:",
+  "csv-mapping-boards": "هر کاربرگ به یک برد جداگانه تبدیل می‌شود:",
+  "csv-mapping-skipped-sheets": "کاربرگ‌هایی که وارد نمی‌شوند:",
+  "csv-mapping-title-required": "ستون حاوی عنوان کارت‌ها را انتخاب کنید.",
+  "csv-mapping-list-required": "نام لیستی را که همه کارت‌ها در آن قرار می‌گیرند بنویسید یا ستون حاوی لیست را انتخاب کنید."
 }

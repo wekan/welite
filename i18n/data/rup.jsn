@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Tu Redmine, dishcljidi Issues a proiectului, alãdzi Also available in: CSV ningã fundul a listãljei, alãdzi coloanili (All columns, cu Description) shi exportã, dupã atsea lipea CSV. Redmine li dã numa a coloanilor tu limba a ta, ashi cã bagã limba a ta anglicheashti tu My account ma nãinti di export. Cathi stari s-fatsi unã listã shi problemili s-fac cãrtsã, cu tracker-lu ca etichetã, responsabilu, autorlu, datili, lucrul-pãrinti shi problemili ligati; prioritatea, categoria, versiunea tsintitã, oara estimatã, % Done shi cãmpurli personalizati s-fac cãmpuri personalizati.",
   "import-board-instruction-orgmode": "Liapeashti un fisieru Org mode scris di Emacs, Orgzly icã Beorg. Titlurli di protu nivelu s-facu listi sh-atseali di nivelul doi s-facu carti. TODO sh-DONE, prioritãtsili, etichetili, SCHEDULED, DEADLINE sh-CLOSED s-tsãn. Cãsuţili di bifari sh-titlurli cama di ngjos s-facu listi di verificari.",
   "import-board-instruction-focalboard": "Discumprimã fishierlu .boardarchive shi bagã board.jsonl a unei tabelã, cu i fãrã linia di versiuni. Prupietatea di adunari a videarillei ali tabelã s-fatsi listili, alti prupietãts di aleadziri s-fac eticheti, blocurli di text shi di cãsutsi di bifari s-fac discriirea shi unã listã di verificari, shi comentariili s-tsãn. Cadrili shi atashamentili nu s-importã.",
-  "import-board-instruction-todoist": "Tu Todoist, dishcljidi meniul a proiectului sh-aleadzi Export as a template (exportã ca modelu), dapoi liapeashti fisierul CSV. Partsili s-facu listi, sarţinili s-facu carti, subsarţinili unã listã di verificari, sh-notili comentarii. @labels sh-prioritãtsili p1 pãnã p3 s-facu eticheti."
+  "import-board-instruction-todoist": "Tu Todoist, dishcljidi meniul a proiectului sh-aleadzi Export as a template (exportã ca modelu), dapoi liapeashti fisierul CSV. Partsili s-facu listi, sarţinili s-facu carti, subsarţinili unã listã di verificari, sh-notili comentarii. @labels sh-prioritãtsili p1 pãnã p3 s-facu eticheti.",
+  "csv-mapping-title": "Cari coloanã easti cari?",
+  "csv-mapping-description": "Alãdzi coloana a fisierlui tsi tsãni cathi cãmp di cartã. Alidzerli furã fapti dupã numa a coloanilor; alãxeashti atseali tsi suntu greshiti, shi alãdzi (nu easti tu fisier) trã un cãmp tsi fisierlu nu-l ari.",
+  "csv-mapping-not-in-file": "(nu easti tu fisier)",
+  "csv-mapping-column-number": "Coloana __number__",
+  "csv-mapping-list-missing": "Fisierlu nu ari coloanã trã listã. Alãdzi unã ma nsus, i scrie numa a unei listã iu s-du tuti cãrtsãli.",
+  "csv-mapping-list-name": "Lista trã cathi cartã",
+  "csv-mapping-custom-fields": "Alti coloani tra s-hibã importati ca cãmpuri personalizati di text:",
+  "csv-mapping-boards": "Cathi foai s-fatsi tabela a ljei:",
+  "csv-mapping-skipped-sheets": "Foiili tsi nu s-importã:",
+  "csv-mapping-title-required": "Alãdzi coloana tsi tsãni titlurli a cãrtsãlor.",
+  "csv-mapping-list-required": "Scrie numa a listãljei iu s-du tuti cãrtsãli, i alãdzi coloana tsi tsãni lista."
 }

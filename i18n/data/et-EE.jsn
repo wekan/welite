@@ -2357,5 +2357,16 @@
   "import-board-instruction-redmine": "Avage rakenduses Redmine projekti Issues, valige loetelu allosas Also available in: CSV, valige veerud (All columns koos väljaga Description) ja eksportige, seejärel kleepige CSV sisu. Redmine nimetab veerud teie keeles, seega valige enne eksportimist jaotises My account keeleks English. Iga olek muutub loeteluks ja tööd kaartideks koos tööliigi kui sildi, vastutaja, autori, kuupäevade, ülemülesande ja seotud töödega; prioriteet, kategooria, sihtversioon, hinnanguline aeg, % Done ja kohandatud väljad muutuvad kohandatud väljadeks.",
   "import-board-instruction-orgmode": "Kleebi Org mode'i fail, mille on loonud Emacs, Orgzly või Beorg. Ülemise taseme pealkirjadest saavad loendid ja teise taseme pealkirjadest kaardid. TODO ja DONE, prioriteedid, sildid, SCHEDULED, DEADLINE ja CLOSED säilitatakse ning märkeruutudest ja sügavamatest pealkirjadest saavad kontroll-loendid.",
   "import-board-instruction-focalboard": "Paki .boardarchive-fail lahti ja kleebi tahvli board.jsonl-faili sisu koos versioonireaga või ilma selleta. Tahvlivaate rühmitamisomadusest saavad loendid, teistest valikuomadustest märgised, teksti- ja märkeruuduplokkidest kirjeldus ning kontrollnimekiri. Kommentaarid säilitatakse. Pilte ja manuseid ei impordita.",
-  "import-board-instruction-todoist": "Ava Todoistis projekti menüü ja vali mallina eksportimine, seejärel kleebi CSV-fail. Jaotistest saavad loendid, ülesannetest kaardid, alamülesannetest kontroll-loend, märkustest kommentaarid ning @labels ja prioriteedid p1 kuni p3 muutuvad siltideks."
+  "import-board-instruction-todoist": "Ava Todoistis projekti menüü ja vali mallina eksportimine, seejärel kleebi CSV-fail. Jaotistest saavad loendid, ülesannetest kaardid, alamülesannetest kontroll-loend, märkustest kommentaarid ning @labels ja prioriteedid p1 kuni p3 muutuvad siltideks.",
+  "csv-mapping-title": "Milline veerg on milline?",
+  "csv-mapping-description": "Vali faili veerg, mis sisaldab iga kaardi välja. Valikud tehti veerunimede põhjal; paranda valed valikud ning vali (failis puudub) välja puhul, mida failis pole.",
+  "csv-mapping-not-in-file": "(failis puudub)",
+  "csv-mapping-column-number": "Veerg __number__",
+  "csv-mapping-list-missing": "Failis pole loetelu veergu. Vali see ülal või sisesta selle ühe loetelu nimi, kuhu kõik kaardid lisatakse.",
+  "csv-mapping-list-name": "Loetelu kõigi kaartide jaoks",
+  "csv-mapping-custom-fields": "Muud veerud, mis imporditakse kohandatud tekstiväljadena:",
+  "csv-mapping-boards": "Igast töölehest saab eraldi tahvel:",
+  "csv-mapping-skipped-sheets": "Töölehed, mida ei impordita:",
+  "csv-mapping-title-required": "Vali veerg, mis sisaldab kaartide pealkirju.",
+  "csv-mapping-list-required": "Sisesta selle loetelu nimi, kuhu kõik kaardid lisatakse, või vali loetelu sisaldav veerg."
 }
