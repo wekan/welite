@@ -5363,9 +5363,17 @@ begin
   except Result.Free; raise; end;
 end;
 
-function MarkdownBoardImport(const Source: TJSONData): TJSONObject;
-var Lines: TStringList; Board, Card: TJSONObject; Lists, Cards: TJSONArray;
-  Line, Title, ListId, Name: string; I: Integer; Done: Boolean;
+function MarkdownBoardImport(const Source: TJSONData; Obsidian: Boolean = False): TJSONObject;
+var Lines: TStringList; Board, Card, ListRow: TJSONObject; Lists, Cards, Labels, Tags: TJSONArray;
+  Line, Title, ListId, Name, Word, CardTitle, Due: string; I, P, Limit: Integer; Done, CompleteLane, FrontMatter: Boolean;
+  procedure AddLabel(const Name: string);
+  var J: Integer;
+  begin
+    if Name='' then Exit;
+    Tags.Add(Name);
+    for J:=0 to Labels.Count-1 do if Labels.Objects[J].Get('_id','')=Name then Exit;
+    Labels.Add(TJSONObject.Create(['_id',Name,'name',Name,'color','blue']));
+  end;
 begin
   if not (Source is TJSONString) or (Trim(Source.AsString)='') then
     raise EConvertError.Create('Invalid Markdown board');
@@ -5378,28 +5386,63 @@ begin
       Result.Add('importedAuthors',TJSONObject.Create);
       Lists:=TJSONArray.Create; Board.Add('lists',Lists);
       Cards:=TJSONArray.Create; Board.Add('cards',Cards);
-      Title:=''; ListId:=''; Card:=nil;
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Title:=''; ListId:=''; Card:=nil; CompleteLane:=False; FrontMatter:=False;
       for I:=0 to Lines.Count-1 do
       begin
         Line:=Trim(Lines[I]);
+        if Obsidian then
+        begin
+          if (I=0) and (Line='---') then begin FrontMatter:=True; Continue; end;
+          if FrontMatter then begin if Line='---' then FrontMatter:=False; Continue; end;
+          if AnsiStartsStr('%% kanban:settings',Line) then Break;
+          if Line='**Complete**' then begin CompleteLane:=True; Continue; end;
+        end;
         if AnsiStartsStr('# ',Line) and (Title='') then
         begin Title:=Trim(Copy(Line,3,MaxInt)); Continue; end;
         if AnsiStartsStr('## ',Line) then
         begin
           ListId:='list-'+IntToStr(Lists.Count);
-          Lists.Add(TJSONObject.Create(['_id',ListId,'title',Trim(Copy(Line,4,MaxInt)),'sort',Lists.Count]));
-          Card:=nil;
+          Name:=Trim(Copy(Line,4,MaxInt)); Limit:=0;
+          if Obsidian and AnsiEndsStr(')',Name) then
+          begin
+            P:=RPos(' (',Name);
+            if P>0 then Limit:=StrToIntDef(Copy(Name,P+2,Length(Name)-P-2),0);
+            if Limit>0 then Name:=Trim(Copy(Name,1,P-1));
+          end;
+          ListRow:=TJSONObject.Create(['_id',ListId,'title',Name,'sort',Lists.Count]);
+          Lists.Add(ListRow);
+          if Limit>0 then ListRow.Add('wipLimit',TJSONObject.Create(['value',Limit,'enabled',True,'soft',False]));
+          Card:=nil; CompleteLane:=False;
           Continue;
         end;
         if AnsiStartsStr('- [ ] ',Line) or AnsiStartsText('- [x] ',Line) then
         begin
-          Done:=AnsiStartsText('- [x] ',Line);
+          Done:=AnsiStartsText('- [x] ',Line) or (Obsidian and CompleteLane);
           Name:=Trim(Copy(Line,7,MaxInt));
           if Name='' then Continue;
           if ListId='' then
           begin ListId:='list-0'; Lists.Add(TJSONObject.Create(['_id',ListId,'title','Tasks','sort',0])); end;
           Card:=TJSONObject.Create(['_id','card-'+IntToStr(Cards.Count),'listId',ListId,'title',Name,'sort',Cards.Count,'dueComplete',Done]);
           Cards.Add(Card);
+          if Obsidian then
+          begin
+            Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+            Due:=''; CardTitle:='';
+            for Word in Name.Split([' '],TStringSplitOptions.ExcludeEmpty) do
+            begin
+              if AnsiStartsStr('#',Word) then AddLabel(Copy(Word,2,MaxInt))
+              else if AnsiStartsStr('@{',Word) and AnsiEndsStr('}',Word) then Due:=Copy(Word,3,Length(Word)-3)
+              else
+              begin
+                if CardTitle<>'' then CardTitle:=CardTitle+' ';
+                CardTitle:=CardTitle+Word;
+              end;
+            end;
+            if CardTitle<>'' then begin Card.Delete('title'); Card.Add('title',CardTitle); end;
+            if Due<>'' then Card.Add('dueAt',Due);
+            if Done then AddLabel('done');
+          end;
         end
         else if (Card<>nil) and (Line<>'') then
         begin
@@ -5408,6 +5451,7 @@ begin
           Card.Delete('description'); Card.Add('description',Name+Line);
         end;
       end;
+      if Obsidian and (Title='') and (Lists.Count>0) then Title:='Obsidian Kanban';
       if Title='' then raise EConvertError.Create('Missing Markdown board title');
       Board.Add('title',Title);
     except Result.Free; raise; end;
@@ -6181,7 +6225,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6209,7 +6253,7 @@ end;
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil; Quiet: Boolean = False);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail:string;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail,ListWipSql:string;
   Body,Input,Row,Reply,SourceDocument,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
@@ -6983,6 +7027,7 @@ begin
             else if (SourceFormat='clickup') or (SourceFormat='linear') then Body:=TaskExportCsvImport(Value,SourceFormat)
             else if SourceFormat='ticktick' then Body:=TickTickImport(Value)
             else if SourceFormat='quire' then Body:=QuireImport(Value)
+            else if SourceFormat='obsidian' then Body:=MarkdownBoardImport(Value,True)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
@@ -7171,11 +7216,16 @@ begin
         if TargetList <> '' then SortSql := ListPosition+'+'+IntToStr(J+1)
         else if TargetBoard <> '' then
           SortSql := '(SELECT COALESCE(MAX(sort),-1)+1 FROM lists WHERE boardId='+Board+')';
-        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt,color,width,archived,collapsed) VALUES('+
+        Value:=Row.Find('wipLimit');
+        if Value is TJSONObject then
+          ListWipSql:=IntToStr(Max(1,TJSONObject(Value).Get('value',1)))+','+
+            BooleanValue(TJSONObject(Value),'enabled')+','+BooleanValue(TJSONObject(Value),'soft')
+        else ListWipSql:='1,0,0';
+        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt,color,width,archived,collapsed,wip_value,wip_enabled,wip_soft) VALUES('+
           QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+
           QuotedStr(Text(Row,'title'))+','+SortSql+','+ImportedDate(Row,'createdAt',Stamp,True)+','+
           ImportedDate(Row,'modifiedAt','NULL',True)+','+ImportedColor(Row)+','+
-          ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+','+BooleanValue(Row,'collapsed','NULL')+'); ';
+          ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+','+BooleanValue(Row,'collapsed','NULL')+','+ListWipSql+'); ';
       end;
       if (DefaultList='') and (Arrays[2]<>nil) and (Arrays[2].Count>0) then
       begin

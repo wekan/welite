@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Obsidian Kanban Markdown imports list limits, card notes, tags, due dates
+  and completed cards. Obsidian metadata blocks stay out of card text.
+
 - Quire project CSV imports status lists, task hierarchy, tags, dates and
   priority values.
 
