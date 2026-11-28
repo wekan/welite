@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Import forms display the format instructions from WeKan’s translation
+  catalogs. The shared Playwright audit verifies 17 of those forms in Hawaiian.
+
 - Taskwarrior JSON arrays and line exports import tasks with lists, tags,
   dates, annotations as comments and card dependencies. The import report
   lists skipped tasks and unsupported attributes.

@@ -539,3 +539,20 @@ import-export-format-audit.e2e.js: Businessmap: a workbook imports
 import-export-format-audit.e2e.js: OPML: an outline imports with its lists, notes, checklist and done state
 import-export-format-audit.e2e.js: todo.txt: tasks import with their list, labels, priority and dates
 import-export-format-audit.e2e.js: Taskwarrior: tasks import with their list, labels, dates, annotations and dependencies
+import-export-format-audit.e2e.js: Hawaiian opml import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian meistertask import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian obsidian import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian linear import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian ticktick import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian clickup import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian nullboard import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian kanri import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian pivotal import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian tasksorg import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian monday import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian superproductivity import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian quire import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian wrike import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian teamwork import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian businessmap import instructions render without an English fallback
+import-export-format-audit.e2e.js: Hawaiian redmine import instructions render without an English fallback

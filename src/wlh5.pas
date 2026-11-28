@@ -9531,7 +9531,7 @@ begin
 end;
 
 procedure Html5ExternalImport(Request: TRequest; Response: TResponse);
-var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Title, Source, FormatName: string;
+var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Title, Source, FormatName, Instruction: string;
 begin
   if not ResolveTenant(Request,T) or not TenantOpen(T) then begin SendPage(Response,404,''); Exit; end;
   if not Html5User(T.Db,Request,S) then begin SendPage(Response,401,''); Exit; end;
@@ -9574,9 +9574,10 @@ begin
       else FormatName:='Kanboard';
     end;
     Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
+    Instruction:=Words.Text('import-board-instruction-'+Source, FormatName + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick') or (Source='linear') or (Source='quire') or (Source='meistertask'),' CSV',IfThen((Source='markdown') or (Source='obsidian'),' Markdown',IfThen((Source='opml') or (Source='todotxt'),'',' JSON'))));
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
-      '<label for="import-textarea">' + E(FormatName) + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick') or (Source='linear') or (Source='quire') or (Source='meistertask'),' CSV',IfThen((Source='markdown') or (Source='obsidian'),' Markdown',IfThen((Source='opml') or (Source='todotxt'),'',' JSON'))) + '</label><textarea id="import-textarea"></textarea>' +
+      '<label for="import-textarea">' + E(Instruction) + '</label><textarea id="import-textarea"></textarea>' +
       IfThen((Source='monday') or (Source='wrike') or (Source='teamwork') or (Source='businessmap'),'<label>'+E(FormatName)+' XLSX<input type="file" class="js-import-file" accept=".xlsx"></label>','')+
       IfThen(Source='trello','<label>Trello ZIP<input type="file" class="js-import-zip-file" accept=".zip,application/zip"></label>','')+
       IfThen(Source='markdown','<label>'+E(Words.Text('import-board-c','Import board'))+
