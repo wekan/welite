@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- todo.txt imports tasks into lists with project, context and priority labels,
+  plus creation, threshold, due and completion dates. Invalid due and threshold
+  dates are reported.
+
 - OPML outlines import lists, card notes, grouped checklists and completed items.
   The import report lists skipped list notes, URL attributes and branches deeper
   than 64 levels.

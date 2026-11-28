@@ -946,6 +946,7 @@ begin
   HTTPRouter.RegisterRoute('/import/teamwork', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/businessmap', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/opml', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/todotxt', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

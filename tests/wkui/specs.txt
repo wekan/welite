@@ -537,3 +537,4 @@ import-export-format-audit.e2e.js: Wrike: custom statuses of a workflow import
 import-export-format-audit.e2e.js: Teamwork.com: an import template imports
 import-export-format-audit.e2e.js: Businessmap: a workbook imports
 import-export-format-audit.e2e.js: OPML: an outline imports with its lists, notes, checklist and done state
+import-export-format-audit.e2e.js: todo.txt: tasks import with their list, labels, priority and dates

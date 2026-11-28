@@ -6598,6 +6598,138 @@ begin
   finally Workbook.Free; SheetNames.Free; end;
 end;
 
+function TodoTxtImport(const Source:TJSONData):TJSONObject;
+var Board,Card:TJSONObject; Lists,Cards,Labels,Tags:TJSONArray;
+  Lines,Words:TStringArray;
+  Line,Word,Text,Stage,Priority,Created,Completed,Due,StartDate,Title,Key,Value,Losses:string;
+  Seen:TStringList;
+  I,First,J,P,InvalidDates:Integer;
+  Done:Boolean;
+
+  function IsDate(const DateText:string):Boolean;
+  var DateValue:TDateTime;
+  begin
+    Result:=(Length(DateText)=10) and TryISO8601ToDate(DateText,DateValue,True);
+  end;
+
+  function IsPriority(const Code:string):Boolean;
+  begin
+    Result:=(Length(Code)=1) and (Code[1] in ['A'..'Z']);
+  end;
+
+  function Unspace(const Name:string):string;
+  begin
+    Result:=StringReplace(Name,'_',' ',[rfReplaceAll]);
+  end;
+
+  procedure AddLabel(const Name:string);
+  var L:Integer;
+  begin
+    for L:=0 to Tags.Count-1 do if Tags.Strings[L]=Name then Exit;
+    Tags.Add(Name);
+    for L:=0 to Labels.Count-1 do if Labels.Objects[L].Get('_id','')=Name then Exit;
+    Labels.Add(TJSONObject.Create(['_id',Name,'name',Name,'color','blue']));
+  end;
+
+  procedure EnsureList(const Name:string);
+  var L:Integer;
+  begin
+    for L:=0 to Lists.Count-1 do if Lists.Objects[L].Get('_id','')=Name then Exit;
+    Lists.Add(TJSONObject.Create(['_id',Name,'title',Name,'sort',Lists.Count]));
+  end;
+
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing todo.txt text');
+  Text:=Source.AsString;
+  if Copy(Text,1,3)=#239#187#191 then Delete(Text,1,3);
+  Text:=StringReplace(Text,#13#10,#10,[rfReplaceAll]);
+  Lines:=StringReplace(Text,#13,#10,[rfReplaceAll]).Split([#10]);
+  if Length(Lines)>10000 then raise EConvertError.Create('todo.txt has more than 10000 lines');
+  Result:=TJSONObject.Create;
+  Seen:=TStringList.Create;
+  Seen.CaseSensitive:=True;
+  try
+    try
+      Board:=TJSONObject.Create(['title','Imported todo.txt']); Result.Add('board',Board);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      InvalidDates:=0;
+      for I:=0 to High(Lines) do
+      begin
+        Line:=Trim(Lines[I]);
+        if Line='' then Continue;
+        Words:=Line.Split([' ',#9,#11,#12],TStringSplitOptions.ExcludeEmpty);
+        if Length(Words)=0 then Continue;
+        First:=0; Priority:=''; Created:=''; Completed:=''; Title:='';
+        Seen.Clear;
+        Done:=Words[0]='x';
+        if Done then Inc(First)
+        else if (Length(Words[0])=3) and (Words[0][1]='(') and
+            (Words[0][3]=')') and IsPriority(Copy(Words[0],2,1)) then
+        begin
+          Priority:=Copy(Words[0],2,1);
+          Inc(First);
+        end;
+        if Done and (First<Length(Words)) and IsDate(Words[First]) then
+        begin
+          Completed:=Words[First];
+          Inc(First);
+        end;
+        if (First<Length(Words)) and IsDate(Words[First]) then
+        begin
+          Created:=Words[First];
+          Inc(First);
+        end;
+        Card:=TJSONObject.Create(['_id','task-'+IntToStr(I),'sort',Cards.Count]);
+        Cards.Add(Card);
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for J:=First to High(Words) do
+        begin
+          Word:=Words[J];
+          if (Length(Word)>1) and (Word[1] in ['+','@']) then
+          begin
+            if Word[1]='+' then Delete(Word,1,1);
+            AddLabel(Unspace(Word));
+            Continue;
+          end;
+          P:=Pos(':',Word);
+          Key:=Copy(Word,1,P-1); Value:=Copy(Word,P+1,MaxInt);
+          if (P>1) and (Value<>'') and (Pos(':',Value)=0) and
+             ((Key='due') or (Key='t') or (Key='list') or (Key='pri')) and
+             (Seen.IndexOfName(Key)<0) then
+          begin
+            Seen.Values[Key]:=Value;
+            Continue;
+          end;
+          if Title<>'' then Title:=Title+' ';
+          Title:=Title+Word;
+        end;
+        if Title='' then Title:='Imported task';
+        Stage:=Unspace(Seen.Values['list']);
+        if Stage='' then Stage:=IfThen(Done,'Done','To Do');
+        EnsureList(Stage);
+        if (Priority='') and IsPriority(Seen.Values['pri']) then Priority:=Seen.Values['pri'];
+        if Priority<>'' then AddLabel('priority:'+Priority);
+        Card.Add('title',Title); Card.Add('listId',Stage);
+        if Created<>'' then Card.Add('createdAt',Created);
+        if Completed<>'' then Card.Add('endAt',Completed);
+        Due:=Seen.Values['due']; StartDate:=Seen.Values['t'];
+        if IsDate(Due) then Card.Add('dueAt',Due) else if Due<>'' then Inc(InvalidDates);
+        if IsDate(StartDate) then Card.Add('startAt',StartDate) else if StartDate<>'' then Inc(InvalidDates);
+      end;
+      if InvalidDates>0 then
+      begin
+        Losses:='/tasks: '+IntToStr(InvalidDates)+' invalid due or threshold date(s) skipped';
+        Result.Add('importLosses',Losses);
+      end;
+    except
+      Result.Free;
+      raise;
+    end;
+  finally Seen.Free; end;
+end;
+
 function OpmlImport(const Source:TJSONData):TJSONObject;
 var Document:TXMLDocument; Stream:TStringStream; Root,Head,TitleNode,Body,OutlineList,OutlineCard,Child:TDOMNode;
   Board,Card:TJSONObject; Lists,Cards,Checks,Items,Labels:TJSONArray;
@@ -6880,7 +7012,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7689,6 +7821,7 @@ begin
             else if SourceFormat='teamwork' then Body:=TeamworkImport(Value)
             else if SourceFormat='businessmap' then Body:=BusinessmapImport(Value)
             else if SourceFormat='opml' then Body:=OpmlImport(Value)
+            else if SourceFormat='todotxt' then Body:=TodoTxtImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
