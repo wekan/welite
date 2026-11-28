@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Pivotal Tracker stories CSV imports workflow states, labels, dates,
+  requesters, named comments and task completion.
+
 - Trello ZIP boards import card comments, checklists and bundled attachments.
   The shared browser test verifies attachment bytes through download and a
   WeKan JSON export and reimport.
