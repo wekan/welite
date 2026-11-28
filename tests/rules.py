@@ -148,6 +148,18 @@ def main():
             away, away_lane, away_lists = board('owner', 'Away', ['Inbox'])
             foreign, _, foreign_lists = board('other', 'Foreign', ['Inbox'])
 
+            # Persist the setting without discarding unrelated board fields.
+            auto_archive_url = '/b/%s/auto-archive' % home
+            assert request('POST', auto_archive_url, {'days': '30'}, cookie=cookies['stranger'])[0] == 403
+            assert request('POST', auto_archive_url, {'days': '30'}, cookie=cookies['owner'])[0] == 200
+            stored = find('boards', {'_id': home})[0]
+            assert stored['autoArchiveInactiveDays'] == 30 and stored['title'] == 'Home'
+            assert request('POST', auto_archive_url, {'days': '4000'}, cookie=cookies['owner'])[0] == 400
+            assert find('boards', {'_id': home})[0]['autoArchiveInactiveDays'] == 30
+            assert request('POST', auto_archive_url, {'days': ''}, cookie=cookies['owner'])[0] == 200
+            assert 'autoArchiveInactiveDays' not in find('boards', {'_id': home})[0]
+            print('PASS: only a board admin can set and clear inactivity archiving')
+
             # sortList: by name, after each new card.
             status, made = call('owner', 'rules.createRule', home, 'Sort by name',
                                 {'activityType': 'createCard', 'listName': 'Todo'},

@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Inactivity archiving saves the board setting and archives qualifying card
+  groups through single SQLite transactions. The hourly job writes activity
+  with the archive update and handles repeat runs without duplicate activity.
+
 - Archive and restore a swimlane and its affected cards and template lists
   in one SQLite transaction. The CLI backend now preserves the same archive
   boundaries as linked SQLite, including cards archived separately.

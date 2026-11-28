@@ -130,6 +130,7 @@ function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Paren
 // by the caller and recorded here in Admin Panel / Problems.
 function AdminFieldForgery(Db:TWLDb;const UserId,BoardId,CardId:string;Fields:TJSONData;const Source:string):Boolean;
 procedure RecordAdminFieldAttempt(Db:TWLDb;const UserId,Source,Detail:string);
+function BoardAdminPermission(Db:TWLDb;const UserId,BoardId:string;out Permission:string):Boolean;
 function BoardCanAdmin(Db:TWLDb;const UserId,BoardId:string):Boolean;
 // The board's new title, as PUT /api/boards/:boardId/title renames it.
 function RenameBoard(const T:TWLTenant;const UserId,BoardId,Title:string;out Error:string):Integer;

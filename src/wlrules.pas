@@ -3087,7 +3087,7 @@ begin
 end;
 
 function SetBoardAutoArchiveDays(Db:TWLDb;const UserId,BoardId,Value:string):Integer;
-var Days:Integer;C:Char;Fields:TJSONObject;Text:string;
+var Days:Integer;C:Char;Fields:TJSONObject;Text,Permission,Raw,TableName,Scope,Sql:string;Rows:TWLRows;
 begin
   Text:=Trim(Value);
   if not IsShared(Db) or not BoardCanAdmin(Db,UserId,BoardId) then Exit(403);
@@ -3098,13 +3098,19 @@ begin
   try
     if Days=0 then Fields.Add('autoArchiveInactiveDays',TJSONNull.Create)
     else Fields.Add('autoArchiveInactiveDays',Days);
-    if not Db.Exec('BEGIN IMMEDIATE;') then Exit(500);
+    if not CollectionTable(Db,'boards',Raw,TableName) or
+      not BoardAdminPermission(Db,UserId,BoardId,Permission) then Exit(403);
+    Scope:=DocField('_id')+'='+Q(BoardId);
+    Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
+    if Length(Rows)<>1 then Exit(500);
     try
-      if BoardCanAdmin(Db,UserId,BoardId) and
-        Db.Exec(UpdateDocSql(Db,'boards',BoardId,Fields,'{}')+'COMMIT;') then Exit(200);
+      Sql:=UpdateDocSql(Db,'boards',BoardId,Fields,'{}');
     except
-      // The board might have disappeared while the form was open.
+      Exit(500);
     end;
+    if Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
+      ' AND EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+' AND json(_ferretdb_sjson)='+Q(Rows[0][0])+')'+
+      ' THEN 1 ELSE json(''Board archive setting changed concurrently'') END; '+Sql+'COMMIT;') then Exit(200);
     Db.Exec('ROLLBACK;');
     Result:=500;
   finally Fields.Free;end;
@@ -3458,36 +3464,37 @@ begin
 end;
 
 procedure ArchiveInactiveCard(Db:TWLDb;const Activity:TActivity;const Eligibility:string);
-var CardScope,RootScope,Tree,Stamp,Sql:string;Changed,Boards:TWLRows;Writable:TJSONArray;I:Integer;
+var CardScope,RootScope,Tree,Stamp,Sql,Selection,Permission:string;Changed:TWLRows;Expected:TJSONArray;I:Integer;
 begin
   CardScope:='deletedAt IS NULL AND COALESCE(type,'''')<>''template-card''';
   RootScope:=CardScope+' AND boardId='+Q(Activity.BoardId)+' AND id='+Q(Activity.CardId)+' AND archived=0'+Eligibility;
-  if not Db.Exec('BEGIN IMMEDIATE;') then Exit;
+  Permission:='SELECT b.id FROM boards b JOIN users u ON u.id='+Q(Activity.UserId)+
+    ' AND u.loginDisabled=0 WHERE b.archived=0 AND (u.isAdmin=1 OR EXISTS('+
+    'SELECT 1 FROM board_members m WHERE m.boardId=b.id AND m.userId=u.id AND m.isActive=1'+
+    ' AND COALESCE(m.isReadOnly,0)=0 AND COALESCE(m.isCommentOnly,0)=0'+
+    ' AND COALESCE(m.isReadAssignedOnly,0)=0 AND COALESCE(m.isCommentAssignedOnly,0)=0'+
+    ' AND COALESCE(m.isNormalAssignedOnly,0)=0 AND COALESCE(m.isWorker,0)=0))';
+  RootScope:=RootScope+' AND boardId IN ('+Permission+')';
+  Tree:='WITH RECURSIVE subtree(id) AS (SELECT id FROM cards WHERE '+RootScope+
+    ' UNION SELECT c.id FROM cards c JOIN subtree p ON c.parentId=p.id WHERE c.'+CardScope+
+    ' AND c.boardId IN ('+Permission+')'+
+    ' AND COALESCE(json_array_length(CASE WHEN json_valid(c.extra_json) THEN c.extra_json ELSE ''{}'' END,'+
+    '''$.parentIds''),0)<=1) ';
+  Selection:='SELECT c.id,c.boardId FROM cards c JOIN subtree s ON s.id=c.id WHERE c.archived=0 ORDER BY c.id';
+  Changed:=Db.Query(Tree+Selection+';');
+  if Length(Changed)=0 then Exit;
+  Expected:=TJSONArray.Create;
   try
-    Writable:=TJSONArray.Create;
-    try
-      Boards:=Db.Query('SELECT id FROM boards WHERE archived=0;');
-      for I:=0 to High(Boards) do
-        if BoardCanWrite(Db,Activity.UserId,Boards[I][0]) then Writable.Add(Boards[I][0]);
-      RootScope:=RootScope+' AND boardId IN (SELECT value FROM json_each('+Q(Writable.AsJSON)+'))';
-      Tree:='WITH RECURSIVE subtree(id) AS (SELECT id FROM cards WHERE '+RootScope+
-        ' UNION SELECT c.id FROM cards c JOIN subtree p ON c.parentId=p.id WHERE c.'+CardScope+
-        ' AND c.boardId IN (SELECT value FROM json_each('+Q(Writable.AsJSON)+'))'+
-        ' AND COALESCE(json_array_length(CASE WHEN json_valid(c.extra_json) THEN c.extra_json ELSE ''{}'' END,'+
-        '''$.parentIds''),0)<=1) ';
-    finally Writable.Free;end;
-    Changed:=Db.Query(Tree+'SELECT c.id,c.boardId FROM cards c JOIN subtree s ON s.id=c.id WHERE c.archived=0 ORDER BY c.id;');
-    if Length(Changed)=0 then begin Db.Exec('ROLLBACK;');Exit;end;
-    Stamp:=Q(NowIso);
-    Sql:=Tree+'UPDATE cards SET archived=1,archivedAt='+Stamp+',modifiedAt='+Stamp+
-      ' WHERE archived=0 AND ' +CardScope+' AND id IN (SELECT id FROM subtree); ';
-    for I:=0 to High(Changed) do
-      Sql:=Sql+ActivitySql('archivedCard',Activity.UserId,Changed[I][0],'{}');
-    if not Db.Exec(Sql+'COMMIT;') then begin Db.Exec('ROLLBACK;');Exit;end;
-  except
-    Db.Exec('ROLLBACK;');
-    raise;
-  end;
+    for I:=0 to High(Changed) do Expected.Add(TJSONArray.Create([Changed[I][0],Changed[I][1]]));
+    Sql:=Tree+'SELECT CASE WHEN (SELECT json_group_array(json_array(id,boardId)) FROM ('+Selection+
+      '))=json('+Q(Expected.AsJSON)+') THEN 1 ELSE json(''Inactive archive scope changed'') END; ';
+  finally Expected.Free; end;
+  Stamp:=Q(NowIso);
+  Sql:=Sql+Tree+'UPDATE cards SET archived=1,archivedAt='+Stamp+',modifiedAt='+Stamp+
+    ' WHERE archived=0 AND '+CardScope+' AND id IN (SELECT id FROM subtree); ';
+  for I:=0 to High(Changed) do
+    Sql:=Sql+ActivitySql('archivedCard',Activity.UserId,Changed[I][0],'{}');
+  if not Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then begin Db.Exec('ROLLBACK;');Exit;end;
   for I:=0 to High(Changed) do
     RecordArchiveHistory(Db,Activity.UserId,Changed[I][1],'card',Changed[I][0],True);
 end;
