@@ -2370,5 +2370,6 @@
   "csv-mapping-title-required": "请选择有卡片标题个列。",
   "csv-mapping-list-required": "请输入全部卡片要放进去个列表名，或者选有列表个列。",
   "import-board-instruction-planner": "勒 Microsoft Planner 里向打开计划菜单，选 Export plan to Excel，再选搿只 .xlsx 文件。分组（Bucket）变成列表，任务变成卡片，带上负责人、日期、标签、清单搭描述；Progress、Priority 搭 Completed By 变成自定义字段。",
-  "import-board-instruction-vikunja": "勒 Vikunja 里向打开 Settings，选 Data Export，下载伊发来个 .zip 文件，再选择该只文件，或者粘贴里向个 data.json。看板分组变成列表，任务变成卡片，带上标签、负责人、日期、描述、作为清单个任务列表搭评论；优先级、完成百分比搭完成状态变成自定义字段。附件勿导入。"
+  "import-board-instruction-vikunja": "勒 Vikunja 里向打开 Settings，选 Data Export，下载伊发来个 .zip 文件，再选择该只文件，或者粘贴里向个 data.json。看板分组变成列表，任务变成卡片，带上标签、负责人、日期、描述、作为清单个任务列表搭评论；优先级、完成百分比搭完成状态变成自定义字段。附件勿导入。",
+  "import-board-instruction-notion": "勒 Notion 里把数据库作为整页打开，选 ••• 搭 Export，选 Markdown & CSV，再选下载下来个 .zip 文件，或者里向一只数据库 CSV，也好粘贴搿只 CSV。叫 Status 个列变成列表（呒没搿列个辰光，用头一只看起来像选择项个列，导入报告会讲明用个是哪只）；每行变成卡片，保留标题，标签变成标签，人员变成成员，日期保留，页面文字变成描述；别个列变成自定义字段。关系、图片搭附件勿导入。"
 }

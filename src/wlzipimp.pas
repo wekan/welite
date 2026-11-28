@@ -10,7 +10,7 @@ function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
 function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings = nil; Date1904: PBoolean = nil): TJSONArray;
 function ReadZipMember(const Bytes:RawByteString; const Name:string; out Content:RawByteString):Boolean;
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
-function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
+function ReadMarkdownZip(const Bytes: RawByteString; IncludeTables:Boolean=False): TJSONArray;
 
 implementation
 
@@ -152,7 +152,7 @@ begin
   Result := True;
 end;
 
-function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
+function ReadMarkdownZip(const Bytes: RawByteString; IncludeTables:Boolean): TJSONArray;
 var Archive: TUnZipper; Reader: TBoardZipReader; I: Integer; Name, Content: RawByteString;
 begin
   if (Length(Bytes)=0) or (Length(Bytes)>MaxArchive) then raise EConvertError.Create('Invalid ZIP size');
@@ -171,8 +171,12 @@ begin
       begin
         Name:=Reader.Files[I];
         if AnsiStartsStr('__MACOSX/',Name) or AnsiStartsStr('._',ExtractFileName(Name)) then Continue;
-        if not (AnsiEndsText('.md',Name) or AnsiEndsText('.markdown',Name)) then Continue;
-        if Reader.ReadEntry(Name,Content) then Result.Add(TJSONObject.Create(['name',Name,'text',Content]));
+        if not (AnsiEndsText('.md',Name) or AnsiEndsText('.markdown',Name) or
+          (IncludeTables and (AnsiEndsText('.csv',Name) or AnsiEndsText('.zip',Name)))) then Continue;
+        if Reader.ReadEntry(Name,Content) then
+          if IncludeTables and AnsiEndsText('.zip',Name) then
+            Result.Add(TJSONObject.Create(['name',Name,'zipBase64',EncodeStringBase64(Content)]))
+          else Result.Add(TJSONObject.Create(['name',Name,'text',Content]));
       end;
     except Result.Free; raise; end;
   finally Archive.Free; Reader.Free; end;

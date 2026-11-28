@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Notion imports database CSVs and Markdown/CSV export archives. It prefers
+  the full database over a view export and pairs row pages with their Markdown
+  bodies, keeping lists, labels, dates, people and checkbox fields.
+
 - Export a board as a Vikunja ZIP. Swimlanes become projects, lists become
   kanban buckets, and tasks carry dates, assignments, labels, comments,
   checklists and parent links.

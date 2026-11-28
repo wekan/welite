@@ -6644,7 +6644,300 @@ begin
   finally Workbook.Free; end;
 end;
 
-type EVikunjaMissingData=class(EConvertError);
+type EExternalArchiveMissingData=class(EConvertError);
+
+function NotionImport(const Source:TJSONData):TJSONObject;
+var Files,Inner,Lists,Lanes,Cards,Labels,Definitions,Fields,Tags,People:TJSONArray;
+  Board,Authors,Card,FileRow,Field:TJSONObject;
+  Csv:TCSVDocument; Databases,UsedPages,Header,Losses:TStringList;
+  IdSuffix:TRegExpr; Kinds:array of string;
+  Decimal:TFormatSettings;
+  I,J,K,DbIndex,TitleColumn,GroupColumn,TaskCount,OuterCount:Integer; LoadedBytes:Int64;
+  Encoded,Input,Path,Base,Title,Stage,Lane,Name,Value,Part,Author,Description,PageBody,Kind,Text:string;
+  Found,AllYesNo,AllNumbers:Boolean;
+  Number:Double;
+
+  function StripId(const Text:string):string;
+  begin
+    Result:=Trim(Text);
+    if IdSuffix.Exec(Result) then Result:=Trim(Copy(Result,1,IdSuffix.MatchPos[0]-1));
+  end;
+
+  function BaseName(const Path:string):string;
+  begin
+    Result:=Copy(Path,LastDelimiter('/',Path)+1,MaxInt);
+  end;
+
+  function DirName(const Path:string):string;
+  begin
+    Result:=Copy(Path,1,LastDelimiter('/',Path)-1);
+  end;
+
+  function NormTitle(const Value:string):string;
+  var C:Char;
+  begin
+    Result:='';
+    for C in LowerCase(Value) do
+      if (C in ['a'..'z','0'..'9',#128..#255]) then Result:=Result+C;
+  end;
+
+  function Cell(Column,Row:Integer):string;
+  begin
+    Result:='';
+    if (Column>=0) and (Column<Csv.ColCount[Row]) then Result:=Trim(Csv.Cells[Column,Row]);
+  end;
+
+  procedure EnsureEntry(Rows:TJSONArray; const Id,Field,Caption,Kind:string);
+  var N:Integer; Entry:TJSONObject;
+  begin
+    for N:=0 to Rows.Count-1 do if Rows.Objects[N].Get('_id','')=Id then Exit;
+    Entry:=TJSONObject.Create(['_id',Id,Field,Caption,'sort',Rows.Count]);
+    if Kind<>'' then Entry.Add('type',Kind);
+    if Rows=Labels then Entry.Add('color','blue');
+    Rows.Add(Entry);
+  end;
+
+  function MatchPage(const Root,Caption:string; out Body:string):Boolean;
+  var N,L,At,Colon:Integer; Page:TJSONObject; Lines:TStringArray; Text,FileName,PageTitle,Heading:string;
+  begin
+    Result:=False; Body:='';
+    for N:=0 to Files.Count-1 do
+    begin
+      Page:=Files.Objects[N]; FileName:=Page.Get('name','');
+      if not (AnsiEndsText('.md',FileName) or AnsiEndsText('.markdown',FileName)) or
+        (UsedPages.IndexOf(FileName)>=0) or (DirName(FileName)<>Root) then Continue;
+      PageTitle:=StripId(ChangeFileExt(BaseName(FileName),''));
+      Text:=StringReplace(Page.Get('text',''),#13#10,#10,[rfReplaceAll]);
+      if Copy(Text,1,3)=#239#187#191 then Delete(Text,1,3);
+      Lines:=StringReplace(Text,#13,#10,[rfReplaceAll]).Split([#10]);
+      At:=0;
+      while (At<Length(Lines)) and (Trim(Lines[At])='') do Inc(At);
+      Heading:='';
+      if (At<Length(Lines)) and AnsiStartsStr('# ',Trim(Lines[At])) then
+      begin Heading:=Trim(Copy(Trim(Lines[At]),3,MaxInt)); Inc(At); end;
+      if (NormTitle(Caption)<>NormTitle(PageTitle)) and (NormTitle(Caption)<>NormTitle(Heading)) then Continue;
+      UsedPages.Add(FileName);
+      while (At<Length(Lines)) and (Trim(Lines[At])='') do Inc(At);
+      while At<Length(Lines) do
+      begin
+        Colon:=Pos(':',Lines[At]);
+        if (Colon<2) or (Header.IndexOf(Trim(Copy(Lines[At],1,Colon-1)))<0) then Break;
+        Inc(At);
+      end;
+      while (At<Length(Lines)) and (Trim(Lines[At])='') do Inc(At);
+      for L:=At to High(Lines) do
+      begin
+        if L>At then Body:=Body+#10;
+        Body:=Body+Lines[L];
+      end;
+      Body:=TrimRight(Body);
+      Exit(True);
+    end;
+  end;
+
+  function Classify(Column:Integer):string;
+  var N:Integer; Caption,Text:string; Numeric:Double;
+  begin
+    Caption:=LowerCase(Header[Column]);
+    case Caption of
+      'labels','label','tags','tag','multi-select': Exit('labels');
+      'assignee','assignees','people','person','owner','responsible': Exit('people');
+      'creator','created by','author': Exit('creator');
+      'description','details','notes','body': Exit('description');
+      'swimlane','lane','group': Exit('swimlane');
+      'due','due date','deadline','date': Exit('dueAt');
+      'start','start date': Exit('startAt');
+      'created time','created at': Exit('createdAt');
+      'last edited time','last edited at': Exit('modifiedAt');
+    end;
+    Found:=False; AllYesNo:=True; AllNumbers:=True;
+    for N:=1 to Csv.RowCount-1 do
+    begin
+      Text:=Cell(Column,N);
+      if Text='' then Continue;
+      Found:=True;
+      AllYesNo:=AllYesNo and (SameText(Text,'Yes') or SameText(Text,'No'));
+      AllNumbers:=AllNumbers and TryStrToFloat(Text,Numeric,Decimal) and not IsNan(Numeric) and not IsInfinite(Numeric);
+    end;
+    if Found and AllYesNo then Exit('checkbox');
+    if Found and AllNumbers then Exit('number');
+    Result:='text';
+  end;
+
+  procedure AddDatabases;
+  var N,Index:Integer; Path,Stem:string;
+  begin
+    for N:=0 to Files.Count-1 do
+    begin
+      Path:=Files.Objects[N].Get('name','');
+      if not AnsiEndsText('.csv',Path) then Continue;
+      Stem:=ChangeFileExt(Path,'');
+      if AnsiEndsText('_all',Stem) then Delete(Stem,Length(Stem)-3,4);
+      Index:=Databases.IndexOf(Stem);
+      if Index<0 then Databases.AddObject(Stem,Files.Objects[N])
+      else if AnsiEndsText('_all.csv',Path) then Databases.Objects[Index]:=Files.Objects[N];
+    end;
+  end;
+
+begin
+  if not ((Source is TJSONString) or (Source is TJSONObject)) then raise EConvertError.Create('Invalid Notion export');
+  Csv:=TCSVDocument.Create; Databases:=TStringList.Create; Header:=TStringList.Create;
+  UsedPages:=TStringList.Create; Losses:=TStringList.Create; Files:=nil;
+  IdSuffix:=TRegExpr.Create('(?i)(?:[ ]|%20)[0-9a-f]{32}$');
+  try
+    Databases.CaseSensitive:=True; UsedPages.CaseSensitive:=True; UsedPages.Sorted:=True;
+    Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.'; Decimal.ThousandSeparator:=#0;
+    if Source is TJSONObject then
+    begin
+      Encoded:=TJSONObject(Source).Get('zipBase64','');
+      if Encoded='' then raise EConvertError.Create('Missing Notion ZIP');
+      Files:=ReadMarkdownZip(DecodeStringBase64(Encoded,True),True);
+      AddDatabases;
+      if Databases.Count=0 then
+      begin
+        OuterCount:=Files.Count;
+        LoadedBytes:=0;
+        for I:=0 to OuterCount-1 do
+        begin
+          Path:=Files.Objects[I].Get('name','');
+          Encoded:=Files.Objects[I].Get('zipBase64','');
+          if Encoded='' then Continue;
+          Inner:=ReadMarkdownZip(DecodeStringBase64(Encoded,True),True);
+          try
+            for J:=0 to Inner.Count-1 do
+            begin
+              FileRow:=Inner.Objects[J];
+              if FileRow.Find('zipBase64')<>nil then Continue;
+              Inc(LoadedBytes,Length(FileRow.Get('text','')));
+              if (LoadedBytes>64*1024*1024) or (Files.Count>=10000) then
+                raise EConvertError.Create('Nested Notion export is too large');
+              FileRow:=TJSONObject(FileRow.Clone);
+              FileRow.Strings['name']:=Path+'/'+FileRow.Get('name','');
+              Files.Add(FileRow);
+            end;
+          finally Inner.Free; end;
+        end;
+        AddDatabases;
+      end;
+      if Databases.Count=0 then raise EExternalArchiveMissingData.Create('Notion export has no database CSV');
+    end
+    else
+    begin
+      Files:=TJSONArray.Create;
+      FileRow:=TJSONObject.Create(['text',Source.AsString]); Files.Add(FileRow);
+      Databases.AddObject('Imported Notion',FileRow);
+    end;
+    if Databases.Count>200 then raise EConvertError.Create('Too many Notion databases');
+    Title:=StripId(BaseName(Databases[0]));
+    if Databases.Count>1 then Title:='Imported Notion';
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      TaskCount:=0;
+      for DbIndex:=0 to Databases.Count-1 do
+      begin
+        Base:=Databases[DbIndex];
+        Input:=TJSONObject(Databases.Objects[DbIndex]).Get('text','');
+        if Copy(Input,1,3)=#239#187#191 then Delete(Input,1,3);
+        Csv.CSVText:=Input;
+        if (Csv.RowCount=0) or (Csv.ColCount[0]=0) then Continue;
+        Inc(TaskCount,Csv.RowCount-1);
+        if (TaskCount>20000) or (Csv.ColCount[0]>1000) then raise EConvertError.Create('Notion database too large');
+        Header.Clear; TitleColumn:=-1; GroupColumn:=-1;
+        for I:=0 to Csv.ColCount[0]-1 do
+        begin
+          Name:=Cell(I,0); Header.Add(Name);
+          case LowerCase(Name) of
+            'title','name','task','page': if TitleColumn<0 then TitleColumn:=I;
+            'status','state','stage','column','list': if GroupColumn<0 then GroupColumn:=I;
+          end;
+        end;
+        if TitleColumn<0 then TitleColumn:=0;
+        SetLength(Kinds,Header.Count);
+        for I:=0 to Header.Count-1 do
+          if (I<>TitleColumn) and (I<>GroupColumn) then Kinds[I]:=Classify(I);
+        if GroupColumn<0 then
+          for I:=0 to Header.Count-1 do
+          begin
+            if (I=TitleColumn) or (Kinds[I]<>'text') then Continue;
+            if SameText(Header[I],'category') or SameText(Header[I],'type') or SameText(Header[I],'select') then
+            begin GroupColumn:=I; Break; end;
+          end;
+        for J:=1 to Csv.RowCount-1 do
+        begin
+          Name:=Cell(TitleColumn,J); if Name='' then Continue;
+          Stage:=Cell(GroupColumn,J); if Stage='' then Stage:='No status';
+          EnsureEntry(Lists,Stage,'title',Stage,'');
+          Lane:='Default';
+          if Databases.Count>1 then Lane:=StripId(BaseName(Base));
+          Description:='';
+          for K:=0 to Header.Count-1 do
+          begin
+            if (K=TitleColumn) or (K=GroupColumn) then Continue;
+            Value:=Cell(K,J); if Value='' then Continue;
+            if Kinds[K]='swimlane' then Lane:=Value;
+            if Kinds[K]='description' then Description:=Value;
+          end;
+          if MatchPage(Base,Name,PageBody) and (PageBody<>'') then Description:=PageBody;
+          EnsureEntry(Lanes,Lane,'title',Lane,'');
+          Card:=TJSONObject.Create(['_id','row-'+IntToStr(DbIndex)+':'+IntToStr(J),
+            'title',Name,'description',Description,'listId',Stage,'swimlaneId',Lane,'sort',Cards.Count]);
+          Cards.Add(Card);
+          Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+          Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+          People:=TJSONArray.Create; Card.Add('members',People);
+          for K:=0 to Header.Count-1 do
+          begin
+            if (K=TitleColumn) or (K=GroupColumn) then Continue;
+            Value:=Cell(K,J); if Value='' then Continue;
+            Name:=Header[K]; Kind:=Kinds[K];
+            case Kind of
+              'description','swimlane': ;
+              'labels':
+                for Part in Value.Split([','],TStringSplitOptions.ExcludeEmpty) do
+                begin
+                  Text:=Trim(Part); if Text='' then Continue;
+                  EnsureEntry(Labels,Text,'name',Text,''); Tags.Add(Text);
+                end;
+              'people':
+                for Part in Value.Split([','],TStringSplitOptions.ExcludeEmpty) do
+                begin
+                  Author:=ImportAuthorIdentity(Authors,Trim(Part)); if Author<>'' then People.Add(Author);
+                end;
+              'creator': Card.Strings['requestedBy']:=Value;
+              'dueAt','startAt','createdAt','modifiedAt':
+                if Card.Find(Kind)=nil then ImportEnglishDate(Card,Kind,Value);
+              else
+                begin
+                  if Name='' then Continue;
+                  Field:=TJSONObject.Create(['_id',Name]);
+                  Fields.Add(Field);
+                  if Kind='checkbox' then Field.Add('value',SameText(Value,'yes'))
+                  else if (Kind='number') and TryStrToFloat(Value,Number,Decimal) then Field.Add('value',Number)
+                  else Field.Add('value',Value);
+                  EnsureEntry(Definitions,Name,'name',Name,Kind);
+                end;
+            end;
+          end;
+        end;
+      end;
+      if Cards.Count=0 then raise EConvertError.Create('Notion database has no pages');
+      for I:=0 to Files.Count-1 do
+      begin
+        Path:=Files.Objects[I].Get('name','');
+        if (AnsiEndsText('.md',Path) or AnsiEndsText('.markdown',Path)) and (UsedPages.IndexOf(Path)<0) then
+          Losses.Add('/pages: unmatched Markdown page '+BaseName(Path));
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except Result.Free; raise; end;
+  finally IdSuffix.Free; Losses.Free; UsedPages.Free; Header.Free; Databases.Free; Files.Free; Csv.Free; end;
+end;
 
 function VikunjaImport(const Source:TJSONData):TJSONObject;
 const PriorityNames:array[1..5] of string=('Low','Medium','High','Urgent','DO NOW');
@@ -6819,7 +7112,7 @@ begin
       if Text<>'' then
       begin
         if not ReadZipMember(DecodeStringBase64(Text,True),'data.json',Input) then
-          raise EVikunjaMissingData.Create('Vikunja ZIP has no data.json');
+          raise EExternalArchiveMissingData.Create('Vikunja ZIP has no data.json');
         Owned:=GetJSON(Input,True); Data:=Owned;
       end
       else Data:=Obj(Data).Find('data');
@@ -8615,7 +8908,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='excel') or (FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner') or (FormatName='vikunja');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner') or (FormatName='vikunja') or (FormatName='notion');
 end;
 
 const ImportRecoveryType='import-completed-with-warnings';
@@ -9473,6 +9766,7 @@ begin
             else if SourceFormat='todoist' then Body:=TodoistImport(Value)
             else if SourceFormat='planner' then Body:=PlannerImport(Value)
             else if SourceFormat='vikunja' then Body:=VikunjaImport(Value)
+            else if SourceFormat='notion' then Body:=NotionImport(Value)
             else if SourceFormat='csv' then Body:=CsvMappedBoard(Value,nil)
             else if SourceFormat='wekan' then
             begin
@@ -9485,7 +9779,7 @@ begin
         end
         else Body:=ExactObject(aRequest.Content);
       except
-        on E:EVikunjaMissingData do raise;
+        on E:EExternalArchiveMissingData do raise;
         else raise EConvertError.Create('Invalid board export');
       end;
       Value:=Body.Find('board');
@@ -9732,10 +10026,14 @@ begin
         raise Exception.Create('Board import failed');
       Committed:=True;
     except
-      on E:EVikunjaMissingData do
+      on E:EExternalArchiveMissingData do
       begin
-        if MethodActor<>'' then SendJson(aResponse,'{"error":"invalid-import-format","reason":"Vikunja ZIP has no data.json"}',400)
-        else SendError(aResponse,400,'Vikunja ZIP has no data.json');
+        if MethodActor<>'' then
+        begin
+          Reply:=TJSONObject.Create(['error','invalid-import-format','reason',E.Message]);
+          try SendJson(aResponse,Reply.AsJSON,400); finally Reply.Free; end;
+        end
+        else SendError(aResponse,400,E.Message);
         Exit;
       end;
       on E:EConvertError do

@@ -2370,5 +2370,6 @@
   "csv-mapping-title-required": "ᎠᏍᏓᏯ ᎪᏪᎵ ᏚᎾᏙᎥ ᏧᏍᏆᏂᎪᏗ ᎯᏑᏰᏍᏓ.",
   "csv-mapping-list-required": "ᎠᏎᏊᎢ ᏚᏙᎥ ᎯᏪᎵᏍᎦ ᎾᎿ ᏂᎦᏛ ᏗᎪᏪᎵ ᏫᏓᏴᎯᎯ, ᎠᎴᏉ ᎠᏍᏓᏯ ᎠᏎᏊᎢ ᎤᏍᏆᏂᎪᏗ ᎯᏑᏰᏍᏓ.",
   "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
-  "import-board-instruction-vikunja": "Vikunja ᎠᏂ, ᏗᏄᏬᏍᏗ ᎯᏍᏚᎢᏍᏓ, Data Export ᎯᏑᏰᏍᏓ ᎠᎴ .zip ᎪᏪᎸ ᏣᏅᏍᏓᏁᎸ ᎡᎳᏗ ᎯᏐᏅᏍᏓ, ᎿᏉ ᎾᏍᎩ ᎪᏪᎸ ᎯᏑᏰᏍᏓ, ᎠᎴᏉ data.json ᎭᏫᏂ ᎯᏂᏴ. Kanban ᏗᏓᏍᏗ ᏗᎠᏎᏊᎢ ᏂᎦᎵᏍᏗᏍᎪ ᎠᎴ ᏗᎦᎸᏫᏍᏓᏁᏗ ᏗᎪᏪᎵ ᏂᎦᎵᏍᏗᏍᎪ, ᏗᎪᏪᎳᏅᎯ, ᏗᎦᎸᏫᏍᏓᏁᎯ, ᎢᎦ, ᎧᏃᎮᏗ, ᏗᎦᎸᏫᏍᏓᏁᏗ ᏗᎠᏎᏊᎢ ᎠᎦᏎᏍᏗ ᏗᎠᏎᏊᎢ ᎠᎴ ᎧᏁᏨᎯ ᎬᏗ; ᎢᎬᏱᏗᏢ, ᎢᎦᎢ ᎠᎵᏍᏆᏛ ᎠᎴ ᎠᎵᏍᏆᏛ ᎤᏤᎵ ᏗᎦᏙᎯ ᏂᎦᎵᏍᏗᏍᎪ. ᏗᏓᏁᏥ Ꮭ ᏱᏓᏴᏔᏂ."
+  "import-board-instruction-vikunja": "Vikunja ᎠᏂ, ᏗᏄᏬᏍᏗ ᎯᏍᏚᎢᏍᏓ, Data Export ᎯᏑᏰᏍᏓ ᎠᎴ .zip ᎪᏪᎸ ᏣᏅᏍᏓᏁᎸ ᎡᎳᏗ ᎯᏐᏅᏍᏓ, ᎿᏉ ᎾᏍᎩ ᎪᏪᎸ ᎯᏑᏰᏍᏓ, ᎠᎴᏉ data.json ᎭᏫᏂ ᎯᏂᏴ. Kanban ᏗᏓᏍᏗ ᏗᎠᏎᏊᎢ ᏂᎦᎵᏍᏗᏍᎪ ᎠᎴ ᏗᎦᎸᏫᏍᏓᏁᏗ ᏗᎪᏪᎵ ᏂᎦᎵᏍᏗᏍᎪ, ᏗᎪᏪᎳᏅᎯ, ᏗᎦᎸᏫᏍᏓᏁᎯ, ᎢᎦ, ᎧᏃᎮᏗ, ᏗᎦᎸᏫᏍᏓᏁᏗ ᏗᎠᏎᏊᎢ ᎠᎦᏎᏍᏗ ᏗᎠᏎᏊᎢ ᎠᎴ ᎧᏁᏨᎯ ᎬᏗ; ᎢᎬᏱᏗᏢ, ᎢᎦᎢ ᎠᎵᏍᏆᏛ ᎠᎴ ᎠᎵᏍᏆᏛ ᎤᏤᎵ ᏗᎦᏙᎯ ᏂᎦᎵᏍᏗᏍᎪ. ᏗᏓᏁᏥ Ꮭ ᏱᏓᏴᏔᏂ.",
+  "import-board-instruction-notion": "Notion ᎠᏂ, ᏗᎦᎦᏙᏍᏙᏗ ᏂᎦᏛ ᎪᏪᎵ ᎯᏍᏚᎢᏍᏓ, ••• ᎠᎴ Export ᎯᏑᏰᏍᏓ, Markdown & CSV ᎯᏑᏰᏍᏓ, ᎠᎴ .zip ᎪᏪᎸ ᎡᎳᏗ ᎦᏐᏅᏍᏔᏅ ᎯᏑᏰᏍᏓ, ᎠᎴᏉ ᏌᏊ CSV ᎾᎿ ᏓᏓᏁᎸ, ᎠᎴᏉ ᎾᏍᎩ CSV ᎯᏂᏴ. Status ᏧᏙᎢᏛ ᎠᏍᏓᏯ ᏗᎠᏎᏊᎢ ᏂᎦᎵᏍᏗᏍᎪ (ᎢᏳᏃ Ꮭ ᏱᎩ, ᎢᎬᏱ ᎠᏍᏓᏯ select ᏥᏄᏍᏗ ᎾᏍᎩ ᏂᎦᎵᏍᏗᏍᎪ, ᎠᎴ ᎦᏴᏔᏗ ᎧᏃᎮᏛ ᎦᏛᎬᎦ); ᏗᏍᏓᏩᏛᏍᏙᏗ ᏗᎪᏪᎵ ᏂᎦᎵᏍᏗᏍᎪ ᏚᏙᎥ, ᏗᎪᏪᎳᏅᎯ, ᏴᏫ ᎠᏂᎳᏫᏍᎩ, ᎢᎦ, ᎠᎴ ᎪᏪᎵ ᎦᏁᏌᎢ ᎧᏃᎮᏗ ᎬᏗ; ᏅᏩᏓᎴ ᏗᏍᏓᏯ ᎤᏤᎵ ᏗᎦᏙᎯ ᏂᎦᎵᏍᏗᏍᎪ. Relations, ᏗᏟᎶᏍᏙᏗ ᎠᎴ ᏗᏓᏁᏥ Ꮭ ᏱᏓᏴᏔᏂ."
 }
