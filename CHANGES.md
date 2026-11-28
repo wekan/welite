@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Trello member overrides travel with the import form, removing the 8 KiB
+  header limit. The shared Chromium audit imports a ZIP with 180 overrides
+  and verifies that the mapped user receives no board access.
+
 - Preview members in a Trello JSON or ZIP import and override the matched
   usernames. Invalid selections leave the board uncreated. Imported
   memberships remain inactive.

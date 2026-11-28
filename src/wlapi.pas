@@ -9854,7 +9854,7 @@ const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers'
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail,ListWipSql:string;
   Body,Input,Row,Reply,SourceDocument,MemberMap,CardCreations,ImportedListLanes,TaigaSprints:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
-  Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
+  Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute, TrelloMultipart:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
   begin
@@ -9905,15 +9905,16 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     end;
   end;
   procedure MapTrelloPeople;
-  var People, Person, Selected:TJSONObject; OverrideName:TJSONData; K: Integer; Key, Id, Username, FullName, Condition, Header:string; Matches:TWLRows;
+  var People, Person, Selected:TJSONObject; OverrideName:TJSONData; K: Integer; Key, Id, Username, FullName, Condition, MappingText:string; Matches:TWLRows;
   begin
     if (SourceFormat<>'trello') or not (Body.Find('trelloPeople') is TJSONObject) then Exit;
     People:=Body.Objects['trelloPeople'];
-    Header:=aRequest.CustomHeaders.Values['X-WeKan-Trello-Members'];
-    if Length(Header)>8192 then raise EConvertError.Create('Invalid Trello member mapping');
+    MappingText:='';
+    if TrelloMultipart then MappingText:=aRequest.ContentFields.Values['membersMapping'];
+    if Length(MappingText)>32*1024*1024 then raise EConvertError.Create('Invalid Trello member mapping');
     Selected:=nil;
     try
-      if Header<>'' then Selected:=ExactObject(HTTPDecode(Header));
+      if MappingText<>'' then Selected:=ExactObject(MappingText);
       for K:=0 to People.Count-1 do
       begin
         Key:=People.Names[K];
@@ -10657,6 +10658,24 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     finally Seen.Free; ReplyObject.Free; end;
   end;
 
+  function TrelloJSONBody: string;
+  begin
+    if TrelloMultipart then Result:=aRequest.ContentFields.Values['text']
+    else Result:=aRequest.Content;
+  end;
+
+  function TrelloZIPBody: RawByteString;
+  var Uploaded: TStream;
+  begin
+    if not TrelloMultipart then Exit(aRequest.Content);
+    Uploaded:=aRequest.Files[0].Stream;
+    if (Uploaded.Size<=0) or (Uploaded.Size>64*1024*1024) then
+      raise EConvertError.Create('Invalid Trello ZIP size');
+    Uploaded.Position:=0;
+    SetLength(Result,Uploaded.Size);
+    Uploaded.ReadBuffer(Result[1],Length(Result));
+  end;
+
   procedure ImportTrelloArchive;
   var ArchiveBoards, Ids: TJSONArray; Statements, SavedFiles: TStringList;
     ArchiveBoard, ResponseBody: TJSONObject; Index: Integer; Saved: Boolean;
@@ -10665,7 +10684,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Statements:=TStringList.Create; SavedFiles:=TStringList.Create; Saved:=False;
     try
       try
-        ArchiveBoards:=ReadTrelloZip(aRequest.Content);
+        ArchiveBoards:=ReadTrelloZip(TrelloZIPBody);
         if aRequest.QueryFields.Values['preview']='1' then
         begin
           PreviewTrelloPeople(ArchiveBoards);
@@ -10709,7 +10728,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Source:=nil; Documents:=TJSONArray.Create;
     try
       try
-        Source:=ExactObject(aRequest.Content);
+        Source:=ExactObject(TrelloJSONBody);
         Documents.Add(Source.Clone);
         PreviewTrelloPeople(Documents);
       except on E:Exception do SendError(aResponse,400,'Invalid Trello export'); end;
@@ -10736,6 +10755,14 @@ begin
   IsZip := SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip');
   SourceFormat := aRequest.QueryFields.Values['source'];
   if MethodActor<>'' then SourceFormat:=MethodFormat;
+  TrelloMultipart:=(SourceFormat='trello') and
+    SameText(Trim(aRequest.ContentType.Split([';'])[0]),'multipart/form-data');
+  if TrelloMultipart then
+  begin
+    if (aRequest.Files.Count>1) or ((aRequest.Files.Count=1) and (aRequest.Files[0].FieldName<>'file')) then
+    begin SendError(aResponse,400,'Invalid Trello file'); Exit; end;
+    IsZip:=aRequest.Files.Count=1;
+  end;
   if (SourceFormat<>'') and (not ExternalImportSupported(SourceFormat) or (IsZip and (SourceFormat<>'trello'))) then
   begin SendError(aResponse,400,'Invalid import source'); Exit; end;
   if MethodActor<>'' then Actor:=MethodActor
@@ -10790,7 +10817,7 @@ begin
         else if IsZip then Body:=ReadBoardZip(aRequest.Content)
         else if SourceFormat<>'' then
         begin
-          SourceDocument:=ExactObject('{"payload":'+IfThen(MethodActor<>'',MethodBody,aRequest.Content)+'}');
+          SourceDocument:=ExactObject('{"payload":'+IfThen(MethodActor<>'',MethodBody,TrelloJSONBody)+'}');
           try
             Value:=SourceDocument.Find('payload');
             if SourceFormat='deck' then
