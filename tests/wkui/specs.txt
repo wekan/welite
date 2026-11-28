@@ -496,3 +496,4 @@ structural-selection.e2e.js: mixed checklist drag across swimlanes
 structural-selection.e2e.js: mixed selection popup selects another board
 structural-selection.e2e.js: mixed list, card and checklist move across boards
 structural-selection.e2e.js: reject invalid
+structural-selection.e2e.js: moving a swimlane preserves nested lists and cards

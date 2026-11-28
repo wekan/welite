@@ -5253,7 +5253,7 @@ begin
       Choice := Selected.Items[I];
       if not (Choice is TJSONObject) then Exit(Fail(400, 'invalid-selection'));
       Entry := TJSONObject(Choice);
-      if (Entry.Get('kind', '') = 'card') or (Entry.Get('kind', '') = 'list') then Continue;
+      if (Entry.Get('kind', '') = 'card') or (Entry.Get('kind', '') = 'list') or (Entry.Get('kind', '') = 'swimlane') then Continue;
       if not (Entry.Find('id') is TJSONString) then Exit(Fail(400, 'invalid-selection'));
       Id := Entry.Get('id', '');
       Kind := Entry.Get('kind', '');
@@ -5366,8 +5366,8 @@ end;
 function MoveSelectedBoardCards(Db: TWLDb; const UserId: string; Args: TJSONData; out Answer: string): Integer;
 const OpenCard = 'archived=0 AND deletedAt IS NULL';
 var Selection, Entry, Target, Options: TJSONObject; Selected: TJSONArray; Value: TJSONData;
-  Source, Board, Lane, ListId, Anchor, Position, Id, CardScope, Destination, Ids, SortKey, ListScope, Capacity, Sql, Moved, CrossBoardSql, ChecklistSql, ChecklistCard, ListIds, ListSelection, ListSql, ListSort, ListDestination, ChildIds, RootIds: string;
-  Rows: TWLRows; I, Count, RootCount, ListCount, ChecklistCount, Code: Integer; Drag, CrossBoard: Boolean;
+  Source, Board, Lane, ListId, Anchor, Position, Id, CardScope, Destination, Ids, SortKey, ListScope, Capacity, Sql, Moved, CrossBoardSql, ChecklistSql, ChecklistCard, ListIds, ListSelection, ListSql, ListSort, ListDestination, ChildIds, RootIds, LaneIds, LaneSelection, LaneSql, LaneSort, LaneMapSql, LaneMoveSql, Stamp: string;
+  Rows: TWLRows; I, Count, RootCount, ListCount, LaneCount, ChecklistCount, Code: Integer; Drag, CrossBoard: Boolean;
   function Failure(Status: Integer; const Reason: string): Integer;
   begin
     Answer := '{"error":"' + Reason + '","reason":"' + Reason + '"}';
@@ -5400,12 +5400,13 @@ begin
     ((Position <> '') and (Position <> 'before') and (Position <> 'after')) then Exit;
   if not BoardCanWrite(Db, UserId, Source) or not BoardCanWrite(Db, UserId, Board) then Exit(Failure(403, 'not-authorized'));
   CrossBoard := Board <> Source;
-  if (Lane = '') then Exit(Failure(400, 'invalid-destination'));
   if (Selected.Count = 0) or (Selected.Count > 200) then Exit(Failure(400, 'invalid-selection'));
   Selection := TJSONObject.Create;
   try
     Ids := '';
     ListIds := '';
+    LaneIds := '';
+    LaneCount := 0;
     ListCount := 0;
     for I := 0 to Selected.Count - 1 do
     begin
@@ -5413,9 +5414,18 @@ begin
       if not (Value is TJSONObject) then Exit(Failure(400, 'invalid-selection'));
       Entry := TJSONObject(Value);
       if (Entry.Get('kind', '') = 'checklist') or (Entry.Get('kind', '') = 'item') then Continue;
-      if ((Entry.Get('kind', '') <> 'card') and (Entry.Get('kind', '') <> 'list')) or not (Entry.Find('id') is TJSONString) then Exit(Failure(400, 'invalid-selection'));
+      if ((Entry.Get('kind', '') <> 'card') and (Entry.Get('kind', '') <> 'list') and (Entry.Get('kind', '') <> 'swimlane')) or not (Entry.Find('id') is TJSONString) then Exit(Failure(400, 'invalid-selection'));
       Id := Entry.Get('id', '');
       if (Id = '') or (Pos(#0, Id) > 0) then Exit(Failure(400, 'invalid-selection'));
+      if Entry.Get('kind', '') = 'swimlane' then
+      begin
+        if Selection.Find('swimlane:' + Id) <> nil then Continue;
+        Selection.Add('swimlane:' + Id, True);
+        if LaneIds <> '' then LaneIds := LaneIds + ',';
+        LaneIds := LaneIds + QuotedStr(Id);
+        Inc(LaneCount);
+        Continue;
+      end;
       if Entry.Get('kind', '') = 'list' then
       begin
         if Selection.Find('list:' + Id) <> nil then Continue;
@@ -5432,15 +5442,23 @@ begin
     end;
     if (Anchor <> '') and (Selection.Find(Anchor) <> nil) then Exit(Failure(400, 'invalid-destination'));
     if (ListId <> '') and (Selection.Find('list:' + ListId) <> nil) then Exit(Failure(400, 'invalid-destination'));
-    Count := Selection.Count - ListCount;
+    if (Lane <> '') and (Selection.Find('swimlane:' + Lane) <> nil) then Exit(Failure(400, 'invalid-destination'));
+    Count := Selection.Count - ListCount - LaneCount;
   finally Selection.Free; end;
   if Ids = '' then Ids := 'NULL';
   if (Count > 0) and Drag and not BoardAllows(Db, Source, 'allowsCardDragging') then Exit(Failure(403, 'drag-disabled'));
   if (ListCount > 0) and Drag and not BoardAllows(Db, Source, 'allowsListDragging') then Exit(Failure(403, 'drag-disabled'));
   if ListIds = '' then ListIds := 'NULL';
+  if LaneIds = '' then LaneIds := 'NULL';
+  if (LaneCount > 0) and Drag and not BoardAllows(Db, Source, 'allowsSwimlaneDragging') then Exit(Failure(403, 'drag-disabled'));
+  LaneSelection := 'SELECT id FROM swimlanes WHERE boardId=' + QuotedStr(Source) + ' AND archived=0 AND id IN (' + LaneIds + ')';
+  if Length(Db.Query(LaneSelection)) <> LaneCount then Exit(Failure(400, 'invalid-selection'));
   ListSelection := 'SELECT id FROM lists WHERE boardId=' + QuotedStr(Source) + ' AND ' + OpenCard + ' AND id IN (' + ListIds + ')';
   if Length(Db.Query(ListSelection)) <> ListCount then Exit(Failure(400, 'invalid-selection'));
-  ChildIds := 'SELECT id FROM cards WHERE boardId=' + QuotedStr(Source) + ' AND listId IN (' + ListSelection + ')';
+  ListSelection := ListSelection + ' AND COALESCE(swimlaneId,'''') NOT IN (' + LaneSelection + ')';
+  ListCount := Length(Db.Query(ListSelection));
+  ChildIds := 'SELECT id FROM cards WHERE boardId=' + QuotedStr(Source) +
+    ' AND (listId IN (' + ListSelection + ') OR swimlaneId IN (' + LaneSelection + '))';
   RootIds := 'SELECT id FROM cards WHERE id IN (' + Ids + ') AND id NOT IN (' + ChildIds + ')';
   RootCount := Length(Db.Query(RootIds));
   Code := PrepareChecklistMove(Db, UserId, Source, Board, Lane, ListId, Anchor, Target.Get('checklistId', ''),
@@ -5448,6 +5466,7 @@ begin
   if Code <> 200 then Exit(Code);
   if (Count > 0) and (ChecklistSql = '') and ((Target.Get('checklistId', '') <> '') or
     (Target.Get('itemId', '') <> '')) then Exit(Failure(400, 'invalid-destination'));
+  if (Lane = '') and ((ListCount > 0) or (LaneCount = 0) or (ListId <> '')) then Exit(Failure(400, 'invalid-destination'));
   if (ListId = '') and ((RootCount > 0) or (Anchor <> '') or (ChecklistCount > 0)) then Exit(Failure(400, 'invalid-destination'));
   Board := QuotedStr(Board);
   Lane := QuotedStr(Lane);
@@ -5465,7 +5484,9 @@ begin
   begin
     if Length(Db.Query('SELECT 1 FROM lists WHERE ' + ListScope)) <> 1 then Exit(Failure(400, 'invalid-destination'));
   end;
-  Capacity := 'EXISTS(SELECT 1 FROM swimlanes WHERE id=' + Lane + ' AND boardId=' + Board + ' AND archived=0)';
+  Capacity := '1=1';
+  if Lane <> QuotedStr('') then
+    Capacity := 'EXISTS(SELECT 1 FROM swimlanes WHERE id=' + Lane + ' AND boardId=' + Board + ' AND archived=0)';
   if RootCount > 0 then
     Capacity := Capacity + ' AND EXISTS(SELECT 1 FROM lists WHERE ' + ListScope + ' AND (COALESCE(wip_enabled,0)<>1 OR ' +
       'COALESCE(wip_soft,0)<>0 OR NOT EXISTS(SELECT 1 FROM cards WHERE id IN (' + RootIds + ') AND listId<>' + ListId +
@@ -5485,14 +5506,46 @@ begin
   if ListCount > 0 then
   begin
     ListDestination := OpenCard + ' AND boardId=' + Board + ' AND (COALESCE(swimlaneId,'''')='''' OR swimlaneId=' + Lane + ')';
-    ListSort := 'CASE WHEN id IN (' + ListIds + ') THEN 1 ELSE 0 END';
+    ListSort := 'CASE WHEN id IN (' + 'SELECT id FROM structural_root_lists' + ') THEN 1 ELSE 0 END';
     if ListId <> QuotedStr('') then
-      ListSort := 'CASE WHEN id IN (' + ListIds + ') THEN 1 WHEN (sort,id) ' +
+      ListSort := 'CASE WHEN id IN (' + 'SELECT id FROM structural_root_lists' + ') THEN 1 WHEN (sort,id) ' +
         IfThen(Position = 'before', '<', '<=') + ' (SELECT sort,id FROM lists WHERE id=' + ListId + ') THEN 0 ELSE 2 END';
     ListSql := 'CREATE TEMP TABLE structural_list_order AS SELECT id,row_number() OVER (ORDER BY ' + ListSort +
-      ',sort,id)-1 AS position FROM lists WHERE (' + ListDestination + ') OR id IN (' + ListIds + '); ' +
+      ',sort,id)-1 AS position FROM lists WHERE (' + ListDestination + ') OR id IN (' + 'SELECT id FROM structural_root_lists' + '); ' +
       'UPDATE lists SET sort=(SELECT position FROM structural_list_order WHERE id=lists.id) WHERE id IN (SELECT id FROM structural_list_order); ' +
-      'UPDATE lists SET boardId=' + Board + ',swimlaneId=' + Lane + ' WHERE id IN (' + ListIds + '); DROP TABLE structural_list_order; ';
+      'UPDATE lists SET boardId=' + Board + ',swimlaneId=' + Lane + ' WHERE id IN (' + 'SELECT id FROM structural_root_lists' + '); DROP TABLE structural_list_order; ';
+  end;
+  LaneSql := '';
+  LaneMapSql := '';
+  LaneMoveSql := '';
+  if LaneCount > 0 then
+  begin
+    Stamp := QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now)));
+    LaneSort := 'CASE WHEN id IN (' + LaneIds + ') THEN 1 ELSE 0 END';
+    if Lane <> QuotedStr('') then
+      LaneSort := 'CASE WHEN id IN (' + LaneIds + ') THEN 1 WHEN (sort,id) ' +
+        IfThen(Position = 'before', '<', '<=') + ' (SELECT sort,id FROM swimlanes WHERE id=' + Lane + ') THEN 0 ELSE 2 END';
+    LaneSql := 'CREATE TEMP TABLE structural_lane_order AS SELECT id,row_number() OVER (ORDER BY ' + LaneSort +
+      ',sort,id)-1 AS position FROM swimlanes WHERE (boardId=' + Board + ' AND archived=0) OR id IN (' + LaneIds + '); ' +
+      'UPDATE swimlanes SET sort=(SELECT position FROM structural_lane_order WHERE id=swimlanes.id) ' +
+      'WHERE id IN (SELECT id FROM structural_lane_order); DROP TABLE structural_lane_order; ';
+    if CrossBoard then
+    begin
+      LaneMapSql := 'CREATE TEMP TABLE structural_lane_lists AS SELECT l.id AS oldId,c.swimlaneId AS laneId,' +
+        'lower(hex(randomblob(12))) AS newId FROM cards c JOIN lists l ON l.id=c.listId WHERE c.boardId=' + QuotedStr(Source) +
+        ' AND c.swimlaneId IN (' + LaneIds + ') AND COALESCE(l.swimlaneId,'''')<>c.swimlaneId GROUP BY l.id,c.swimlaneId; ' +
+        'INSERT INTO lists(id,boardId,swimlaneId,title,type,color,sort,width,starred,collapsed,wip_enabled,wip_value,wip_soft,archived,archivedAt,' +
+        'deletedAt,deletedBy,deleteBatchId,createdAt,modifiedAt,updatedAt) SELECT m.newId,' + Board +
+        ',m.laneId,l.title,l.type,l.color,l.sort,l.width,l.starred,l.collapsed,l.wip_enabled,l.wip_value,l.wip_soft,l.archived,l.archivedAt,' +
+        'l.deletedAt,l.deletedBy,l.deleteBatchId,l.createdAt,l.modifiedAt,l.updatedAt FROM structural_lane_lists m JOIN lists l ON l.id=m.oldId; ';
+      LaneMoveSql := 'UPDATE swimlanes SET boardId=' + Board + ' WHERE id IN (' + LaneIds + '); ' +
+        'UPDATE lists SET boardId=' + Board + ' WHERE boardId=' + QuotedStr(Source) + ' AND swimlaneId IN (' + LaneIds + '); ' +
+        'UPDATE cards SET boardId=' + Board + ',listId=COALESCE((SELECT newId FROM structural_lane_lists WHERE oldId=cards.listId ' +
+        'AND laneId=cards.swimlaneId),listId) WHERE id IN (SELECT id FROM structural_lane_cards); ' +
+        'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) SELECT ' + QuotedStr(NewId) + ',' + QuotedStr(Source) +
+        ',''Default'',0,' + Stamp + ' WHERE NOT EXISTS(SELECT 1 FROM swimlanes WHERE boardId=' + QuotedStr(Source) +
+        ' AND archived=0); DROP TABLE structural_lane_lists; ';
+    end;
   end;
   Moved := 'cardId IN (SELECT id FROM structural_moving_cards)';
   CrossBoardSql := '';
@@ -5527,28 +5580,35 @@ begin
     '))=' + IntToStr(Count) + ' AND ' + Capacity +
     IfThen(Anchor <> '', ' AND EXISTS(SELECT 1 FROM cards WHERE ' + Destination + ' AND id=' + Anchor + ')', '') +
     ' AND (SELECT count(*) FROM (' + ListSelection + '))=' + IntToStr(ListCount) +
+    ' AND (SELECT count(*) FROM (' + LaneSelection + '))=' + IntToStr(LaneCount) +
     ' AND (SELECT count(*) FROM (' + RootIds + '))=' + IntToStr(RootCount) +
     ' THEN 1 ELSE json(''Move scope changed'') END; ' +
     'CREATE TEMP TABLE structural_root_cards AS ' + RootIds + '; ' +
-    'CREATE TEMP TABLE structural_child_cards AS ' + ChildIds + '; ' +
-    'CREATE TEMP TABLE structural_moving_cards AS SELECT id FROM structural_root_cards UNION SELECT id FROM structural_child_cards; ' +
+    'CREATE TEMP TABLE structural_root_lists AS ' + ListSelection + '; ' +
+    'CREATE TEMP TABLE structural_lane_cards AS SELECT id FROM cards WHERE boardId=' + QuotedStr(Source) +
+    ' AND swimlaneId IN (' + LaneSelection + '); ' +
+    'CREATE TEMP TABLE structural_child_cards AS SELECT id FROM cards WHERE boardId=' + QuotedStr(Source) +
+    ' AND listId IN (SELECT id FROM structural_root_lists) AND id NOT IN (SELECT id FROM structural_lane_cards); ' +
+    'CREATE TEMP TABLE structural_moving_cards AS SELECT id FROM structural_root_cards UNION SELECT id FROM structural_child_cards' +
+    IfThen(CrossBoard, ' UNION SELECT id FROM structural_lane_cards', '') + '; ' +
     ChecklistSql +
     'CREATE TEMP TABLE structural_card_order AS SELECT id,row_number() OVER (ORDER BY ' + SortKey + ',sort,id)-1 AS position ' +
     'FROM cards WHERE ((' + Destination + ') OR id IN (SELECT id FROM structural_root_cards)) ' +
     'AND EXISTS(SELECT 1 FROM structural_root_cards); ' +
-    CrossBoardSql + ListSql +
+    CrossBoardSql + LaneMapSql + LaneSql + ListSql + LaneMoveSql +
     'UPDATE cards SET sort=(SELECT position FROM structural_card_order WHERE structural_card_order.id=cards.id), ' +
     'boardId=' + Board + ',swimlaneId=' + Lane + ',listId=' + ListId + ' WHERE id IN (SELECT id FROM structural_card_order); ' +
     'UPDATE cards SET boardId=' + Board + ',swimlaneId=' + Lane + ' WHERE id IN (SELECT id FROM structural_child_cards); ' +
-    'UPDATE attachments SET boardId=' + Board + ',swimlaneId=' + Lane +
+    'UPDATE attachments SET boardId=' + Board + ',swimlaneId=(SELECT swimlaneId FROM cards WHERE id=attachments.cardId)' +
     ',listId=(SELECT listId FROM cards WHERE id=attachments.cardId) WHERE ' + Moved + '; ' +
+    'DROP TABLE structural_lane_cards; DROP TABLE structural_root_lists; ' +
     'DROP TABLE structural_card_order; DROP TABLE structural_moving_cards; DROP TABLE structural_child_cards; DROP TABLE structural_root_cards; COMMIT;';
   if not Db.Exec(Sql) then
   begin
     Db.Exec('ROLLBACK;');
     Exit(Failure(409, 'move-conflict'));
   end;
-  Answer := '{"result":{"moved":' + IntToStr(RootCount + ListCount + ChecklistCount) +
+  Answer := '{"result":{"moved":' + IntToStr(RootCount + ListCount + LaneCount + ChecklistCount) +
     IfThen(ChecklistCard <> '', ',"cardId":"' + StringToJSONString(ChecklistCard) + '"', '') + '}}';
   Result := 200;
 end;
