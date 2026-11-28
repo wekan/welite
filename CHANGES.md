@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Deck imports report skipped sharing rules, deleted records, and attachments.
+  Shared stores retain a Recovery event visible to site administrators and
+  let the importer retrieve their own recent report.
+
 - Jira JSON imports issues by status, converts rich-text documents to text,
   and preserves dates, labels, comments, custom values and subtask completion.
 

@@ -514,3 +514,4 @@ import-export-format-audit.e2e.js: jira: import adapter fixture text through the
 import-export-format-audit.e2e.js: jira: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: jira: comments, checklists and card fields survive a UI import
 import-export-format-audit.e2e.js: openproject: parent hierarchy and relations link the imported cards
+import-export-format-audit.e2e.js: imports with losses record one Recovery row

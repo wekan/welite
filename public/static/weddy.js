@@ -814,7 +814,22 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       return callAsync('importBoard', JSON.parse(form.querySelector('textarea').value), {}, form.dataset.source);
     }).then(function (board) {
       if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
-      window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
+      var href = '/b/' + encodeURIComponent(board._id) + '/board';
+      if (!board.importLosses || !board.importLosses.length) {
+        window.location.assign(href);
+        return;
+      }
+      var report = form.parentElement.querySelector('.js-import-report');
+      var rows = report.querySelector('ul');
+      board.importLosses.forEach(function (detail) {
+        var row = document.createElement('li');
+        row.className = 'import-report-row';
+        row.textContent = detail;
+        rows.appendChild(row);
+      });
+      report.querySelector('.js-open-imported-board').href = href;
+      form.hidden = true;
+      report.hidden = false;
     }).catch(function () {
       warning.hidden = false;
       submit.disabled = false;

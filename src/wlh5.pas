@@ -1100,6 +1100,22 @@ function BoardSignature(Db: TWLDb; const BoardId: string): string; forward;
 // WeKan's changeAvatarPopup (below, with the avatar upload).
 function ChangeAvatarPopup(Db: TWLDb; Words: TWLTranslator; const UserId, Error: string): string; forward;
 
+function ImportRecoveryContent(Db: TWLDb; Words: TWLTranslator): string;
+var Rows: TJSONArray; Row: TJSONObject; I: Integer;
+begin
+  Result:='<main><h1>'+E(Words.Text('recoveryReportTitle','Recovery'))+'</h1><table><tbody>';
+  Rows:=ImportRecoveryRows(Db,'','');
+  try
+    for I:=0 to Rows.Count-1 do
+    begin
+      Row:=Rows.Objects[I];
+      Result:=Result+'<tr><td>'+E(Row.Get('type',''))+'</td><td>'+E(Row.Get('createdAt',''))+
+        '</td><td>'+E(Row.Get('detail',''))+'</td></tr>';
+    end;
+  finally Rows.Free; end;
+  Result:=Result+'</tbody></table></main>';
+end;
+
 function BoardZipImportPopup(Words: TWLTranslator; const BoardId: string): string;
 var Action, Popup, Caption: string;
 begin
@@ -5784,6 +5800,25 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
+  if Name='importReportForBoard' then
+  begin
+    Args:=nil;
+    try
+      try Args:=GetJSON(Request.Content); except end;
+      if not (Args is TJSONArray) or (Args.Count<>1) or (Args.Items[0].JSONType<>jtString) or
+        (Pos(#0,Args.Items[0].AsString)>0) then
+        SendJsonAnswer(Response,400,'{"error":"Match.Error","reason":"Expected a board ID"}')
+      else
+      begin
+        Chart:=TJSONObject.Create;
+        try
+          Chart.Add('result',ImportRecoveryRows(T.Db,S.UserId,Args.Items[0].AsString));
+          SendJsonAnswer(Response,200,Chart.AsJSON);
+        finally Chart.Free; end;
+      end;
+    finally Args.Free; end;
+    Exit;
+  end;
   if Name='importBoard' then
   begin
     Args:=nil;
@@ -9282,7 +9317,7 @@ begin
   if (Length(Parts) = 3) and (Parts[0] = 'b') and (Parts[2] = 'history') then HistoryBoard := Parts[1];
   if not ((HistoryBoard <> '') or (Path = '/profile/history') or (Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/global-search') or (Path = '/people') or (Path = '/admin/people') or
-    (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or
+    (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or (Path = '/admin/problems/recovery') or
     (Path = '/admin/problems/password-length') or (Path = '/admin/settings/appearance') or (Path = '/admin/settings/visibility') or
     (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
@@ -9378,6 +9413,12 @@ begin
       Exit;
     end;
     // Admin Panel / Problems / Security Report (wlprob), a site admin's.
+    if Path = '/admin/problems/recovery' then
+    begin
+      if not IsSiteAdmin(T.Db,S.UserId) then Send(404,Page(Request,Language,Words,S,'', '', ''))
+      else Send(200,Page(Request,Language,Words,S,Words.Text('recoveryReportTitle','Recovery'),'',ImportRecoveryContent(T.Db,Words)));
+      Exit;
+    end;
     if Path = '/admin/problems/security-report' then
     begin
       if not IsSiteAdmin(T.Db, S.UserId) then
@@ -9515,7 +9556,9 @@ begin
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
       '<label for="import-textarea">' + E(FormatName) + ' JSON</label><textarea id="import-textarea" required></textarea>' +
       '<p class="warning" role="alert" hidden>'+E(Words.Text('import-scoped-failed','Import failed'))+'</p>' +
-      '<button class="primary js-import-without-mapping" type="submit">'+E(Words.Text('import','Import'))+'</button></form></main>'));
+      '<button class="primary js-import-without-mapping" type="submit">'+E(Words.Text('import','Import'))+'</button></form><section class="js-import-report" hidden><h2>'+
+      E(Words.Text('import-report-heading','Import report'))+'</h2><ul></ul><a class="js-open-imported-board">'+
+      E(Words.Text('import-report-open-board','Open imported board'))+'</a></section></main>'));
   finally Words.Free; end;
 end;
 

@@ -73,6 +73,7 @@ procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
+function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
@@ -4346,7 +4347,7 @@ end;
 
 function DeckImport(const Source: TJSONObject): TJSONObject;
 var Meta, Board, Stack, Entry, Card, Comment, Authors: TJSONObject; Stacks, StackCards, Lists, Cards, Labels,
-  Comments, Tags: TJSONArray; Child, Value: TJSONData; I,J,K: Integer; CardId,ListId,Name,Author,LabelId: string;
+  Comments, Tags: TJSONArray; Child, Value: TJSONData; I,J,K, DeletedCards, DeletedStacks, AclCount, AttachmentCount: Integer; CardId,ListId,Name,Author,LabelId, Losses: string;
   function Identity(Obj: TJSONObject): string;
   var Field: TJSONData;
   begin
@@ -4387,6 +4388,9 @@ begin
   if Value=nil then Value:=Source.Find('stacks');
   if not (Value is TJSONArray) or (Trim(Meta.Get('title',''))='') then raise EConvertError.Create('Invalid Deck export');
   Stacks:=TJSONArray(Value);
+  DeletedCards:=0; DeletedStacks:=0; AttachmentCount:=0; AclCount:=0;
+  Value:=Meta.Find('acl');
+  if Value is TJSONArray then AclCount:=Value.Count;
   Result:=TJSONObject.Create;
   try
     Board:=TJSONObject.Create(['title',Meta.Get('title','')]); Result.Add('board',Board);
@@ -4398,7 +4402,7 @@ begin
     for I:=0 to Stacks.Count-1 do
     begin
       Stack:=Stacks.Objects[I];
-      if Deleted(Stack) then Continue;
+      if Deleted(Stack) then begin Inc(DeletedStacks); Continue; end;
       ListId:=Identity(Stack);
       Lists.Add(TJSONObject.Create(['_id',ListId,'title',Stack.Get('title',''),'sort',StrToIntDef(Stack.Get('order',''),I)]));
       Child:=Stack.Find('cards');
@@ -4407,7 +4411,9 @@ begin
       for J:=0 to StackCards.Count-1 do
       begin
         Entry:=StackCards.Objects[J];
-        if Deleted(Entry) then Continue;
+        if Deleted(Entry) then begin Inc(DeletedCards); Continue; end;
+        Child:=Entry.Find('attachments');
+        if Child is TJSONArray then Inc(AttachmentCount,Child.Count);
         CardId:=Identity(Entry);
         Card:=TJSONObject.Create(['_id',CardId,'listId',ListId,'title',Entry.Get('title',''),
           'description',Entry.Get('description',''),'sort',StrToIntDef(Entry.Get('order',''),J),'archived',Entry.Get('archived',False)]);
@@ -4450,6 +4456,12 @@ begin
         end;
       end;
     end;
+    Losses:='';
+    if AclCount>0 then Losses:='/acl: '+IntToStr(AclCount)+' sharing rule(s) skipped';
+    if DeletedStacks>0 then Losses:=Losses+LineEnding+'/stacks: '+IntToStr(DeletedStacks)+' deleted stack(s) skipped';
+    if DeletedCards>0 then Losses:=Losses+LineEnding+'/stacks/cards: '+IntToStr(DeletedCards)+' deleted card(s) skipped';
+    if AttachmentCount>0 then Losses:=Losses+LineEnding+'/stacks/cards/attachments: '+IntToStr(AttachmentCount)+' attachment(s) skipped';
+    if Trim(Losses)<>'' then Result.Add('importLosses',Trim(Losses));
   except Result.Free; raise; end;
 end;
 
@@ -5218,10 +5230,32 @@ begin
     (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira');
 end;
 
+function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
+var Rows: TWLRows; Row: TWLRow; Physical, Scope: string;
+begin
+  Result:=TJSONArray.Create;
+  if not IsShared(Db) then Exit;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''recoveryEvents'';');
+  if Length(Rows)<>1 then Exit;
+  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Scope:='';
+  if UserId<>'' then
+    Scope:=' AND json_extract(e._ferretdb_sjson,''$.userId'')='+QuotedStr(UserId)+
+      ' AND EXISTS(SELECT 1 FROM json_each(e._ferretdb_sjson,''$.boardIds'') WHERE value='+QuotedStr(BoardId)+')'+
+      ' AND datetime(json_extract(e._ferretdb_sjson,''$.createdAt'')/1000,''unixepoch'')>=datetime(''now'',''-1 hour'')';
+  Rows:=Db.Query('SELECT json_extract(e._ferretdb_sjson,''$.detail''),strftime(''%Y-%m-%dT%H:%M:%fZ'',json_extract(e._ferretdb_sjson,''$.createdAt'')/1000.0,''unixepoch''),' +
+    'json_extract(e._ferretdb_sjson,''$.type'') FROM '+Physical+' e WHERE '+
+    'json_extract(e._ferretdb_sjson,''$.type'')=''import-completed-with-warnings'''+Scope+
+    ' ORDER BY json_extract(e._ferretdb_sjson,''$.createdAt'') DESC LIMIT '+IfThen(UserId='','100','5')+';');
+  for Row in Rows do
+    if UserId='' then Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1],'type',Row[2]]))
+    else Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1]]));
+end;
+
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat:string;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail:string;
   Body,Input,Row,Reply,SourceDocument,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
@@ -6221,9 +6255,21 @@ begin
       end;
       on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not import board');Exit;end;
     end;
+    LossDetail:=Body.Get('importLosses','');
+    if (SourceFormat<>'') and (LossDetail<>'') and IsShared(T.Db) then
+    begin
+      Row:=TJSONObject.Create(['_id',NewId,'type','import-completed-with-warnings','severity','warning',
+        'source','import:'+SourceFormat,'detail',LossDetail,'userId',Actor,'createdAt',DateTimeToUnix(Now,False)*1000,'done',True,'deletedData',False]);
+      try
+        Row.Add('boardIds',TJSONArray.Create([BoardId]));
+        Row.Add('boardTitles',TJSONArray.Create([Title]));
+        try if not T.Db.Exec(InsertDocSql(T.Db,'recoveryEvents',Row,'{"createdAt":"date"}')) then WriteLn(StdErr,'Recovery SQL failed'); except on E:Exception do WriteLn(StdErr,'Recovery event could not be recorded'); end;
+      finally Row.Free; end;
+    end;
     if MethodActor<>'' then
     begin
       Reply:=TJSONObject.Create(['_id',BoardId,'boardId',BoardId]);
+      if LossDetail<>'' then Reply.Add('importLosses',TJSONArray.Create([LossDetail]));
       try SendJson(aResponse,'{"result":'+Reply.AsJSON+'}'); finally Reply.Free; end;
       Exit;
     end;
