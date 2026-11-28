@@ -9642,7 +9642,8 @@ begin
     Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
     Instruction:=Words.Text('import-board-instruction-'+Source, FormatName + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick') or (Source='linear') or (Source='quire') or (Source='meistertask') or (Source='todoist'),' CSV',IfThen((Source='markdown') or (Source='obsidian'),' Markdown',IfThen((Source='opml') or (Source='todotxt') or (Source='orgmode') or (Source='csv') or (Source='excel'),'',' JSON'))));
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
-      '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
+      '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'"'+IfThen(Source='trello',' data-trello-mapping="raw"','')+
+      ' method="post" action="/api/boards/import?source='+Source+'">' +
       '<label for="import-textarea">' + E(Instruction) + '</label><textarea id="import-textarea"></textarea>' +
       IfThen((Source='monday') or (Source='wrike') or (Source='teamwork') or (Source='businessmap') or (Source='planner'),'<label>'+E(FormatName)+' XLSX<input type="file" class="js-import-file" accept=".xlsx"></label>','')+
       IfThen(Source='excel','<label>'+E(Words.Text('import-file-label','Choose a file'))+
@@ -9656,6 +9657,11 @@ begin
       IfThen(Source='vikunja','<label>'+E(Words.Text('import-file-label','Choose a file'))+
         '<input type="file" class="js-import-file" accept=".zip,.json,application/zip,application/json"></label>','')+
       IfThen(Source='trello','<label>Trello ZIP<input type="file" class="js-import-zip-file" accept=".zip,application/zip"></label>','')+
+      IfThen(Source='trello','<button type="button" class="js-trello-people">'+
+        E(Words.Text('import-map-members','Map members'))+'</button>'+
+        '<div class="js-trello-mapping-fields" hidden data-username="'+HtmlAttr(Words.Text('username','Username'))+'"></div>'+
+        '<p class="warning js-trello-mapping-error" hidden role="alert">'+
+        E(Words.Text('import-scoped-failed','Import failed'))+'</p>','')+
       IfThen(Source='markdown','<label>'+E(Words.Text('import-board-c','Import board'))+
         '<input type="file" class="js-import-many-files" accept=".md,.markdown,.zip" multiple></label>','')+
       IfThen(Source='kanri','<button type="button" class="js-import-split-toggle"><span class="materialCheckBox"></span> '+

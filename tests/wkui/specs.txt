@@ -595,3 +595,5 @@ import-export-format-audit.e2e.js: Trello JSON export preserves typed custom fie
 import-export-format-audit.e2e.js: Trello ZIP export keeps same-named attachments separate and supports field selection
 import-export-format-audit.e2e.js: Trello ZIP imports multiple boards without mixing same-named attachments
 import-export-format-audit.e2e.js: Trello import resolves existing usernames and keeps unmatched people inactive
+import-export-format-audit.e2e.js: Trello ZIP member mapping overrides a username without granting board access
+import-export-format-audit.e2e.js: Trello JSON member mapping overrides a username without granting board access

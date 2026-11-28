@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Preview members in a Trello JSON or ZIP import and override the matched
+  usernames. Invalid selections leave the board uncreated. Imported
+  memberships remain inactive.
+
 - Trello import matches existing usernames and preserves other people as
   sign-in-disabled placeholders. Card assignments and comment authors
   retain the imported identities with inactive board memberships.

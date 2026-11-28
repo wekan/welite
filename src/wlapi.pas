@@ -9905,37 +9905,54 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     end;
   end;
   procedure MapTrelloPeople;
-  var People, Person:TJSONObject; K: Integer; Key, Id, Username, FullName, Condition:string; Matches:TWLRows;
+  var People, Person, Selected:TJSONObject; OverrideName:TJSONData; K: Integer; Key, Id, Username, FullName, Condition, Header:string; Matches:TWLRows;
   begin
     if (SourceFormat<>'trello') or not (Body.Find('trelloPeople') is TJSONObject) then Exit;
     People:=Body.Objects['trelloPeople'];
-    for K:=0 to People.Count-1 do
-    begin
-      Key:=People.Names[K];
-      if MemberMap.Find(Key)<>nil then Continue;
-      Person:=People.Objects[Key];
-      Username:=Person.Get('username','');
-      Matches:=nil;
-      if Username<>'' then
-        Matches:=T.Db.Query('SELECT id FROM users WHERE username='+QuotedStr(Username)+' AND COALESCE(loginDisabled,0)=0;');
-      if Length(Matches)=1 then
+    Header:=aRequest.CustomHeaders.Values['X-WeKan-Trello-Members'];
+    if Length(Header)>8192 then raise EConvertError.Create('Invalid Trello member mapping');
+    Selected:=nil;
+    try
+      if Header<>'' then Selected:=ExactObject(HTTPDecode(Header));
+      for K:=0 to People.Count-1 do
       begin
-        Id:=Matches[0][0];
-        Condition:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Id)+' AND username='+QuotedStr(Username)+
-          ' AND COALESCE(loginDisabled,0)=0)';
-        Guard:=Guard+' AND '+Condition;
-      end else
-      begin
-        Id:=NewId;
-        FullName:=Person.Get('fullName','');
-        if FullName='' then FullName:=Username;
-        if FullName='' then FullName:=Key;
-        Sql:=Sql+'INSERT INTO users(id,username,createdAt,modifiedAt,profile_json,loginDisabled,isAdmin) VALUES('+
-          QuotedStr(Id)+','+QuotedStr('imported-'+Id)+','+Stamp+','+Stamp+',json_object(''fullname'','+
-          QuotedStr(FullName)+'),1,0); ';
+        Key:=People.Names[K];
+        if MemberMap.Find(Key)<>nil then Continue;
+        Person:=People.Objects[Key];
+        Username:=Person.Get('username','');
+        OverrideName:=nil;
+        if Selected<>nil then
+        begin
+          OverrideName:=Selected.Find(Key);
+          if OverrideName<>nil then
+          begin
+            if not (OverrideName is TJSONString) then raise EConvertError.Create('Invalid Trello member mapping');
+            Username:=OverrideName.AsString;
+          end;
+        end;
+        Matches:=nil;
+        if Username<>'' then
+          Matches:=T.Db.Query('SELECT id FROM users WHERE username='+QuotedStr(Username)+' AND COALESCE(loginDisabled,0)=0;');
+        if Length(Matches)=1 then
+        begin
+          Id:=Matches[0][0];
+          Condition:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Id)+' AND username='+QuotedStr(Username)+
+            ' AND COALESCE(loginDisabled,0)=0)';
+          Guard:=Guard+' AND '+Condition;
+        end else
+        begin
+          if OverrideName<>nil then raise EConvertError.Create('Invalid mapped account');
+          Id:=NewId;
+          FullName:=Person.Get('fullName','');
+          if FullName='' then FullName:=Username;
+          if FullName='' then FullName:=Key;
+          Sql:=Sql+'INSERT INTO users(id,username,createdAt,modifiedAt,profile_json,loginDisabled,isAdmin) VALUES('+
+            QuotedStr(Id)+','+QuotedStr('imported-'+Id)+','+Stamp+','+Stamp+',json_object(''fullname'','+
+            QuotedStr(FullName)+'),1,0); ';
+        end;
+        MemberMap.Add(Key,Id);
       end;
-      MemberMap.Add(Key,Id);
-    end;
+    finally Selected.Free; end;
   end;
   procedure ImportInactiveMembers;
   var Members,Entry:TJSONData;LocalId:string;K:Integer;
@@ -10614,6 +10631,32 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       finally Part.Free;end;
     end;
   end;
+  procedure PreviewTrelloPeople(const Documents: TJSONArray);
+  var ReplyObject, Converted, People, Person, Seen: TJSONObject; Rows: TJSONArray;
+    Index, MemberIndex: Integer; Key: string;
+  begin
+    ReplyObject:=TJSONObject.Create; Seen:=TJSONObject.Create;
+    try
+      Rows:=TJSONArray.Create; ReplyObject.Add('people',Rows);
+      for Index:=0 to Documents.Count-1 do
+      begin
+        Converted:=TrelloImport(Documents.Items[Index]);
+        try
+          People:=Converted.Objects['trelloPeople'];
+          for MemberIndex:=0 to People.Count-1 do
+          begin
+            Key:=People.Names[MemberIndex];
+            if Seen.Find(Key)<>nil then Continue;
+            Seen.Add(Key,True);
+            Person:=People.Objects[Key];
+            Rows.Add(TJSONObject.Create(['id',Key,'username',Person.Get('username',''),'name',Person.Get('fullName','')]));
+          end;
+        finally Converted.Free; end;
+      end;
+      SendJson(aResponse,ReplyObject.AsJSON);
+    finally Seen.Free; ReplyObject.Free; end;
+  end;
+
   procedure ImportTrelloArchive;
   var ArchiveBoards, Ids: TJSONArray; Statements, SavedFiles: TStringList;
     ArchiveBoard, ResponseBody: TJSONObject; Index: Integer; Saved: Boolean;
@@ -10623,6 +10666,11 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     try
       try
         ArchiveBoards:=ReadTrelloZip(aRequest.Content);
+        if aRequest.QueryFields.Values['preview']='1' then
+        begin
+          PreviewTrelloPeople(ArchiveBoards);
+          Exit;
+        end;
         if (TargetBoard<>'') and (ArchiveBoards.Count<>1) then
           raise EConvertError.Create('An existing board can import only one Trello board');
         for Index:=0 to ArchiveBoards.Count-1 do
@@ -10653,6 +10701,19 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       if not Saved then for Index:=0 to SavedFiles.Count-1 do DeleteFile(SavedFiles[Index]);
       SavedFiles.Free; Statements.Free; Ids.Free; ArchiveBoards.Free;
     end;
+  end;
+
+  procedure PreviewTrelloJSON;
+  var Source: TJSONObject; Documents: TJSONArray;
+  begin
+    Source:=nil; Documents:=TJSONArray.Create;
+    try
+      try
+        Source:=ExactObject(aRequest.Content);
+        Documents.Add(Source.Clone);
+        PreviewTrelloPeople(Documents);
+      except on E:Exception do SendError(aResponse,400,'Invalid Trello export'); end;
+    finally Source.Free; Documents.Free; end;
   end;
 
   procedure ReadImportPolicy;
@@ -10712,6 +10773,11 @@ begin
   if IsZip and (SourceFormat='trello') and (Prepared=nil) then
   begin
     ImportTrelloArchive;
+    Exit;
+  end;
+  if (SourceFormat='trello') and (aRequest.QueryFields.Values['preview']='1') then
+  begin
+    PreviewTrelloJSON;
     Exit;
   end;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
