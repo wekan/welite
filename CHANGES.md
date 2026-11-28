@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Trello ZIP boards import card comments, checklists and bundled attachments.
+  The shared browser test verifies attachment bytes through download and a
+  WeKan JSON export and reimport.
+
 - The import menu accepts pasted WeKan JSON exports. Cards retain their
   original creation dates and receive a valid date when the export lacks one.
 

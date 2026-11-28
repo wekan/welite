@@ -810,9 +810,22 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     if (submit.disabled) return;
     submit.disabled = true;
     warning.hidden = true;
+    var zip = form.querySelector('.js-import-zip-file');
+    var zipFile = zip && zip.files[0];
     Promise.resolve().then(function () {
       var split = form.querySelector('.js-import-split-value');
       var options = split && split.value ? { splitBy: split.value } : {};
+      if (zipFile) {
+        return fetch(form.action, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/zip', 'X-Requested-With': 'XMLHttpRequest' },
+          body: zipFile
+        }).then(function (response) {
+          if (!response.ok) throw new Error('Import failed');
+          return response.json();
+        });
+      }
       var files = form.querySelector('.js-import-many-files');
       if (files && files.files.length) {
         return Promise.all(Array.from(files.files, function (file) {
@@ -847,13 +860,13 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       }
       if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
       var href = '/b/' + encodeURIComponent(board._id) + '/board';
-      if (!board.importLosses || !board.importLosses.length) {
+      if (!zipFile && (!board.importLosses || !board.importLosses.length)) {
         window.location.assign(href);
         return;
       }
       var report = form.parentElement.querySelector('.js-import-report');
       var rows = report.querySelector('ul');
-      board.importLosses.forEach(function (detail) {
+      (board.importLosses || []).forEach(function (detail) {
         var row = document.createElement('li');
         row.className = 'import-report-row';
         row.textContent = detail;
@@ -2704,6 +2717,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   }
   if (!window.Meteor) {
     window.Meteor = {
+      connection: { _lastSessionId: '' },
       // Weddy's pages come drawn by the server: a subscription is ready at
       // once, and there is nothing to stop.
       subscribe: function () {

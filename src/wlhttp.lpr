@@ -929,6 +929,7 @@ begin
   HTTPRouter.RegisterRoute('/import/kanri', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/markdown', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/wekan', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/trello', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

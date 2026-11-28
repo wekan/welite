@@ -5414,10 +5414,102 @@ begin
   finally Lines.Free; end;
 end;
 
+function TrelloImport(const Source: TJSONData): TJSONObject;
+var Input, Board, Entry, Card, Check, Item, Owner, ActionData, Authors: TJSONObject;
+  Lists,Cards,Labels,Checks,Items,Comments,Attachments: TJSONArray;
+  SourceLists,SourceCards,Data,Child,Value: TJSONData;
+  I,J: Integer; Id,CardId,Name,Color: string;
+  function Obj(Row: TJSONObject; const Key: string): TJSONObject;
+  var Field: TJSONData;
+  begin
+    Field:=Row.Find(Key);
+    if Field is TJSONObject then Result:=TJSONObject(Field) else Result:=nil;
+  end;
+begin
+  if not (Source is TJSONObject) then raise EConvertError.Create('Invalid Trello export');
+  Input:=TJSONObject(Source); SourceLists:=Input.Find('lists'); SourceCards:=Input.Find('cards');
+  if not (SourceLists is TJSONArray) or not (SourceCards is TJSONArray) or (Trim(Input.Get('name',''))='') then
+    raise EConvertError.Create('Invalid Trello board');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title',Input.Get('name',''),'description',Input.Get('desc','')]); Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+    Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    Attachments:=TJSONArray.Create; Board.Add('attachments',Attachments);
+    for I:=0 to SourceLists.Count-1 do
+    begin
+      Entry:=TJSONArray(SourceLists).Objects[I];
+      Lists.Add(TJSONObject.Create(['_id',Entry.Get('id',''),'title',Entry.Get('name',''),
+        'sort',Entry.Get('pos',Double(I)),'archived',Entry.Get('closed',False)]));
+    end;
+    Data:=Input.Find('labels');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+    begin
+      Entry:=TJSONArray(Data).Objects[I]; Color:=MapImportColor('trello',Entry.Get('color',''));
+      if Color='' then Color:='blue';
+      Labels.Add(TJSONObject.Create(['_id',Entry.Get('id',''),'name',Entry.Get('name',''),'color',Color]));
+    end;
+    for I:=0 to SourceCards.Count-1 do
+    begin
+      Entry:=TJSONArray(SourceCards).Objects[I]; CardId:=Entry.Get('id','');
+      Card:=TJSONObject.Create(['_id',CardId,'listId',Entry.Get('idList',''),'title',Entry.Get('name',''),
+        'description',Entry.Get('desc',''),'sort',Entry.Get('pos',Double(I)),'archived',Entry.Get('closed',False),
+        'dueComplete',Entry.Get('dueComplete',False)]);
+      Cards.Add(Card);
+      if Entry.Get('due','')<>'' then Card.Add('dueAt',Entry.Get('due',''));
+      if Entry.Get('start','')<>'' then Card.Add('startAt',Entry.Get('start',''));
+      Data:=Entry.Find('idLabels');
+      if Data is TJSONArray then Card.Add('labelIds',Data.Clone);
+      Data:=Entry.Find('attachments');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Item:=TJSONObject(Data.Items[J]); Value:=Item.Find('file');
+        if not (Value is TJSONString) then Continue;
+        Attachments.Add(TJSONObject.Create(['_id',Item.Get('id',''),'cardId',CardId,
+          'name',Item.Get('fileName',Item.Get('name','file')),'type',Item.Get('mimeType','application/octet-stream'),'file',Value.AsString]));
+      end;
+    end;
+    Data:=Input.Find('checklists');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+    begin
+      Check:=TJSONArray(Data).Objects[I]; Id:=Check.Get('id','');
+      Checks.Add(TJSONObject.Create(['_id',Id,'cardId',Check.Get('idCard',''),'title',Check.Get('name',''),
+        'sort',Check.Get('pos',Double(I))]));
+      Child:=Check.Find('checkItems');
+      if Child is TJSONArray then for J:=0 to Child.Count-1 do
+      begin
+        Item:=TJSONArray(Child).Objects[J];
+        Items.Add(TJSONObject.Create(['_id',Item.Get('id',''),'checklistId',Id,'title',Item.Get('name',''),
+          'sort',Item.Get('pos',Double(J)),'isFinished',Item.Get('state','')='complete']));
+      end;
+    end;
+    Data:=Input.Find('actions');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+    begin
+      Entry:=TJSONArray(Data).Objects[I];
+      if Entry.Get('type','')<>'commentCard' then Continue;
+      ActionData:=Obj(Entry,'data');
+      if ActionData=nil then Continue;
+      Item:=Obj(ActionData,'card'); if Item=nil then Continue;
+      Owner:=Obj(Entry,'memberCreator'); Name:='';
+      if Owner<>nil then Name:=ImportAuthorIdentity(Authors,Owner.Get('fullName',Owner.Get('username','')));
+      Item:=TJSONObject.Create(['_id',Entry.Get('id',''),'cardId',Item.Get('id',''),'text',ActionData.Get('text',''),'userId',Name]);
+      Comments.Add(Item);
+      if Entry.Get('date','')<>'' then Item.Add('createdAt',Entry.Get('date',''));
+    end;
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6144,7 +6236,7 @@ begin
   IsZip := SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip');
   SourceFormat := aRequest.QueryFields.Values['source'];
   if MethodActor<>'' then SourceFormat:=MethodFormat;
-  if (SourceFormat<>'') and (not ExternalImportSupported(SourceFormat) or IsZip) then
+  if (SourceFormat<>'') and (not ExternalImportSupported(SourceFormat) or (IsZip and (SourceFormat<>'trello'))) then
   begin SendError(aResponse,400,'Invalid import source'); Exit; end;
   if MethodActor<>'' then Actor:=MethodActor
   else if (IsZip or (SourceFormat<>'')) and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
@@ -6184,7 +6276,12 @@ begin
   try
     try
       try
-        if IsZip then Body:=ReadBoardZip(aRequest.Content)
+        if IsZip and (SourceFormat='trello') then
+        begin
+          SourceDocument:=ReadTrelloZip(aRequest.Content);
+          try Body:=TrelloImport(SourceDocument); finally SourceDocument.Free; end;
+        end
+        else if IsZip then Body:=ReadBoardZip(aRequest.Content)
         else if SourceFormat<>'' then
         begin
           SourceDocument:=ExactObject('{"payload":'+IfThen(MethodActor<>'',MethodBody,aRequest.Content)+'}');
@@ -6206,6 +6303,7 @@ begin
             else if SourceFormat='jira' then Body:=JiraImport(Value)
             else if SourceFormat='kanri' then Body:=KanriProjectImport(Value)
             else if SourceFormat='markdown' then Body:=MarkdownBoardImport(Value)
+            else if SourceFormat='trello' then Body:=TrelloImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
