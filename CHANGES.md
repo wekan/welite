@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Quire project CSV imports status lists, task hierarchy, tags, dates and
+  priority values.
+
 - Linear issue CSV imports teams as swimlanes, status lists, labels,
   priorities and parent issue links.
 

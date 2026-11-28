@@ -5506,8 +5506,26 @@ begin
   except Result.Free; raise; end;
 end;
 
-function PivotalImport(const Source: TJSONData): TJSONObject;
+procedure ImportEnglishDate(Row: TJSONObject; const Key, Value: string);
 const Months: array[1..12] of string=('jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec');
+var C, Day, Year: Integer; Parts: TStringArray; DateValue: TDateTime;
+  begin
+    if Value='' then Exit;
+    Parts:=StringReplace(Trim(Value),',','',[rfReplaceAll]).Split([' '],TStringSplitOptions.ExcludeEmpty);
+    if Length(Parts)=3 then
+    begin
+      Day:=StrToIntDef(Parts[1],0); Year:=StrToIntDef(Parts[2],0);
+      if (Day<1) or (Day>31) or (Year<1) or (Year>9999) then Exit;
+      for C:=1 to High(Months) do if SameText(Copy(Parts[0],1,3),Months[C]) then
+      begin
+        if TryEncodeDate(Year,C,Day,DateValue) then Row.Add(Key,FormatDateTime('yyyy-mm-dd',DateValue));
+        Exit;
+      end;
+    end
+    else if (Length(Value)>=10) and (Value[5]='-') and (Value[8]='-') then Row.Add(Key,Value);
+  end;
+
+function PivotalImport(const Source: TJSONData): TJSONObject;
 var Csv: TCSVDocument; Board, Authors, Card, Comment: TJSONObject;
   Lists, Cards, Labels, Comments, Checks, Items, Tags: TJSONArray;
   I,J,K,P: Integer; Id, Title, Stage, Name, Key, Note, Author, DateText, CheckId: string;
@@ -5524,23 +5542,7 @@ var Csv: TCSVDocument; Board, Authors, Card, Comment: TJSONObject;
     for C:=0 to Rows.Count-1 do if Rows.Objects[C].Get('_id','')=Id then Exit;
     Rows.Add(TJSONObject.Create(['_id',Id,Field,Value,'sort',Rows.Count]));
   end;
-  procedure AddDate(Row: TJSONObject; const Key, Value: string);
-  var C, Day, Year: Integer; Parts: TStringArray; DateValue: TDateTime;
-  begin
-    if Value='' then Exit;
-    Parts:=StringReplace(Trim(Value),',','',[rfReplaceAll]).Split([' '],TStringSplitOptions.ExcludeEmpty);
-    if Length(Parts)=3 then
-    begin
-      Day:=StrToIntDef(Parts[1],0); Year:=StrToIntDef(Parts[2],0);
-      if (Day<1) or (Day>31) or (Year<1) or (Year>9999) then Exit;
-      for C:=1 to High(Months) do if SameText(Copy(Parts[0],1,3),Months[C]) then
-      begin
-        if TryEncodeDate(Year,C,Day,DateValue) then Row.Add(Key,FormatDateTime('yyyy-mm-dd',DateValue));
-        Exit;
-      end;
-    end
-    else if (Length(Value)>=10) and (Value[5]='-') and (Value[8]='-') then Row.Add(Key,Value);
-  end;
+
 begin
   if not (Source is TJSONString) or (Trim(Source.AsString)='') then raise EConvertError.Create('Invalid Pivotal Tracker CSV');
   Csv:=TCSVDocument.Create;
@@ -5571,7 +5573,7 @@ begin
         Card:=TJSONObject.Create(['_id',Id,'listId',Stage,'title',Title,'description',Cell('Description'),
           'requestedBy',Cell('Requested By'),'sort',I,'dueComplete',SameText(Stage,'Accepted')]);
         Cards.Add(Card);
-        AddDate(Card,'createdAt',Cell('Created at')); AddDate(Card,'endAt',Cell('Accepted at')); AddDate(Card,'dueAt',Cell('Deadline'));
+        ImportEnglishDate(Card,'createdAt',Cell('Created at')); ImportEnglishDate(Card,'endAt',Cell('Accepted at')); ImportEnglishDate(Card,'dueAt',Cell('Deadline'));
         Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
         for Name in (Cell('Labels')+','+Cell('Type')).Split([',']) do
         begin
@@ -5609,7 +5611,7 @@ begin
             end;
             Comment:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Note,
               'userId',ImportAuthorIdentity(Authors,Author)]);
-            Comments.Add(Comment); AddDate(Comment,'createdAt',DateText);
+            Comments.Add(Comment); ImportEnglishDate(Comment,'createdAt',DateText);
           end;
         end;
       end;
@@ -6098,10 +6100,88 @@ begin
   finally Csv.Free; end;
 end;
 
+function QuireImport(const Source:TJSONData):TJSONObject;
+var Csv:TCSVDocument; Board,Authors,Card:TJSONObject; Lists,Cards,Labels,Tags,Definitions:TJSONArray;
+  Ancestors:array of string; I,J,Depth,Level:Integer; Id,Name,Stage,Priority,Author,Parent,Completed:string;
+  function Cell(const Header:string):string;
+  var C:Integer;
+  begin
+    Result:='';
+    for C:=0 to Csv.ColCount[0]-1 do
+      if SameText(Trim(Csv.Cells[C,0]),Header) then Exit(Trim(Csv.Cells[C,I]));
+  end;
+  procedure AddNamed(Rows:TJSONArray; const Id,Key,Value:string);
+  var C:Integer;
+  begin
+    for C:=0 to Rows.Count-1 do if Rows.Objects[C].Get('_id','')=Id then Exit;
+    Rows.Add(TJSONObject.Create(['_id',Id,Key,Value,'sort',Rows.Count]));
+  end;
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Invalid Quire CSV');
+  Csv:=TCSVDocument.Create;
+  Result:=TJSONObject.Create;
+  try
+    try
+      Csv.CSVText:=Source.AsString;
+      I:=0;
+      if (Csv.RowCount=0) or not SameText(Cell('Name'),'Name') or not SameText(Cell('ID'),'ID') then
+        raise EConvertError.Create('Missing Quire CSV columns');
+      Board:=TJSONObject.Create(['title','Quire project']); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      SetLength(Ancestors,Csv.ColCount[0]);
+      for I:=1 to Csv.RowCount-1 do
+      begin
+        Name:=Cell('Name'); if Name='' then Continue;
+        Depth:=-1; Level:=-1; Id:='';
+        for J:=0 to Csv.ColCount[0]-1 do
+        begin
+          if not SameText(Trim(Csv.Cells[J,0]),'ID') then Continue;
+          Inc(Level);
+          if Trim(Csv.Cells[J,I])='' then Continue;
+          Depth:=Level; Id:=Trim(Csv.Cells[J,I]);
+        end;
+        if Depth<0 then raise EConvertError.Create('Missing Quire task ID');
+        Parent:='';
+        if Depth>0 then Parent:=Ancestors[Depth-1];
+        Ancestors[Depth]:=Id;
+        for J:=Depth+1 to High(Ancestors) do Ancestors[J]:='';
+        Stage:=Cell('Status'); if Stage='' then Stage:='Tasks';
+        AddNamed(Lists,Stage,'title',Stage);
+        Completed:=Cell('Completed');
+        Card:=TJSONObject.Create(['_id',Id,'title',Name,'description',Cell('Description'),'listId',Stage,
+          'sort',I,'dueComplete',(Completed<>'') or SameText(Stage,'Completed')]);
+        Cards.Add(Card);
+        if (Parent<>'') and (Parent<>Id) then Card.Add('parentId',Parent);
+        ImportEnglishDate(Card,'createdAt',Cell('Created')); ImportEnglishDate(Card,'startAt',Cell('Start'));
+        ImportEnglishDate(Card,'dueAt',Cell('Due')); ImportEnglishDate(Card,'endAt',Completed);
+        Author:=ImportAuthorIdentity(Authors,Cell('Created by'));
+        if Author<>'' then Card.Add('userId',Author);
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for J:=0 to Csv.ColCount[0]-1 do
+        begin
+          if not SameText(Trim(Csv.Cells[J,0]),'Tag') then Continue;
+          Name:=Trim(Csv.Cells[J,I]); if Name='' then Continue;
+          AddNamed(Labels,Name,'name',Name); Tags.Add(Name);
+        end;
+        Priority:=Cell('Priority');
+        if Priority<>'' then
+        begin
+          if Definitions.Count=0 then Definitions.Add(TJSONObject.Create(['_id','priority','name','Priority','type','text']));
+          Card.Add('customFields',TJSONArray.Create([TJSONObject.Create(['_id','priority','value',Priority])]));
+        end;
+      end;
+    except Result.Free; raise; end;
+  finally Csv.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6902,6 +6982,7 @@ begin
             else if SourceFormat='superproductivity' then Body:=SuperProductivityImport(Value)
             else if (SourceFormat='clickup') or (SourceFormat='linear') then Body:=TaskExportCsvImport(Value,SourceFormat)
             else if SourceFormat='ticktick' then Body:=TickTickImport(Value)
+            else if SourceFormat='quire' then Body:=QuireImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

@@ -527,3 +527,4 @@ import-export-format-audit.e2e.js: Super Productivity: a backup imports
 import-export-format-audit.e2e.js: ClickUp: a task export imports
 import-export-format-audit.e2e.js: TickTick: a backup imports
 import-export-format-audit.e2e.js: Linear: a CSV export imports
+import-export-format-audit.e2e.js: Quire: a project CSV imports
