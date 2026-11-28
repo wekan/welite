@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Trello ZIP can import several boards in one archive. Each board gets its
+  own attachments, even when the source cards and files reuse IDs and names.
+
 - Trello JSON and ZIP imports restore number, checkbox, date and text
   custom values, plus dropdown definitions and selections. The shared
   Chromium test verifies the values against the imported board.

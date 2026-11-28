@@ -9817,7 +9817,7 @@ end;
 
 function CsvMappedBoard(Rows,RawMapping:TJSONData; const BoardTitle:string=''; ExcelDates:Boolean=False; Date1904:Boolean=False):TJSONObject; forward;
 
-procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil; Quiet: Boolean = False; Prepared: TJSONObject = nil);
+procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil; Quiet: Boolean = False; Prepared: TJSONObject = nil; BatchFiles: TStrings = nil);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail,ListWipSql:string;
@@ -10549,6 +10549,47 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       finally Part.Free;end;
     end;
   end;
+  procedure ImportTrelloArchive;
+  var ArchiveBoards, Ids: TJSONArray; Statements, SavedFiles: TStringList;
+    ArchiveBoard, ResponseBody: TJSONObject; Index: Integer; Saved: Boolean;
+  begin
+    ArchiveBoards:=nil; Ids:=TJSONArray.Create;
+    Statements:=TStringList.Create; SavedFiles:=TStringList.Create; Saved:=False;
+    try
+      try
+        ArchiveBoards:=ReadTrelloZip(aRequest.Content);
+        if (TargetBoard<>'') and (ArchiveBoards.Count<>1) then
+          raise EConvertError.Create('An existing board can import only one Trello board');
+        for Index:=0 to ArchiveBoards.Count-1 do
+        begin
+          ArchiveBoard:=TrelloImport(ArchiveBoards.Objects[Index]);
+          try
+            ImportBoardRequest(aRequest,aResponse,T,Actor,'','trello',Statements,Ids,False,ArchiveBoard,SavedFiles);
+            if Ids.Count<>Index+1 then Exit;
+          finally ArchiveBoard.Free; end;
+        end;
+        if not T.Db.Exec('BEGIN IMMEDIATE; '+Statements.Text+'COMMIT;') then
+        begin
+          T.Db.Exec('ROLLBACK;');
+          SendError(aResponse,500,'Could not import Trello boards');
+          Exit;
+        end;
+        Saved:=True;
+        ResponseBody:=TJSONObject.Create(['_id',Ids.Strings[0],'boardId',Ids.Strings[0],'ok',True]);
+        try
+          ResponseBody.Add('boardIds',Ids.Clone);
+          SendJson(aResponse,ResponseBody.AsJSON);
+        finally ResponseBody.Free; end;
+      except
+        on E:EConvertError do SendError(aResponse,400,'Invalid Trello ZIP');
+        on E:Exception do SendError(aResponse,500,'Could not import Trello boards');
+      end;
+    finally
+      if not Saved then for Index:=0 to SavedFiles.Count-1 do DeleteFile(SavedFiles[Index]);
+      SavedFiles.Free; Statements.Free; Ids.Free; ArchiveBoards.Free;
+    end;
+  end;
+
   procedure ReadImportPolicy;
   var Found:TWLRows;Physical,Registry:string;
   begin
@@ -10603,6 +10644,11 @@ begin
       begin SendError(aResponse, 403, 'Board import is restricted'); Exit; end;
     end;
   end;
+  if IsZip and (SourceFormat='trello') and (Prepared=nil) then
+  begin
+    ImportTrelloArchive;
+    Exit;
+  end;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
   TaigaSprints:=TJSONObject.Create;MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedListLanes:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
   for I:=0 to High(Maps) do Maps[I]:=nil;
@@ -10610,11 +10656,6 @@ begin
     try
       try
         if Prepared<>nil then Body:=TJSONObject(Prepared.Clone)
-        else if IsZip and (SourceFormat='trello') then
-        begin
-          SourceDocument:=ReadTrelloZip(aRequest.Content);
-          try Body:=TrelloImport(SourceDocument); finally SourceDocument.Free; end;
-        end
         else if IsZip then Body:=ReadBoardZip(aRequest.Content)
         else if SourceFormat<>'' then
         begin
@@ -10917,6 +10958,11 @@ begin
       begin
         BatchSql.Add(Sql);
         BatchIds.Add(BoardId);
+        if BatchFiles<>nil then
+        begin
+          BatchFiles.AddStrings(Files);
+          Files.Clear;
+        end;
         Exit;
       end;
       if not T.Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then

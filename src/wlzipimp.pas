@@ -9,7 +9,7 @@ function ZipAttachmentName(const Value: string; Used: TStringList): string;
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
 function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings = nil; Date1904: PBoolean = nil): TJSONArray;
 function ReadZipMember(const Bytes:RawByteString; const Name:string; out Content:RawByteString):Boolean;
-function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
+function ReadTrelloZip(const Bytes: RawByteString): TJSONArray;
 function ReadMarkdownZip(const Bytes: RawByteString; IncludeTables:Boolean=False; IncludeIssues:Boolean=False): TJSONArray;
 
 implementation
@@ -111,7 +111,13 @@ procedure TBoardZipReader.CreateEntry(Sender: TObject; var Stream: TStream; Item
 var Name, Leaf: string; Data: TZipEntryStream;
 begin
   Name := Item.ArchiveFileName;
-  if Markdown then
+  if Trello then
+  begin
+    if Item.IsLink or (Name='') or (Pos(#0,Name)>0) or (Pos('\',Name)>0) or (Pos(':',Name)>0) or
+      AnsiStartsStr('/',Name) or (Pos('/../','/'+Name+'/')>0) or (Pos('/./','/'+Name+'/')>0) or
+      (Pos('//',Name)>0) then raise EConvertError.Create('Invalid ZIP entry');
+  end
+  else if Markdown then
   begin
     if Item.IsLink or (Pos(#0,Name)>0) or (Pos('\',Name)>0) or AnsiStartsStr('/',Name) or
       (Pos('/../','/'+Name+'/')>0) then raise EConvertError.Create('Invalid ZIP entry');
@@ -320,46 +326,125 @@ begin
   finally Reader.Free; Archive.Free; end;
 end;
 
-function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
-var Archive: TUnZipper; Reader: TBoardZipReader; Raw: RawByteString; Data, Cards, Attachments, Files: TJSONData;
-  Card, Attachment: TJSONObject; I,J: Integer; Name, Id: string; Used: TStringList;
-begin
-  if (Length(Bytes)=0) or (Length(Bytes)>MaxArchive) then raise EConvertError.Create('Invalid Trello ZIP size');
-  Archive:=TUnZipper.Create; Reader:=TBoardZipReader.Create(Bytes); Used:=TStringList.Create;
-  Data:=nil;
-  try
-    Reader.Trello:=True;
-    Archive.OnOpenInputStream:=@Reader.OpenInput;
-    Archive.OnCloseInputStream:=@Reader.CloseInput;
-    Archive.OnCreateStream:=@Reader.CreateEntry;
-    Archive.OnDoneStream:=@Reader.FinishEntry;
-    Archive.UnZipAllFiles;
-    if not Reader.ReadEntry('board.json',Raw) then raise EConvertError.Create('Missing Trello board JSON');
-    Data:=GetJSON(Raw);
-    if not (Data is TJSONObject) then raise EConvertError.Create('Invalid Trello board');
-    Cards:=TJSONObject(Data).Find('cards');
-    if not (Cards is TJSONArray) then raise EConvertError.Create('Invalid Trello cards');
-    for I:=0 to Cards.Count-1 do
+function ReadTrelloZip(const Bytes: RawByteString): TJSONArray;
+var Archive: TUnZipper; Reader: TBoardZipReader; Raw: RawByteString;
+  Data, Cards, Attachments, Files: TJSONData;
+  Board, Card, Attachment: TJSONObject; B, I, J: Integer;
+  Name, Id, Member, Directory, Leaf, Candidate, Scope: string;
+  Used, Paths, LegacyNames: TStringList; DirectoryCounts, ScopeOwners: TJSONObject; Scopes: TStringArray;
+
+  function Parent(const Entry: string): string;
+  var At: Integer;
+  begin
+    At:=RPos('/',Entry);
+    Result:=Copy(Entry,1,At);
+  end;
+
+  function ScopesOf(const Entry: string): TStringArray;
+  var Dir, Stem: string;
+  begin
+    Dir:=Parent(Entry);
+    Stem:=Copy(Entry,1,Length(Entry)-5)+'/';
+    Result:=[];
+    if Copy(Entry,Length(Dir)+1,MaxInt)<>'board.json' then Result:=[Stem+AttachmentPrefix,Stem];
+    if (DirectoryCounts.Get(Dir,0)=1) and ((Dir<>'') or (Paths.Count=1)) then
     begin
-      if not (Cards.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Trello card');
-      Card:=TJSONObject(Cards.Items[I]); Attachments:=Card.Find('attachments');
-      if not (Attachments is TJSONArray) then Continue;
-      for J:=0 to Attachments.Count-1 do
+      Result:=Concat(Result,[Dir+AttachmentPrefix]);
+      if Dir<>'' then Result:=Concat(Result,[Dir]);
+    end;
+  end;
+
+  function FindFile(const Entry: string): Boolean;
+  var Scope: string;
+  begin
+    Result:=False;
+    if (Entry='') or (Entry='.') or (Entry='..') or (Pos('/',Entry)>0) or (Pos('\',Entry)>0) or
+      (Pos(':',Entry)>0) or (Pos(#0,Entry)>0) then Exit;
+    for Scope in Scopes do
+    begin
+      if ScopeOwners.Get(Scope,0)<>1 then Continue;
+      Candidate:=Scope+Entry;
+      if Used.IndexOf(Candidate)>=0 then Continue;
+      if Reader.ReadEntry(Candidate,Raw) then
       begin
-        Files:=Attachments.Items[J];
-        if not (Files is TJSONObject) then Continue;
-        Attachment:=TJSONObject(Files);
-        Name:=Attachment.Get('fileName',Attachment.Get('name',''));
-        Attachment.Delete('file');
-        if Name='' then Continue;
-        Id:=Attachment.Get('id','');
-        if ((Id<>'') and Reader.ReadEntry(AttachmentPrefix+Id+'_'+Name,Raw)) or
-          Reader.ReadEntry(AttachmentPrefix+ZipAttachmentName(Name,Used),Raw) then
-          Attachment.Add('file',EncodeStringBase64(Raw));
+        Used.Add(Candidate);
+        Exit(True);
       end;
     end;
-    Result:=TJSONObject(Data); Data:=nil;
-  finally Data.Free; Used.Free; Reader.Free; Archive.Free; end;
+  end;
+
+begin
+  if (Length(Bytes)=0) or (Length(Bytes)>MaxArchive) then raise EConvertError.Create('Invalid Trello ZIP size');
+  Archive:=TUnZipper.Create; Reader:=TBoardZipReader.Create(Bytes);
+  Used:=TStringList.Create; Paths:=TStringList.Create; LegacyNames:=TStringList.Create; DirectoryCounts:=TJSONObject.Create; ScopeOwners:=TJSONObject.Create;
+  Result:=TJSONArray.Create;
+  try
+    try
+      Used.CaseSensitive:=True;
+      LegacyNames.CaseSensitive:=False;
+      Reader.Trello:=True;
+      Archive.OnOpenInputStream:=@Reader.OpenInput;
+      Archive.OnCloseInputStream:=@Reader.CloseInput;
+      Archive.OnCreateStream:=@Reader.CreateEntry;
+      Archive.OnDoneStream:=@Reader.FinishEntry;
+      Archive.UnZipAllFiles;
+      for B:=0 to Reader.Files.Count-1 do
+      begin
+        Member:=Reader.Files[B];
+        Directory:=Parent(Member);
+        if not AnsiEndsText('.json',Member) or (Pos('/attachments/','/'+Directory)>0) then Continue;
+        if not Reader.ReadEntry(Member,Raw) then Continue;
+        Leaf:=Copy(Member,Length(Directory)+1,MaxInt);
+        Data:=nil;
+        try
+          try Data:=GetJSON(Raw); except on E:EJSONParser do Data:=nil; end;
+          if Data is TJSONObject then
+          begin
+            Board:=TJSONObject(Data);
+            if (Trim(Board.Get('name',''))<>'') and (Board.Find('lists') is TJSONArray) and
+              (Board.Find('cards') is TJSONArray) then
+            begin
+              Result.Add(Board);
+              Data:=nil;
+              Paths.Add(Member);
+              DirectoryCounts.Integers[Directory]:=DirectoryCounts.Get(Directory,0)+1;
+              Continue;
+            end;
+          end;
+          if Leaf='board.json' then raise EConvertError.Create('Invalid Trello board');
+        finally Data.Free; end;
+      end;
+      if Result.Count=0 then raise EConvertError.Create('Missing Trello board JSON');
+      for Member in Paths do
+        for Scope in ScopesOf(Member) do
+          ScopeOwners.Integers[Scope]:=ScopeOwners.Get(Scope,0)+1;
+      for B:=0 to Result.Count-1 do
+      begin
+        Scopes:=ScopesOf(Paths[B]);
+        LegacyNames.Clear;
+        Cards:=Result.Objects[B].Find('cards');
+        for I:=0 to Cards.Count-1 do
+        begin
+          if not (Cards.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Trello card');
+          Card:=TJSONObject(Cards.Items[I]); Attachments:=Card.Find('attachments');
+          if not (Attachments is TJSONArray) then Continue;
+          for J:=0 to Attachments.Count-1 do
+          begin
+            Files:=Attachments.Items[J];
+            if not (Files is TJSONObject) then Continue;
+            Attachment:=TJSONObject(Files);
+            Name:=Attachment.Get('fileName',Attachment.Get('name',''));
+            Attachment.Delete('file');
+            if Name='' then Continue;
+            Id:=Attachment.Get('id','');
+            Leaf:=ZipAttachmentName(Name,LegacyNames);
+            if ((Id<>'') and FindFile(Id+'_'+Name)) or FindFile(Name) or FindFile(Leaf) then
+              Attachment.Add('file',EncodeStringBase64(Raw));
+          end;
+        end;
+      end;
+    except FreeAndNil(Result); raise; end;
+  finally ScopeOwners.Free; DirectoryCounts.Free; LegacyNames.Free; Paths.Free; Used.Free; Reader.Free; Archive.Free; end;
 end;
 
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
