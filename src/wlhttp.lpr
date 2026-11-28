@@ -934,6 +934,7 @@ begin
   HTTPRouter.RegisterRoute('/import/redmine', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/tasksorg', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/superproductivity', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/clickup', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

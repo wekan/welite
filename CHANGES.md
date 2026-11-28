@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- ClickUp task CSV imports lists as swimlanes and retains statuses,
+  descriptions, tags, due dates and subtask links.
+
 - Super Productivity backups import projects as swimlanes and preserve task
   states, tags, notes, dates, time spent and subtask links.
 
