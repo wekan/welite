@@ -487,3 +487,4 @@ structural-selection.e2e.js
 export-access.e2e.js
 import-export-format-audit.e2e.js: kanboard: import adapter fixture text through the UI
 import-export-format-audit.e2e.js: kanboard: comments, checklists and card fields survive a UI import
+import-export-format-audit.e2e.js: kanboard: malformed JSON and wrong document shapes are rejected

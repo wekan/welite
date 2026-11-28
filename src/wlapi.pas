@@ -74,6 +74,7 @@ procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
+procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
@@ -4342,7 +4343,7 @@ begin
   except Result.Free; raise; end;
 end;
 
-procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
+procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat:string;
@@ -5038,12 +5039,15 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       ' WHERE json_type(_ferretdb_sjson,''$.disableAllImport'')=''true'')';
   end;
 begin
-  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if MethodActor<>'' then T:=Tenant
+  else if not ApiTenant(aRequest,aResponse,T) then Exit;
   IsZip := SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip');
   SourceFormat := aRequest.QueryFields.Values['source'];
+  if MethodActor<>'' then SourceFormat:=MethodFormat;
   if (SourceFormat<>'') and ((SourceFormat<>'kanboard') or IsZip) then
   begin SendError(aResponse,400,'Invalid import source'); Exit; end;
-  if (IsZip or (SourceFormat<>'')) and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
+  if MethodActor<>'' then Actor:=MethodActor
+  else if (IsZip or (SourceFormat<>'')) and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
     (aRequest.Authorization = '') and (aRequest.QueryFields.Values['authToken'] = '') and
     (aRequest.QueryFields.Values['token'] = '') and Html5User(T.Db, aRequest, Session) then Actor := Session.UserId
   else if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
@@ -5083,7 +5087,7 @@ begin
         if IsZip then Body:=ReadBoardZip(aRequest.Content)
         else if SourceFormat='kanboard' then
         begin
-          SourceDocument:=ExactObject(aRequest.Content);
+          SourceDocument:=ExactObject(IfThen(MethodActor<>'',MethodBody,aRequest.Content));
           try Body:=KanboardImport(SourceDocument); finally SourceDocument.Free; end;
         end
         else Body:=ExactObject(aRequest.Content);
@@ -5317,8 +5321,19 @@ begin
         raise Exception.Create('Board import failed');
       Committed:=True;
     except
-      on E:EConvertError do begin SendError(aResponse,400,'Invalid board export');Exit;end;
+      on E:EConvertError do
+      begin
+        if MethodActor<>'' then SendJson(aResponse,'{"error":"invalid-import-format","reason":"Invalid board export"}',400)
+        else SendError(aResponse,400,'Invalid board export');
+        Exit;
+      end;
       on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not import board');Exit;end;
+    end;
+    if MethodActor<>'' then
+    begin
+      Reply:=TJSONObject.Create(['_id',BoardId,'boardId',BoardId]);
+      try SendJson(aResponse,'{"result":'+Reply.AsJSON+'}'); finally Reply.Free; end;
+      Exit;
     end;
     Reply:=TJSONObject.Create(['_id',BoardId]);
     if ZipRoute then
@@ -5337,6 +5352,23 @@ begin
     for I:=0 to High(Maps) do Maps[I].Free;
     Body.Free;
   end;
+end;
+
+procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
+begin
+  ImportBoardRequest(aRequest,aResponse,Default(TWLTenant),'','','');
+end;
+
+procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
+begin
+  if not (Args is TJSONArray) or (Args.Count<>3) or not (Args.Items[0] is TJSONObject) or
+    not (Args.Items[1] is TJSONObject) or (Args.Items[2].JSONType<>jtString) then
+  begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
+  if Args.Items[2].AsString<>'kanboard' then
+  begin SendJson(aResponse,'{"error":"invalid-import-format","reason":"Unknown import source"}',400); Exit; end;
+  if Args.Items[1].Count<>0 then
+  begin SendJson(aResponse,'{"error":"invalid-member-mapping","reason":"Kanboard member mapping is unavailable"}',400); Exit; end;
+  ImportBoardRequest(aRequest,aResponse,Tenant,Actor,Args.Items[0].AsJSON,'kanboard');
 end;
 
 function CopyBoardWorkflows(Db:TWLDb;const Source,Destination,Actor:string):string;

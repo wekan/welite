@@ -5784,6 +5784,15 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
+  if Name='importBoard' then
+  begin
+    Args:=nil;
+    try
+      try Args:=GetJSON(Request.Content); except end;
+      ImportBoardMethod(Request,Response,T,S.UserId,Args);
+    finally Args.Free; end;
+    Exit;
+  end;
   if (Name='structuralMoveOptions') or (Name='moveBoardObjects') then
   begin
     Args:=nil;

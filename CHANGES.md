@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The Kanboard import form uses the authenticated importBoard method. Invalid
+  JSON stays on the form, and documents of the wrong shape return the shared
+  invalid-import-format error. All three of these shared Kanboard cases pass.
+
 - Kanboard imports keep named card and comment authors as sign-in-disabled
   accounts and record imported comment activity. The shared browser test also
   covers checklist completion, card fields and label preservation.

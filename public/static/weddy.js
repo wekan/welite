@@ -810,14 +810,8 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     if (submit.disabled) return;
     submit.disabled = true;
     warning.hidden = true;
-    fetch(form.action, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: form.querySelector('textarea').value
-    }).then(function (response) {
-      if (!response.ok) throw new Error('Import failed');
-      return response.json();
+    Promise.resolve().then(function () {
+      return callAsync('importBoard', JSON.parse(form.querySelector('textarea').value), {}, 'kanboard');
     }).then(function (board) {
       if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
       window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
