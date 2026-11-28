@@ -1135,7 +1135,7 @@ begin
     '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
     '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
     E(Words.Text('import', 'Import')) + '</button></form>' +
-    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p><p><a href="/import/markdown">Markdown</a></p><p><a href="/import/wekan">WeKan JSON</a></p><p><a href="/import/trello">Trello</a></p><p><a href="/import/pivotal">Pivotal Tracker CSV</a></p><p><a href="/import/redmine">Redmine CSV</a></p><p><a href="/import/tasksorg">Tasks.org JSON</a></p><p><a href="/import/superproductivity">Super Productivity JSON</a></p><p><a href="/import/clickup">ClickUp CSV</a></p><p><a href="/import/ticktick">TickTick CSV</a></p><p><a href="/import/linear">Linear CSV</a></p><p><a href="/import/quire">Quire CSV</a></p><p><a href="/import/obsidian">Obsidian Kanban</a></p><p><a href="/import/meistertask">MeisterTask CSV</a></p><p><a href="/import/nullboard">Nullboard NBX</a></p><p><a href="/import/monday">monday.com XLSX</a></p>', '') + '</template>';
+    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p><p><a href="/import/markdown">Markdown</a></p><p><a href="/import/wekan">WeKan JSON</a></p><p><a href="/import/trello">Trello</a></p><p><a href="/import/pivotal">Pivotal Tracker CSV</a></p><p><a href="/import/redmine">Redmine CSV</a></p><p><a href="/import/tasksorg">Tasks.org JSON</a></p><p><a href="/import/superproductivity">Super Productivity JSON</a></p><p><a href="/import/clickup">ClickUp CSV</a></p><p><a href="/import/ticktick">TickTick CSV</a></p><p><a href="/import/linear">Linear CSV</a></p><p><a href="/import/quire">Quire CSV</a></p><p><a href="/import/obsidian">Obsidian Kanban</a></p><p><a href="/import/meistertask">MeisterTask CSV</a></p><p><a href="/import/nullboard">Nullboard NBX</a></p><p><a href="/import/monday">monday.com XLSX</a></p><p><a href="/import/wrike">Wrike XLSX</a></p>', '') + '</template>';
 end;
 
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
@@ -9565,13 +9565,14 @@ begin
       'meistertask': FormatName:='MeisterTask';
       'nullboard': FormatName:='Nullboard';
       'monday': FormatName:='monday.com';
+      'wrike': FormatName:='Wrike';
       else FormatName:='Kanboard';
     end;
     Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
       '<label for="import-textarea">' + E(FormatName) + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick') or (Source='linear') or (Source='quire') or (Source='meistertask'),' CSV',IfThen((Source='markdown') or (Source='obsidian'),' Markdown',' JSON')) + '</label><textarea id="import-textarea"></textarea>' +
-      IfThen(Source='monday','<label>monday.com XLSX<input type="file" class="js-import-file" accept=".xlsx"></label>','')+
+      IfThen((Source='monday') or (Source='wrike'),'<label>'+E(FormatName)+' XLSX<input type="file" class="js-import-file" accept=".xlsx"></label>','')+
       IfThen(Source='trello','<label>Trello ZIP<input type="file" class="js-import-zip-file" accept=".zip,application/zip"></label>','')+
       IfThen(Source='markdown','<label>'+E(Words.Text('import-board-c','Import board'))+
         '<input type="file" class="js-import-many-files" accept=".md,.markdown,.zip" multiple></label>','')+

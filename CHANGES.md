@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Wrike workbooks import folders, workflow names, custom statuses, dates,
+  task dependencies, duration and priority.
+
 - monday.com workbooks import board groups, status lists, people, due dates,
   tags and updates as card comments.
 

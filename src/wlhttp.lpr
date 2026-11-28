@@ -942,6 +942,7 @@ begin
   HTTPRouter.RegisterRoute('/import/meistertask', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/nullboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/monday', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/wrike', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);
