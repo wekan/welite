@@ -6491,10 +6491,117 @@ begin
   finally Workbook.Free; end;
 end;
 
+function TeamworkImport(const Source:TJSONData):TJSONObject;
+var Workbook,Sheet,Header,Row,Lists,Cards,Definitions,Fields,Labels,Tags:TJSONArray;
+  SheetNames:TStringList; Board,Card:TJSONObject; Ancestors:array of string;
+  I,Depth:Integer; Title,Lane,Name,Id,Status,Tag,Text:string; Hours:Double; Done:Boolean;
+  function Cell(const Key:string):string;
+  var C:Integer;
+  begin
+    Result:='';
+    for C:=0 to Header.Count-1 do
+      if SameText(Trim(Header.Strings[C]),Key) and (C<Row.Count) then Exit(Trim(Row.Strings[C]));
+  end;
+  procedure AddNamed(Rows:TJSONArray;const Id,Key,Value,Kind:string);
+  var C:Integer; Entry:TJSONObject;
+  begin
+    for C:=0 to Rows.Count-1 do if Rows.Objects[C].Get('_id','')=Id then Exit;
+    Entry:=TJSONObject.Create(['_id',Id,Key,Value,'sort',Rows.Count]);
+    if Kind<>'' then Entry.Add('type',Kind);
+    Rows.Add(Entry);
+  end;
+  procedure AddField(const Key,Name,Kind:string; Value:TJSONData);
+  var Entry:TJSONObject;
+  begin
+    AddNamed(Definitions,Key,'name',Name,Kind);
+    Entry:=TJSONObject.Create(['_id',Key]); Fields.Add(Entry); Entry.Add('value',Value);
+  end;
+  procedure AddDate(const Key,Target:string);
+  var Text:string; Serial:Double; Decimal:TFormatSettings;
+  begin
+    Text:=Cell(Key); Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.';
+    if TryStrToFloat(Text,Serial,Decimal) and (Serial>0) and (Serial<2958466) then
+      Text:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',EncodeDate(1899,12,30)+Serial);
+    if Text<>'' then Card.Add(Target,Text);
+  end;
+  function EstimatedHours(const Value:string;out Total:Double):Boolean;
+  var Token:string; Number:Double; Decimal:TFormatSettings;
+  begin
+    Total:=0; Result:=False;
+    Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.';
+    for Token in LowerCase(Value).Split([' '],TStringSplitOptions.ExcludeEmpty) do
+    begin
+      if (Length(Token)<2) or not TryStrToFloat(Copy(Token,1,Length(Token)-1),Number,Decimal) or (Number<0) or IsInfinite(Number) then Exit(False);
+      case Token[Length(Token)] of
+        'h': Total:=Total+Number;
+        'm': Total:=Total+Number/60;
+        else Exit(False);
+      end;
+      Result:=True;
+    end;
+  end;
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing Teamwork workbook');
+  SheetNames:=TStringList.Create;
+  Workbook:=nil;
+  Result:=TJSONObject.Create;
+  try
+    try
+      Workbook:=ReadWorkbookRows(DecodeStringBase64(Source.AsString,True),SheetNames);
+      Sheet:=Workbook.Arrays[0];
+      if Sheet.Count=0 then raise EConvertError.Create('Empty Teamwork workbook');
+      Header:=Sheet.Arrays[0]; Row:=Header;
+      if not SameText(Cell('Tasklist'),'Tasklist') or not SameText(Cell('Task'),'Task') then
+        raise EConvertError.Create('Missing Teamwork columns');
+      Title:='Teamwork tasks';
+      if (SheetNames.Count>0) and (Trim(SheetNames[0])<>'') then Title:=SheetNames[0];
+      Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+      Result.Add('importedAuthors',TJSONObject.Create);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Lane:='Tasks'; SetLength(Ancestors,1);
+      for I:=1 to Sheet.Count-1 do
+      begin
+        Row:=Sheet.Arrays[I]; Name:=Cell('Task'); if Name='' then Continue;
+        Text:=Cell('Tasklist');
+        if Text<>'' then
+        begin Lane:=Text; SetLength(Ancestors,0); SetLength(Ancestors,1); end;
+        AddNamed(Lists,Lane,'title',Lane,'');
+        Depth:=0;
+        while (Depth<Length(Name)) and (Name[Depth+1]='-') do Inc(Depth);
+        Name:=Trim(Copy(Name,Depth+1,MaxInt)); if Name='' then Continue;
+        Id:='task-'+IntToStr(I);
+        Status:=Cell('Status'); Done:=SameText(Status,'Complete') or SameText(Status,'Completed');
+        Card:=TJSONObject.Create(['_id',Id,'title',Name,'description',Cell('Description'),'listId',Lane,
+          'sort',I,'dueComplete',Done]);
+        Cards.Add(Card);
+        if (Depth>0) and (Depth<=Length(Ancestors)) and (Ancestors[Depth-1]<>'') then
+          Card.Add('parentId',Ancestors[Depth-1]);
+        SetLength(Ancestors,Depth+1); Ancestors[Depth]:=Id;
+        AddDate('Start date','startAt'); AddDate('Due date','dueAt');
+        Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+        Text:=LowerCase(Cell('Priority'));
+        if Text<>'' then AddField('priority','Priority','text',TJSONString.Create(UpCase(Text[1])+Copy(Text,2,MaxInt)));
+        if EstimatedHours(Cell('Estimated time'),Hours) then
+          AddField('estimate','Estimated time (hours)','number',TJSONFloatNumber.Create(Hours));
+        if Done then AddField('complete','Complete','checkbox',TJSONBoolean.Create(True));
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for Tag in Cell('Tags').Split([',',';']) do
+        begin
+          Text:=Trim(Tag); if Text='' then Continue;
+          AddNamed(Labels,Text,'name',Text,''); Tags.Add(Text);
+        end;
+      end;
+    except Result.Free; raise; end;
+  finally Workbook.Free; SheetNames.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7300,6 +7407,7 @@ begin
             else if SourceFormat='nullboard' then Body:=NullboardImport(Value)
             else if SourceFormat='monday' then Body:=MondayImport(Value)
             else if SourceFormat='wrike' then Body:=WrikeImport(Value)
+            else if SourceFormat='teamwork' then Body:=TeamworkImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

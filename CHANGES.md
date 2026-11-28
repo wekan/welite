@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Teamwork.com workbooks import task lists, due dates, tags, priorities,
+  estimated hours, completion and subtask hierarchy.
+
 - Wrike workbooks import folders, workflow names, custom statuses, dates,
   task dependencies, duration and priority.
 

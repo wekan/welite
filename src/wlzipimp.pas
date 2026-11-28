@@ -7,7 +7,7 @@ uses Classes, fpjson;
 
 function ZipAttachmentName(const Value: string; Used: TStringList): string;
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
-function ReadWorkbookRows(const Bytes: RawByteString): TJSONArray;
+function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings = nil): TJSONArray;
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
 function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
 
@@ -177,7 +177,7 @@ begin
   finally Archive.Free; Reader.Free; end;
 end;
 
-function ReadWorkbookRows(const Bytes: RawByteString): TJSONArray;
+function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings): TJSONArray;
 var Archive:TUnZipper; Reader:TBoardZipReader; Shared:TStringList; Sheet, Row:TJSONArray;
   Xml:TXMLDocument; Node, Cells, Cell, Value:TDOMNode; I, Column, K:Integer;
   Name,Ref,Text,Kind:string; Raw:RawByteString;
@@ -202,6 +202,24 @@ begin
       Archive.OnDoneStream:=@Reader.FinishEntry;
       Archive.UnZipAllFiles;
       if not Reader.ReadEntry('xl/workbook.xml',Raw) then raise EConvertError.Create('Missing workbook');
+      if SheetNames<>nil then
+      begin
+        SheetNames.Clear;
+        Xml:=XmlOf(Raw);
+        try
+          Cells:=Xml.DocumentElement.FindNode('sheets');
+          if Cells<>nil then
+          begin
+            Node:=Cells.FirstChild;
+            while Node<>nil do
+            begin
+              if (Node is TDOMElement) and ((Node.LocalName='sheet') or (Node.NodeName='sheet')) then
+                SheetNames.Add(UTF8Encode(TDOMElement(Node).GetAttribute('name')));
+              Node:=Node.NextSibling;
+            end;
+          end;
+        finally Xml.Free; end;
+      end;
       if Reader.ReadEntry('xl/sharedStrings.xml',Raw) then
       begin
         Xml:=XmlOf(Raw);
