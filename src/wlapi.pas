@@ -70,7 +70,7 @@ procedure ApiScrumVelocityReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardBurnReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
-procedure ApiBoardOutline(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardTextExport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardVikunja(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
@@ -3077,18 +3077,20 @@ begin
   Result := True;
 end;
 
-procedure ApiBoardOutline(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Body, Extension: string; Payload: TJSONObject; Opml: Boolean;
+procedure ApiBoardTextExport(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; BoardId, UserId, Body, Extension: string; Payload: TJSONObject; Opml, TodoTxt: Boolean;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
   Opml := AnsiEndsStr('/opml', aRequest.PathInfo);
+  TodoTxt := AnsiEndsStr('/todotxt', aRequest.PathInfo);
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
     if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
     try
       if Payload.Find('subtaskItems') = nil then Payload.Add('subtaskItems', TJSONArray.Create);
-      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields'], Opml);
-      Body := OutlineBoard(Payload, Opml);
+      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields'], Opml or TodoTxt);
+      if TodoTxt then Body := TodoTxtBoard(Payload)
+      else Body := OutlineBoard(Payload, Opml);
     finally Payload.Free; end;
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   aResponse.Code := 200;
@@ -3096,6 +3098,10 @@ begin
   begin
     aResponse.ContentType := 'text/x-opml; charset=utf-8';
     Extension := 'opml';
+  end else if TodoTxt then
+  begin
+    aResponse.ContentType := 'text/plain; charset=utf-8';
+    Extension := 'txt';
   end else
   begin
     aResponse.ContentType := 'text/markdown; charset=utf-8';

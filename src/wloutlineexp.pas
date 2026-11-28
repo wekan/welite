@@ -8,9 +8,14 @@ uses fpjson;
 
 function OutlineBoard(Board: TJSONObject; Opml: Boolean): string;
 
+function TodoTxtBoard(Board: TJSONObject): string;
+
 implementation
 
 uses Classes, SysUtils, DateUtils, RegExpr;
+
+const WhiteSpace = '\s| | | | | | | | | | | | | | | | | |　|﻿';
+  TerminalList = '(?i)done|closed|complete|archiv|finished';
 
 function XmlText(const Value: string): string;
 begin
@@ -37,6 +42,18 @@ begin
   Result := FormatDateTime('ddd, dd mmm yyyy hh":"nn":"ss "GMT"', At, Settings);
 end;
 
+procedure IndexNames(Output: TStringList; Rows: TJSONArray; const NameKey: string);
+var Index: Integer; Row: TJSONObject;
+begin
+  if Rows = nil then Exit;
+  for Index := 0 to Rows.Count - 1 do
+  begin
+    Row := Rows.Objects[Index];
+    if not Row.Get('archived', False) then
+      Output.Values[Row.Get('_id', '')] := Row.Get(NameKey, '');
+  end;
+end;
+
 function OutlineBoard(Board: TJSONObject; Opml: Boolean): string;
 var Lines, ListTitles, ListNames, LabelNames: TStringList;
   Spaces, TagSeparators, ChecklistText, ClosedList: TRegExpr;
@@ -46,18 +63,6 @@ var Lines, ListTitles, ListNames, LabelNames: TStringList;
   Title, ListTitle, Task, Tag, Description, RawLine, DescriptionLine, Clock, Box, Category, Created, ListOfCard: string;
   Due: TDateTime;
   HasCards: Boolean;
-
-  procedure IndexNames(Output: TStringList; Rows: TJSONArray; const NameKey: string);
-  var Index: Integer; Row: TJSONObject;
-  begin
-    if Rows = nil then Exit;
-    for Index := 0 to Rows.Count - 1 do
-    begin
-      Row := Rows.Objects[Index];
-      if not Row.Get('archived', False) then
-        Output.Values[Row.Get('_id', '')] := Row.Get(NameKey, '');
-    end;
-  end;
 
   procedure CloseOutline(Index: Integer; const Indent: string);
   begin
@@ -69,7 +74,6 @@ var Lines, ListTitles, ListNames, LabelNames: TStringList;
     end;
   end;
 
-const WhiteSpace = '\s| | | | | | | | | | | | | | | | | |　|﻿';
 begin
   Lines := TStringList.Create;
   ListTitles := TStringList.Create;
@@ -78,7 +82,7 @@ begin
   Spaces := TRegExpr.Create('(' + WhiteSpace + ')+');
   TagSeparators := TRegExpr.Create('(' + WhiteSpace + '|#)+');
   ChecklistText := TRegExpr.Create('^((' + WhiteSpace + ')*)([-*+](' + WhiteSpace + ')+\[)');
-  ClosedList := TRegExpr.Create('(?i)done|closed|complete|archiv|finished');
+  ClosedList := TRegExpr.Create(TerminalList);
   try
     ListTitles.CaseSensitive := True;
     ListNames.CaseSensitive := True;
@@ -237,6 +241,97 @@ begin
     LabelNames.Free;
     ListNames.Free;
     ListTitles.Free;
+    Lines.Free;
+  end;
+end;
+
+function TodoTxtBoard(Board: TJSONObject): string;
+var Lines, ListNames, LabelNames, Words, Tags: TStringList;
+  Spaces, ClosedList: TRegExpr;
+  Cards, CardLabels: TJSONArray;
+  Card: TJSONObject;
+  I, J: Integer;
+  ListTitle, Title, Created, Finished, Due, StartDay, Tag, Priority: string;
+  Done: Boolean;
+
+  function Day(const Key: string): string;
+  var At: TDateTime;
+  begin
+    Result := '';
+    if TryISO8601ToDate(Card.Get(Key, ''), At, True) then Result := FormatDateTime('yyyy-mm-dd', At);
+  end;
+
+  function Respace(const Value: string): string;
+  begin
+    Result := StringReplace(Trim(Spaces.Replace(Value, ' ')), ' ', '_', [rfReplaceAll]);
+  end;
+
+begin
+  Lines := TStringList.Create;
+  ListNames := TStringList.Create;
+  LabelNames := TStringList.Create;
+  Words := TStringList.Create;
+  Tags := TStringList.Create;
+  Spaces := TRegExpr.Create('(' + WhiteSpace + ')+');
+  ClosedList := TRegExpr.Create(TerminalList);
+  try
+    ListNames.CaseSensitive := True;
+    LabelNames.CaseSensitive := True;
+    IndexNames(ListNames, Board.Arrays['lists'], 'title');
+    IndexNames(LabelNames, Board.Get('labels', TJSONArray(nil)), 'name');
+    Cards := Board.Arrays['cards'];
+    for I := 0 to Cards.Count - 1 do
+    begin
+      Card := Cards.Objects[I];
+      if Card.Get('archived', False) then Continue;
+      ListTitle := ListNames.Values[Card.Get('listId', '')];
+      Done := ClosedList.Exec(ListTitle);
+      Tags.Clear;
+      Words.Clear;
+      Priority := '';
+      CardLabels := Card.Get('labelIds', TJSONArray(nil));
+      if CardLabels <> nil then
+        for J := 0 to CardLabels.Count - 1 do
+        begin
+          Tag := LabelNames.Values[CardLabels.Strings[J]];
+          if Tag = '' then Continue;
+          if (Length(Tag) = 10) and (Copy(Tag, 1, 9) = 'priority:') and (Tag[10] in ['A'..'Z']) then
+          begin
+            if Priority = '' then Priority := Tag[10];
+          end else if Tag[1] = '@' then Tags.Add('@' + Respace(Copy(Tag, 2, Length(Tag))))
+          else Tags.Add('+' + Respace(Tag));
+        end;
+      Created := Day('createdAt');
+      Finished := Day('endAt');
+      Due := Day('dueAt');
+      StartDay := Day('startAt');
+      if Done then
+      begin
+        Words.Add('x');
+        if (Finished <> '') and (Created <> '') then Words.Add(Finished);
+      end else if Priority <> '' then Words.Add('(' + Priority + ')');
+      if Created <> '' then Words.Add(Created);
+      Title := Trim(Spaces.Replace(Card.Get('title', ''), ' '));
+      if Title = '' then Title := 'Untitled';
+      Words.Add(Title);
+      Words.AddStrings(Tags);
+      if Done and (Priority <> '') then Words.Add('pri:' + Priority);
+      if Due <> '' then Words.Add('due:' + Due);
+      if StartDay <> '' then Words.Add('t:' + StartDay);
+      if ListTitle <> '' then Words.Add('list:' + Respace(ListTitle));
+      Title := Words[0];
+      for J := 1 to Words.Count - 1 do Title := Title + ' ' + Words[J];
+      Lines.Add(Title);
+    end;
+    Lines.LineBreak := #10;
+    Result := Lines.Text;
+  finally
+    ClosedList.Free;
+    Spaces.Free;
+    Tags.Free;
+    Words.Free;
+    LabelNames.Free;
+    ListNames.Free;
     Lines.Free;
   end;
 end;

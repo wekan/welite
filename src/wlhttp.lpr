@@ -979,8 +979,9 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/exportExcel', rmGet, @ApiBoardDocument);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export/planner', rmGet, @ApiBoardDocument);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export/vikunja', rmGet, @ApiBoardVikunja);
-  HTTPRouter.RegisterRoute('/api/boards/:boardId/export/markdown', rmGet, @ApiBoardOutline);
-  HTTPRouter.RegisterRoute('/api/boards/:boardId/export/opml', rmGet, @ApiBoardOutline);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/export/markdown', rmGet, @ApiBoardTextExport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/export/opml', rmGet, @ApiBoardTextExport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/export/todotxt', rmGet, @ApiBoardTextExport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/exportExcel', rmGet, @ApiBoardDocument);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/exportPDF', rmGet, @ApiBoardDocument);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/exportPDF', rmGet, @ApiBoardDocument);

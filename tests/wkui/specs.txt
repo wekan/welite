@@ -585,3 +585,4 @@ import-export-format-audit.e2e.js: Taiga: malformed JSON and a document that is 
 import-export-format-audit.e2e.js: Hawaiian taiga import instructions render without an English fallback
 import-export-format-audit.e2e.js: Markdown export preserves task details and honors the export selection
 import-export-format-audit.e2e.js: OPML export preserves nested outlines, note whitespace and metadata
+import-export-format-audit.e2e.js: todo.txt export preserves task dates, list names and priority syntax
