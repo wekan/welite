@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Excel import uses localized WeKan export headers and creates one board per
+  eligible worksheet in a single transaction. The preview lists skipped
+  sheets, and the import preserves cached formula results and mapped dates.
+
 - CSV and TSV import offers a localized column mapping step for pasted or
   uploaded data. It preserves multiline Unicode cells, accepts a list name
   when the file omits the list column, and rejects invalid mappings before

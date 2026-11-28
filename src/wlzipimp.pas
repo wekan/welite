@@ -7,7 +7,7 @@ uses Classes, fpjson;
 
 function ZipAttachmentName(const Value: string; Used: TStringList): string;
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
-function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings = nil): TJSONArray;
+function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings = nil; Date1904: PBoolean = nil): TJSONArray;
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
 function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
 
@@ -177,7 +177,7 @@ begin
   finally Archive.Free; Reader.Free; end;
 end;
 
-function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings): TJSONArray;
+function ReadWorkbookRows(const Bytes: RawByteString; SheetNames: TStrings; Date1904: PBoolean): TJSONArray;
 var Archive:TUnZipper; Reader:TBoardZipReader; Shared:TStringList; Sheet, Row:TJSONArray;
   Xml:TXMLDocument; Node, Cells, Cell, Value:TDOMNode; I, Column, K:Integer;
   Name,Ref,Text,Kind:string; Raw:RawByteString;
@@ -202,13 +202,23 @@ begin
       Archive.OnDoneStream:=@Reader.FinishEntry;
       Archive.UnZipAllFiles;
       if not Reader.ReadEntry('xl/workbook.xml',Raw) then raise EConvertError.Create('Missing workbook');
-      if SheetNames<>nil then
+      if (SheetNames<>nil) or (Date1904<>nil) then
       begin
-        SheetNames.Clear;
+        if SheetNames<>nil then SheetNames.Clear;
         Xml:=XmlOf(Raw);
         try
+          if Date1904<>nil then
+          begin
+            Date1904^:=False;
+            Node:=Xml.DocumentElement.FindNode('workbookPr');
+            if Node is TDOMElement then
+            begin
+              Text:=UTF8Encode(TDOMElement(Node).GetAttribute('date1904'));
+              Date1904^:=(Text='1') or SameText(Text,'true');
+            end;
+          end;
           Cells:=Xml.DocumentElement.FindNode('sheets');
-          if Cells<>nil then
+          if (Cells<>nil) and (SheetNames<>nil) then
           begin
             Node:=Cells.FirstChild;
             while Node<>nil do

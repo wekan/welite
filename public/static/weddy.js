@@ -804,16 +804,27 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     openPopOver(el.dataset.pop || 'board-zip-import');
   });
   function csvMappingPreview(form, text) {
-    return callAsync('csvImportPreview', text).then(function (preview) {
+    var excel = form.dataset.source === 'excel';
+    return callAsync(excel ? 'excelImportPreview' : 'csvImportPreview', text).then(function (preview) {
       var mapping = form.parentElement.querySelector('.js-csv-mapping');
       var fields = mapping.querySelectorAll('select[data-field]');
       var extras = mapping.querySelector('.js-csv-extra-fields');
-      mapping.csvRows = preview.rows;
-      preview.rows[0].forEach(function (name, index) {
+      var first = excel ? preview.parts[0] : preview;
+      mapping.importSource = form.dataset.source;
+      mapping.importPayload = excel ? { excelBase64: text } : first.rows;
+      if (excel) {
+        var boards = mapping.querySelector('.js-csv-mapping-boards');
+        var skipped = mapping.querySelector('.js-csv-mapping-skipped');
+        boards.querySelector('span').textContent = preview.parts.map(function (part) { return part.title; }).join(', ');
+        boards.hidden = preview.parts.length < 2;
+        skipped.querySelector('span').textContent = preview.skipped.join(', ');
+        skipped.hidden = !preview.skipped.length;
+      }
+      first.rows[0].forEach(function (name, index) {
         var title = name || String(index + 1);
         fields.forEach(function (field) {
           field.add(new Option(title, index));
-          if (preview.columns[field.dataset.field] === index) field.value = String(index);
+          if (first.columns[field.dataset.field] === index) field.value = String(index);
         });
         var label = document.createElement('label');
         var input = document.createElement('input');
@@ -849,7 +860,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       return Number(input.value);
     });
     submit.disabled = true;
-    callAsync('importBoard', form.csvRows, { csvMapping: { columns: columns, listName: listName, customFieldColumns: customFieldColumns } }, 'csv')
+    callAsync('importBoard', form.importPayload, { csvMapping: { columns: columns, listName: listName, customFieldColumns: customFieldColumns } }, form.importSource)
       .then(function (board) {
         if (!board || !board._id) throw new Error('Missing board');
         window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
@@ -861,11 +872,28 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   });
   up.on('submit', '.js-external-board-import', function (event, form) {
     event.preventDefault();
-    var submit = form.querySelector('button[type="submit"]');
+    var submit = form.querySelector('[type="submit"]');
     var warning = form.querySelector('.warning');
     if (submit.disabled) return;
     submit.disabled = true;
     warning.hidden = true;
+    if (form.dataset.source === 'excel') {
+      var excelFile = form.querySelector('.js-import-file').files[0];
+      if (!excelFile) {
+        warning.hidden = false;
+        submit.disabled = false;
+        return;
+      }
+      var reader = new FileReader();
+      function failedExcelPreview() {
+        warning.hidden = false;
+        submit.disabled = false;
+      }
+      reader.onload = function () { csvMappingPreview(form, reader.result.split(',')[1]).catch(failedExcelPreview); };
+      reader.onerror = failedExcelPreview;
+      reader.readAsDataURL(excelFile);
+      return;
+    }
     if (form.dataset.source === 'csv') {
       var csvFile = form.querySelector('.js-csv-import-file').files[0];
       var csvText = csvFile ? csvFile.text() : Promise.resolve(form.querySelector('textarea').value);

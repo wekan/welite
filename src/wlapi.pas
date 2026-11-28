@@ -77,6 +77,7 @@ function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArra
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
 function CsvImportPreview(const Text:string):TJSONObject;
+function ExcelImportPreview(const Encoded:string):TJSONObject;
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
@@ -8069,7 +8070,7 @@ end;
 
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
-  Result:=(FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
+  Result:=(FormatName='excel') or (FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
     (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist');
 end;
 
@@ -8134,7 +8135,7 @@ begin
     else Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1]]));
 end;
 
-function CsvMappedBoard(Rows,RawMapping:TJSONData):TJSONObject; forward;
+function CsvMappedBoard(Rows,RawMapping:TJSONData; const BoardTitle:string=''; ExcelDates:Boolean=False; Date1904:Boolean=False):TJSONObject; forward;
 
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil; Quiet: Boolean = False; Prepared: TJSONObject = nil);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
@@ -9284,10 +9285,106 @@ begin
   finally Csv.Free; end;
 end;
 
-function CsvMappedBoard(Rows,RawMapping:TJSONData):TJSONObject;
+function ExcelImportPreview(const Encoded:string):TJSONObject;
+const ExportKeys:array[0..19] of string=('number','title','description','parent-card','owner','createdAt',
+  'last-modified-at','card-received','card-start','card-due','card-end','list','swimlane','assignee','members',
+  'requested-by','assigned-by','labels','overtime-hours','spent-time-hours');
+  ExportFields:array[1..19] of string=('title','description','parentCard','owner','createdAt','modifiedAt',
+    'receivedAt','startAt','dueAt','endAt','list','swimlane','assignees','members','requestedBy','assignedBy',
+    'labels','isOvertime','spentTime');
+var Workbook,Sheet,Rows,Parts,Skipped:TJSONArray; Header,Top:TJSONArray;
+  Columns,Guess,Part:TJSONObject; Names:TStringList; I,J,K,L,At:Integer; Caption,Title:string;
+  Words:TWLTranslator; Date1904:Boolean;
+
+  function ExportLayout(Row:TJSONArray):Boolean;
+  var N,V:Integer;
+  begin
+    if Row.Count<Length(ExportKeys) then Exit(False);
+    for N:=0 to LanguageCount-1 do
+    begin
+      Words:=TWLTranslator.Create(LanguageAt(N));
+      try
+        V:=0;
+        while (V<Length(ExportKeys)) and (Trim(Row.Strings[V])=Words.Text(ExportKeys[V],ExportKeys[V])) do Inc(V);
+        if V=Length(ExportKeys) then Exit(True);
+      finally Words.Free; end;
+    end;
+    Result:=False;
+  end;
+
+  function NamedHeader(Row:TJSONArray):Boolean;
+  var Name:string; N:Integer;
+  begin
+    for N:=0 to Row.Count-1 do
+    begin
+      Name:=LowerCase(Trim(Row.Strings[N]));
+      if (Name<>'') and (Pos('|'+Name+'|','|'+CsvAliases[0]+'|')>0) then Exit(True);
+    end;
+    Result:=False;
+  end;
+
+begin
+  Names:=TStringList.Create;
+  Workbook:=nil;
+  try
+    Workbook:=ReadWorkbookRows(DecodeStringBase64(Encoded,True),Names,@Date1904);
+    Result:=TJSONObject.Create;
+    try
+      Result.Add('date1904',Date1904);
+      Parts:=TJSONArray.Create; Result.Add('parts',Parts);
+      Skipped:=TJSONArray.Create; Result.Add('skipped',Skipped);
+      for I:=0 to Workbook.Count-1 do
+      begin
+        Sheet:=Workbook.Arrays[I];
+        Caption:='Sheet '+IntToStr(I+1);
+        if I<Names.Count then Caption:=Names[I];
+        At:=-1;
+        Columns:=nil;
+        for J:=0 to Min(Sheet.Count,30)-1 do
+        begin
+          Header:=Sheet.Arrays[J];
+          if ExportLayout(Header) then
+          begin
+            Columns:=TJSONObject.Create;
+            for K:=Low(ExportFields) to High(ExportFields) do Columns.Add(ExportFields[K],K);
+            At:=J;
+            Break;
+          end;
+          if not NamedHeader(Header) then Continue;
+          Guess:=GuessCsvColumns(Header);
+          if (J=0) or (Guess.Count>=4) then
+          begin Columns:=Guess; At:=J; Break; end;
+          Guess.Free;
+        end;
+        if At<0 then
+        begin Skipped.Add(Caption); Continue; end;
+        Part:=TJSONObject.Create; Parts.Add(Part);
+        Part.Add('columns',Columns);
+        Title:='';
+        if At>0 then
+        begin
+          Top:=Sheet.Arrays[0];
+          L:=0;
+          for K:=0 to Top.Count-1 do
+            if Trim(Top.Strings[K])<>'' then
+            begin Inc(L); Title:=Trim(Top.Strings[K]); end;
+          if L<>1 then Title:='';
+        end;
+        if (Title='') and (Workbook.Count>1) then Title:=Caption;
+        if Title='' then Title:='Imported Excel';
+        Part.Add('title',Title);
+        Rows:=TJSONArray.Create; Part.Add('rows',Rows);
+        for J:=At to Sheet.Count-1 do Rows.Add(Sheet.Arrays[J].Clone);
+      end;
+      if Parts.Count=0 then raise EConvertError.Create('No importable worksheet headers');
+    except Result.Free; raise; end;
+  finally Workbook.Free; Names.Free; end;
+end;
+
+function CsvMappedBoard(Rows,RawMapping:TJSONData; const BoardTitle:string; ExcelDates,Date1904:Boolean):TJSONObject;
 var Columns,Mapping,Card,Board,Authors,ParentTitles:TJSONObject; Lists,Lanes,Cards,Labels,Custom,Values,Tags,People:TJSONArray;
   Header,Row:TJSONArray; Field,Extra:TJSONData; I,J,K:Integer; Name,Key,Value,ListName,Title,Id,Parent:string;
-  Hours:Double; Stamp:TDateTime;
+  Hours,Serial:Double; Stamp:TDateTime; Decimal:TFormatSettings;
 
   function ColumnIndex(Data:TJSONData):Integer;
   begin
@@ -9368,7 +9465,8 @@ begin
       raise EConvertError.Create('CSV title or list mapping is missing');
     Result:=TJSONObject.Create;
     try
-      Board:=TJSONObject.Create(['title','Imported CSV']); Result.Add('board',Board);
+      Board:=TJSONObject.Create(['title',IfThen(BoardTitle='','Imported CSV',BoardTitle)]);
+      Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.'; Decimal.ThousandSeparator:=#0; Result.Add('board',Board);
       Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
       Lists:=TJSONArray.Create; Board.Add('lists',Lists);
       Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
@@ -9417,7 +9515,16 @@ begin
               for Name in Value.Split([',']) do
                 if Trim(Name)<>'' then Tags.Add(Named(Labels,Trim(Name),'name'));
             'receivedAt','startAt','dueAt','endAt','createdAt','modifiedAt':
-              if TryISO8601ToDate(Trim(Value),Stamp,True) then Card.Add(Key,Trim(Value));
+              if TryISO8601ToDate(Trim(Value),Stamp,True) then Card.Add(Key,Trim(Value))
+              else if ExcelDates and TryStrToFloat(Trim(Value),Serial,Decimal) and
+                (Serial>=0) and (Serial<2958466) then
+              begin
+                if Date1904 then Stamp:=EncodeDate(1904,1,1)+Serial
+                else if Serial<60 then Stamp:=EncodeDate(1899,12,31)+Serial
+                else Stamp:=EncodeDate(1899,12,30)+Serial;
+                if Stamp>=EncodeDate(9999,12,31)+1 then Continue;
+                Card.Add(Key,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',Stamp));
+              end;
             'spentTime':
               if TryStrToFloat(Trim(Value),Hours) and (Hours>=0) and not IsInfinite(Hours) then Card.Add(Key,Hours);
             'archived','isOvertime': Card.Add(Key,SameText(Trim(Value),'true') or (Trim(Value)='1'));
@@ -9448,7 +9555,7 @@ begin
 end;
 
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
-var Projects, Options, FileData, Mapping: TJSONData; BatchSql: TStringList; Ids: TJSONArray; Reply: TJSONObject; I,J: Integer;
+var Projects, Options, FileData, Mapping: TJSONData; Workbook,Part,Doc,SheetMapping:TJSONObject; EffectiveMapping:TJSONData; BatchSql: TStringList; Ids: TJSONArray; Reply: TJSONObject; I,J: Integer;
   Files, Members, Results: TJSONArray; FileRow, ResultRow: TJSONObject; Filename, Text, Encoded: string;
   procedure ImportOne(const Name, Content: string);
   var Payload: TJSONString;
@@ -9466,6 +9573,54 @@ begin
   if not (Args is TJSONArray) or ((Args.Count<>3) and (Args.Count<>4)) or not (Args.Items[0].JSONType in [jtObject,jtArray,jtString]) or
     not (Args.Items[1] is TJSONObject) or (Args.Items[2].JSONType<>jtString) then
   begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
+  if Args.Items[2].AsString='excel' then
+  begin
+    Workbook:=nil; Doc:=nil;
+    BatchSql:=TStringList.Create; Ids:=TJSONArray.Create;
+    try
+      try
+        if not (Args.Items[0] is TJSONObject) then raise EConvertError.Create('Missing Excel workbook');
+        Workbook:=ExcelImportPreview(TJSONObject(Args.Items[0]).Get('excelBase64',''));
+        Projects:=Workbook.Arrays['parts'];
+        Mapping:=TJSONObject(Args.Items[1]).Find('csvMapping');
+        for I:=0 to Projects.Count-1 do
+        begin
+          Part:=TJSONObject(Projects.Items[I]);
+          SheetMapping:=TJSONObject.Create;
+          try
+            SheetMapping.Add('columns',Part.Objects['columns'].Clone);
+            SheetMapping.Add('listName','Imported');
+            EffectiveMapping:=SheetMapping;
+            if (Mapping<>nil) and ((I=0) or
+              (Part.Arrays['rows'].Items[0].AsJSON=TJSONObject(Projects.Items[0]).Arrays['rows'].Items[0].AsJSON)) then
+              EffectiveMapping:=Mapping;
+            Doc:=CsvMappedBoard(Part.Arrays['rows'],EffectiveMapping,Part.Get('title',''),True,Workbook.Get('date1904',False));
+            try ImportBoardRequest(aRequest,aResponse,Tenant,Actor,'','excel',BatchSql,Ids,False,Doc);
+            finally FreeAndNil(Doc); end;
+            if Ids.Count<>I+1 then Exit;
+          finally SheetMapping.Free; end;
+        end;
+      except
+        on E:Exception do
+        begin
+          SendJson(aResponse,'{"error":"invalid-import-format","reason":"Invalid Excel workbook or mapping"}',400);
+          Exit;
+        end;
+      end;
+      if not Tenant.Db.Exec('BEGIN IMMEDIATE; '+BatchSql.Text+'COMMIT;') then
+      begin
+        Tenant.Db.Exec('ROLLBACK;');
+        SendError(aResponse,500,'Could not import workbook');
+        Exit;
+      end;
+      Reply:=TJSONObject.Create(['_id',Ids.Strings[0],'boardId',Ids.Strings[0]]);
+      try
+        Reply.Add('boardIds',Ids.Clone);
+        SendJson(aResponse,'{"result":'+Reply.AsJSON+'}');
+      finally Reply.Free; end;
+    finally Workbook.Free; Ids.Free; BatchSql.Free; end;
+    Exit;
+  end;
   if Args.Items[2].AsString='csv' then
   begin
     Mapping:=TJSONObject(Args.Items[1]).Find('csvMapping');
