@@ -6598,10 +6598,131 @@ begin
   finally Workbook.Free; SheetNames.Free; end;
 end;
 
+function BusinessmapImport(const Source:TJSONData):TJSONObject;
+var Workbook,Sheet,Header,Row,Lanes,Lists,Cards,Definitions,Fields,Labels,Tags,Comments:TJSONArray;
+  Board,Card,Parents:TJSONObject; I,Y,M,D:Integer; Id,Title,BoardTitle,Stage,Lane,Text,Name,Tag,Parent,Child,Color:string;
+  Parts:TStringArray; Day:TDateTime; CardNumber:Int64; Serial:Double; Decimal:TFormatSettings;
+  function Cell(const Key:string):string;
+  var C:Integer;
+  begin
+    Result:='';
+    for C:=0 to Header.Count-1 do
+      if SameText(Trim(Header.Strings[C]),Key) and (C<Row.Count) then Exit(Trim(Row.Strings[C]));
+  end;
+  procedure AddNamed(Rows:TJSONArray;const Id,Key,Value,Kind:string);
+  var C:Integer; Entry:TJSONObject;
+  begin
+    for C:=0 to Rows.Count-1 do if Rows.Objects[C].Get('_id','')=Id then Exit;
+    Entry:=TJSONObject.Create(['_id',Id,Key,Value,'sort',Rows.Count]);
+    if Kind<>'' then Entry.Add('type',Kind);
+    Rows.Add(Entry);
+  end;
+  procedure AddDeadline;
+  var Value:string;
+  begin
+    Value:=Cell('Deadline');
+    if Value='' then Exit;
+    Parts:=Value.Split(['/']);
+    if Length(Parts)=3 then
+    begin
+      M:=StrToIntDef(Parts[0],0); D:=StrToIntDef(Parts[1],0); Y:=StrToIntDef(Parts[2],0);
+      if (Y>0) and (Y<=9999) and (M>0) and (M<=12) and (D>0) and (D<=31) and TryEncodeDate(Y,M,D,Day) then
+        Card.Add('dueAt',FormatDateTime('yyyy-mm-dd',Day));
+    end
+    else if TryStrToFloat(Value,Serial,Decimal) and (Serial>0) and (Serial<2958466) then
+      Card.Add('dueAt',FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',EncodeDate(1899,12,30)+Serial))
+    else Card.Add('dueAt',Value);
+  end;
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing Businessmap workbook');
+  try Workbook:=ReadWorkbookRows(DecodeStringBase64(Source.AsString,True));
+  except raise EConvertError.Create('Invalid Businessmap workbook'); end;
+  Result:=TJSONObject.Create; Parents:=TJSONObject.Create;
+  try
+    try
+      Sheet:=Workbook.Arrays[0];
+      if Sheet.Count=0 then raise EConvertError.Create('Empty Businessmap workbook');
+      Header:=Sheet.Arrays[0]; Row:=Header;
+      if not SameText(Cell('Card ID'),'Card ID') or not SameText(Cell('Title'),'Title') then
+        raise EConvertError.Create('Missing Businessmap columns');
+      Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.';
+      Board:=TJSONObject.Create; Result.Add('board',Board);
+      Result.Add('importedAuthors',TJSONObject.Create);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      BoardTitle:='';
+      for I:=1 to Sheet.Count-1 do
+      begin
+        Row:=Sheet.Arrays[I]; Title:=Cell('Title'); if Title='' then Continue;
+        Id:=Cell('Card ID');
+        if Id='' then raise EConvertError.Create('Missing Businessmap card ID');
+        if BoardTitle='' then BoardTitle:=Cell('Board name');
+        Stage:=Cell('Column'); if Stage='' then Stage:='Cards';
+        Lane:=Cell('Lane'); if Lane='' then Lane:='Default';
+        AddNamed(Lists,Stage,'title',Stage,''); AddNamed(Lanes,Lane,'title',Lane,'');
+        Card:=TJSONObject.Create(['_id',Id,'title',Title,'description',Cell('Description'),
+          'listId',Stage,'swimlaneId',Lane,'sort',I]);
+        Cards.Add(Card);
+        AddDeadline;
+        Color:=LowerCase(Cell('Color'));
+        if ResolveColor(Color)<>'' then Card.Add('color',Color);
+        Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+        if TryStrToInt64(Id,CardNumber) then
+        begin
+          AddNamed(Definitions,'external-id','name','Card ID','number');
+          Fields.Add(TJSONObject.Create(['_id','external-id','value',CardNumber]));
+        end;
+        Text:=Cell('Priority');
+        if Text<>'' then
+        begin
+          AddNamed(Definitions,'priority','name','Priority','text');
+          Fields.Add(TJSONObject.Create(['_id','priority','value',Text]));
+        end;
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for Tag in Cell('Tags').Split([',',';']) do
+        begin
+          Name:=Trim(Tag); if Name='' then Continue;
+          AddNamed(Labels,Name,'name',Name,''); Tags.Add(Name);
+        end;
+        Text:=Cell('Comment');
+        if Text<>'' then Comments.Add(TJSONObject.Create(['_id',Id+':comment','cardId',Id,'text',Text]));
+        for Text in Cell('Links').Split([#10,';']) do
+        begin
+          Name:=Trim(Text);
+          if AnsiStartsText('Children:',Name) then
+          begin
+            for Tag in Copy(Name,10,MaxInt).Split([',']) do
+            begin
+              Child:=Trim(Tag);
+              if (Child<>'') and (Child<>Id) and (Parents.Find(Child)=nil) then Parents.Add(Child,Id);
+            end;
+          end
+          else if AnsiStartsText('Parent:',Name) then
+          begin
+            Parent:=Trim(Copy(Name,8,MaxInt));
+            if (Parent<>'') and (Parent<>Id) and (Parents.Find(Id)=nil) then Parents.Add(Id,Parent);
+          end;
+        end;
+      end;
+      for I:=0 to Cards.Count-1 do
+      begin
+        Card:=Cards.Objects[I]; Parent:=Parents.Get(Card.Get('_id',''),'');
+        if Parent<>'' then Card.Add('parentId',Parent);
+      end;
+      if BoardTitle='' then BoardTitle:='Businessmap cards';
+      Board.Add('title',BoardTitle);
+    except Result.Free; raise; end;
+  finally Parents.Free; Workbook.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7408,6 +7529,7 @@ begin
             else if SourceFormat='monday' then Body:=MondayImport(Value)
             else if SourceFormat='wrike' then Body:=WrikeImport(Value)
             else if SourceFormat='teamwork' then Body:=TeamworkImport(Value)
+            else if SourceFormat='businessmap' then Body:=BusinessmapImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

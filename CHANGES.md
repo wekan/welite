@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Businessmap workbooks import columns, swimlanes, deadlines, priorities,
+  colors, tags, comments and parent-child links.
+
 - Teamwork.com workbooks import task lists, due dates, tags, priorities,
   estimated hours, completion and subtask hierarchy.
 

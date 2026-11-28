@@ -535,3 +535,4 @@ import-export-format-audit.e2e.js: monday.com: a board export imports
 import-export-format-audit.e2e.js: Wrike: an import template imports
 import-export-format-audit.e2e.js: Wrike: custom statuses of a workflow import
 import-export-format-audit.e2e.js: Teamwork.com: an import template imports
+import-export-format-audit.e2e.js: Businessmap: a workbook imports
