@@ -6303,10 +6303,103 @@ begin
   except Result.Free; raise; end;
 end;
 
+function MondayImport(const Source:TJSONData):TJSONObject;
+var Workbook, Sheet, Row, Header, Lists,Lanes,Cards,Labels,Comments,Tags:TJSONArray;
+  Board,Authors,Card,Candidate,Comment:TJSONObject; I,J,K:Integer; Title,Group,Stage,Name,Id,Person,Due,Text,Tag:string;
+  ReadingRows:Boolean; Day:TDateTime; Serial:Double;
+  function Cell(const Key:string):string;
+  var K:Integer;
+  begin
+    Result:='';
+    if Header=nil then Exit;
+    for K:=0 to Header.Count-1 do
+      if SameText(Header.Strings[K],Key) and (K<Row.Count) then Exit(Trim(Row.Strings[K]));
+  end;
+  procedure Named(Rows:TJSONArray;const Id,Key,Value:string);
+  var K:Integer;
+  begin
+    for K:=0 to Rows.Count-1 do if Rows.Objects[K].Get('_id','')=Id then Exit;
+    Rows.Add(TJSONObject.Create(['_id',Id,Key,Value,'sort',Rows.Count]));
+  end;
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing monday.com workbook');
+  try Workbook:=ReadWorkbookRows(DecodeStringBase64(Source.AsString,True));
+  except raise EConvertError.Create('Invalid monday.com workbook'); end;
+  Result:=TJSONObject.Create;
+  try
+    try
+      Sheet:=Workbook.Arrays[0];
+      if (Sheet.Count=0) or (Sheet.Arrays[0].Count=0) then raise EConvertError.Create('Empty monday.com workbook');
+      Title:=Trim(Sheet.Arrays[0].Strings[0]);
+      Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      Header:=nil; Group:='Items'; ReadingRows:=False;
+      for I:=1 to Sheet.Count-1 do
+      begin
+        Row:=Sheet.Arrays[I];
+        if Row.Count=0 then begin ReadingRows:=False; Continue; end;
+        if SameText(Row.Strings[0],'Name') then begin Header:=Row; ReadingRows:=True; Continue; end;
+        if not ReadingRows then begin if Trim(Row.Strings[0])<>'' then Group:=Trim(Row.Strings[0]); Continue; end;
+        Name:=Cell('Name'); if Name='' then Continue;
+        Stage:=Cell('Status'); if Stage='' then Stage:='Items';
+        Named(Lanes,Group,'title',Group); Named(Lists,Stage,'title',Stage);
+        Id:=Cell('Item ID'); if Id='' then Id:='row-'+IntToStr(I);
+        Card:=TJSONObject.Create(['_id',Id,'title',Name,'listId',Stage,'swimlaneId',Group,'sort',I]);
+        Cards.Add(Card);
+        Person:=ImportAuthorIdentity(Authors,Cell('Person'));
+        if Person<>'' then Card.Add('userId',Person);
+        Due:=Cell('Date');
+        if TryStrToFloat(Due,Serial,DefaultFormatSettings) and (Serial>0) and (Serial<2958466) then
+        begin Day:=EncodeDate(1899,12,30)+Serial; Due:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',Day); end;
+        if Due<>'' then Card.Add('dueAt',Due);
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for Tag in Cell('Tags').Split([',',';']) do
+        begin
+          Text:=Trim(Tag); if Text='' then Continue;
+          Named(Labels,Text,'name',Text); Tags.Add(Text);
+        end;
+      end;
+      if Header=nil then raise EConvertError.Create('Missing monday.com item columns');
+      for J:=1 to Workbook.Count-1 do
+      begin
+        Sheet:=Workbook.Arrays[J]; Header:=nil;
+        for I:=0 to Sheet.Count-1 do
+        begin
+          Row:=Sheet.Arrays[I]; if Row.Count=0 then Continue;
+          if SameText(Row.Strings[0],'Item ID') then begin Header:=Row; Continue; end;
+          Text:=Cell('Update Content'); Name:=Cell('Item Name'); Id:=Cell('Item ID');
+          if Text='' then Continue;
+          Card:=nil;
+          for K:=0 to Cards.Count-1 do
+          begin
+            Candidate:=Cards.Objects[K];
+            if ((Id<>'') and (Candidate.Get('_id','')=Id)) or
+              ((Id='') and (Candidate.Get('title','')=Name)) then
+            begin
+              if Card<>nil then begin Card:=nil; Break; end;
+              Card:=Candidate;
+            end;
+          end;
+          if Card=nil then Continue;
+          Person:=ImportAuthorIdentity(Authors,Cell('User'));
+          Comment:=TJSONObject.Create(['_id','update-'+IntToStr(J)+':'+IntToStr(I),'cardId',Card.Get('_id',''),
+            'text',Text,'userId',Person]);
+          Comments.Add(Comment);
+        end;
+      end;
+    except Result.Free; raise; end;
+  finally Workbook.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7110,6 +7203,7 @@ begin
             else if SourceFormat='quire' then Body:=QuireImport(Value)
             else if SourceFormat='obsidian' then Body:=MarkdownBoardImport(Value,True)
             else if SourceFormat='nullboard' then Body:=NullboardImport(Value)
+            else if SourceFormat='monday' then Body:=MondayImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

@@ -7,12 +7,13 @@ uses Classes, fpjson;
 
 function ZipAttachmentName(const Value: string; Used: TStringList): string;
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
+function ReadWorkbookRows(const Bytes: RawByteString): TJSONArray;
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
 function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
 
 implementation
 
-uses SysUtils, StrUtils, zipper, jsonparser, base64;
+uses SysUtils, StrUtils, zipper, jsonparser, base64, DOM, XMLRead;
 
 const
   MaxArchive = 64 * 1024 * 1024;
@@ -174,6 +175,98 @@ begin
       end;
     except Result.Free; raise; end;
   finally Archive.Free; Reader.Free; end;
+end;
+
+function ReadWorkbookRows(const Bytes: RawByteString): TJSONArray;
+var Archive:TUnZipper; Reader:TBoardZipReader; Shared:TStringList; Sheet, Row:TJSONArray;
+  Xml:TXMLDocument; Node, Cells, Cell, Value:TDOMNode; I, Column, K:Integer;
+  Name,Ref,Text,Kind:string; Raw:RawByteString;
+  function XmlOf(const Content:RawByteString):TXMLDocument;
+  var Stream:TStringStream;
+  begin
+    if (Pos(#0,Content)>0) or (Pos('<!DOCTYPE',Content)>0) or (Pos('<!ENTITY',Content)>0) then
+      raise EConvertError.Create('Invalid workbook XML');
+    Stream:=TStringStream.Create(Content);
+    try ReadXMLFile(Result,Stream); finally Stream.Free; end;
+  end;
+begin
+  if (Length(Bytes)=0) or (Length(Bytes)>MaxArchive) then raise EConvertError.Create('Invalid workbook size');
+  Archive:=TUnZipper.Create; Reader:=TBoardZipReader.Create(Bytes); Shared:=TStringList.Create;
+  Result:=TJSONArray.Create;
+  try
+    try
+      Reader.Markdown:=True;
+      Archive.OnOpenInputStream:=@Reader.OpenInput;
+      Archive.OnCloseInputStream:=@Reader.CloseInput;
+      Archive.OnCreateStream:=@Reader.CreateEntry;
+      Archive.OnDoneStream:=@Reader.FinishEntry;
+      Archive.UnZipAllFiles;
+      if not Reader.ReadEntry('xl/workbook.xml',Raw) then raise EConvertError.Create('Missing workbook');
+      if Reader.ReadEntry('xl/sharedStrings.xml',Raw) then
+      begin
+        Xml:=XmlOf(Raw);
+        try
+          Node:=Xml.DocumentElement.FirstChild;
+          while Node<>nil do
+          begin
+            if ((Node.LocalName='si') or (Node.NodeName='si')) then Shared.Add(UTF8Encode(Node.TextContent));
+            Node:=Node.NextSibling;
+          end;
+        finally Xml.Free; end;
+      end;
+      for I:=1 to MaxEntries do
+      begin
+        Name:='xl/worksheets/sheet'+IntToStr(I)+'.xml';
+        if not Reader.ReadEntry(Name,Raw) then Break;
+        Xml:=XmlOf(Raw);
+        try
+          Cells:=Xml.DocumentElement.FindNode('sheetData');
+          Sheet:=TJSONArray.Create; Result.Add(Sheet);
+          if Cells=nil then Continue;
+          Node:=Cells.FirstChild;
+          while Node<>nil do
+          begin
+            if ((Node.LocalName='row') or (Node.NodeName='row')) then
+            begin
+              Row:=TJSONArray.Create; Sheet.Add(Row);
+              Cell:=Node.FirstChild;
+              while Cell<>nil do
+              begin
+                if ((Cell.LocalName='c') or (Cell.NodeName='c')) then
+                begin
+                  Ref:=UTF8Encode(TDOMElement(Cell).GetAttribute('r'));
+                  Kind:=UTF8Encode(TDOMElement(Cell).GetAttribute('t'));
+                  Column:=0; K:=1;
+                  while (K<=Length(Ref)) and (Ref[K] in ['A'..'Z']) do
+                  begin
+                    Column:=Column*26+Ord(Ref[K])-Ord('A')+1;
+                    if Column>16384 then raise EConvertError.Create('Invalid workbook cell');
+                    Inc(K);
+                  end;
+                  if Column=0 then Column:=Row.Count+1;
+                  if Column<=Row.Count then raise EConvertError.Create('Unordered workbook cell');
+                  while Row.Count<Column-1 do Row.Add('');
+                  Text:='';
+                  if Kind='inlineStr' then Value:=Cell.FindNode('is') else Value:=Cell.FindNode('v');
+                  if Value<>nil then Text:=UTF8Encode(Value.TextContent);
+                  if Kind='s' then
+                  begin
+                    K:=StrToIntDef(Text,-1);
+                    if (K<0) or (K>=Shared.Count) then raise EConvertError.Create('Invalid workbook string reference');
+                    Text:=Shared[K];
+                  end;
+                  Row.Add(Text);
+                end;
+                Cell:=Cell.NextSibling;
+              end;
+            end;
+            Node:=Node.NextSibling;
+          end;
+        finally Xml.Free; end;
+      end;
+      if Result.Count=0 then raise EConvertError.Create('Missing workbook sheets');
+    except Result.Free; raise; end;
+  finally Shared.Free; Reader.Free; Archive.Free; end;
 end;
 
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;

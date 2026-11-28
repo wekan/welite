@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- monday.com workbooks import board groups, status lists, people, due dates,
+  tags and updates as card comments.
+
 - Nullboard NBX imports lists and notes with separate titles and descriptions.
   Raw notes retain a label, and the report lists collapsed notes imported expanded.
 

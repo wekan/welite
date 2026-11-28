@@ -531,3 +531,4 @@ import-export-format-audit.e2e.js: Quire: a project CSV imports
 import-export-format-audit.e2e.js: Obsidian Kanban: a plugin board imports
 import-export-format-audit.e2e.js: MeisterTask: a project CSV imports
 import-export-format-audit.e2e.js: Nullboard: a .nbx board imports
+import-export-format-audit.e2e.js: monday.com: a board export imports
