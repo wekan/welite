@@ -2354,5 +2354,6 @@
   "import-board-instruction-wrike": "勒 Wrike 里把项目或者文件夹导出成 Excel，或者填好 Wrike 个 Excel 导入模板，再选搿只 .xlsx 文件。文件夹搭项目行变成泳道，Status 变成列表，任务变成卡片，保留 Key、父任务、负责人、开始搭结束日期、依赖关系搭描述；Priority、Duration 搭别个列变成自定义字段。",
   "import-board-instruction-teamwork": "勒 Teamwork.com 里填好 Excel 任务导入模板（Tasklist、Task、Description、Assign to、Start date、Due date、Priority、Estimated time、Tags、Status），存成 .xlsx，再选搿只文件。任务列表变成列表，任务变成卡片；用 -、# 或者 > 开头个任务变成上头任务个子任务（--、## 或者 >> 再深一层）。负责人、日期搭标签保留原来个位置；Priority、Estimated time 搭 Complete 变成自定义字段。",
   "import-board-instruction-businessmap": "勒 Businessmap（原来叫 Kanbanize）里打开 Advanced Search，选 Configure results 来选列，下载 Excel 文件，再选搿只 .xlsx 文件。列是照英文名字读取个（Title、Column、Lane、Owner、Deadline……）：假使侬个账号用别个语言，先把表头行改成英文。Column 变成列表，Lane 变成泳道；负责人、标签、颜色、日期、评论搭父项链接保留原来个位置，Priority、Size、Type 搭别个列变成自定义字段。",
-  "import-board-instruction-redmine": "勒 Redmine 里打开项目个 Issues，勒列表下头选 Also available in: CSV，选好列（All columns，带 Description）再导出，然后粘贴 CSV。Redmine 会用侬个语言写列名，所以导出前先勒 My account 里把语言设成 English。每只状态变成一只列表，问题变成卡片，跟踪器变成标签，负责人、作者、日期、父任务搭关联问题保留下来；优先级、分类、目标版本、预计时间、% Done 搭自定义字段变成自定义字段。"
+  "import-board-instruction-redmine": "勒 Redmine 里打开项目个 Issues，勒列表下头选 Also available in: CSV，选好列（All columns，带 Description）再导出，然后粘贴 CSV。Redmine 会用侬个语言写列名，所以导出前先勒 My account 里把语言设成 English。每只状态变成一只列表，问题变成卡片，跟踪器变成标签，负责人、作者、日期、父任务搭关联问题保留下来；优先级、分类、目标版本、预计时间、% Done 搭自定义字段变成自定义字段。",
+  "import-board-instruction-orgmode": "贴进 Org mode 文件，就是 Emacs、Orgzly 或者 Beorg 写出来个格式。最上层个标题变成列表，第二层个标题变成卡片。TODO 搭仔 DONE、优先级、标签、SCHEDULED、DEADLINE 搭仔 CLOSED 侪保留，复选框搭仔更下层个标题变成检查清单。"
 }

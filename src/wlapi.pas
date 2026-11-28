@@ -411,7 +411,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,DOM,XMLRead;
+uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,DOM,XMLRead,RegExpr;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -6598,6 +6598,267 @@ begin
   finally Workbook.Free; SheetNames.Free; end;
 end;
 
+function OrgModeImport(const Source:TJSONData):TJSONObject;
+type THeading=record
+  Level,Line:Integer;
+  Title,Priority,TagText:string;
+  Done:Boolean;
+end;
+var Headings:array of THeading;
+  Lines,Keywords:TStringArray;
+  States,DoneStates,Losses,Description:TStringList;
+  HeadingRe,KeywordRe,WordRe,PriorityRe,TagRe,CheckRe,PlanRe,DateRe,DrawerRe:TRegExpr;
+  Board,Card:TJSONObject; Lists,Cards,Labels,Checks,Items,Tags:TJSONArray;
+  Text,Line,Rest,Name,BoardTitle,ListId,CardId,LooseId,GroupId,Field,Drawer:string;
+  I,J,K,Count,ListLevel,CardLevel,GroupLevel,BodyEnd,Indent:Integer;
+  HasSeparator,Finished:Boolean;
+
+  procedure AddLabel(const Caption:string);
+  var L:Integer;
+  begin
+    for L:=0 to Tags.Count-1 do if Tags.Strings[L]=Caption then Exit;
+    Tags.Add(Caption);
+    for L:=0 to Labels.Count-1 do if Labels.Objects[L].Get('_id','')=Caption then Exit;
+    Labels.Add(TJSONObject.Create(['_id',Caption,'name',Caption,'color','blue']));
+  end;
+
+  function AddChecklist(const Caption:string):string;
+  begin
+    Result:=CardId+':check:'+IntToStr(Checks.Count);
+    Checks.Add(TJSONObject.Create(['_id',Result,'cardId',CardId,'title',Caption,'sort',Checks.Count]));
+  end;
+
+  procedure AddItem(const ChecklistId,Caption:string; IsFinished:Boolean);
+  begin
+    Items.Add(TJSONObject.Create(['_id','item-'+IntToStr(Items.Count),'checklistId',ChecklistId,
+      'title',Caption,'isFinished',IsFinished,'sort',Items.Count]));
+  end;
+
+  procedure AddLooseItem(const Caption:string; IsFinished:Boolean);
+  begin
+    if LooseId='' then
+      LooseId:=AddChecklist(IfThen(Headings[I].Title='','Checklist',Headings[I].Title));
+    AddItem(LooseId,Caption,IsFinished);
+  end;
+
+  procedure AddDate(const OutputField,Timestamp:string; LineNumber:Integer);
+  var Value:string; Stamp:TDateTime; Hour,Minute:Integer;
+  begin
+    if DateRe.Exec(Timestamp) then
+    begin
+      Value:=DateRe.Match[1];
+      Hour:=StrToIntDef(DateRe.Match[2],0); Minute:=StrToIntDef(DateRe.Match[3],0);
+      if (Hour<24) and (Minute<60) and TryISO8601ToDate(Value,Stamp,True) then
+      begin
+        if DateRe.Match[2]<>'' then Value:=Value+Format('T%.2d:%.2d:00Z',[Hour,Minute]);
+        Card.Strings[OutputField]:=Value;
+        if Trim(DateRe.Match[4])<>'' then
+          Losses.Add('/line/'+IntToStr(LineNumber)+': Org repeater or delay skipped');
+        Exit;
+      end;
+    end;
+    Losses.Add('/line/'+IntToStr(LineNumber)+': invalid Org date');
+  end;
+
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing Org outline');
+  Text:=Source.AsString;
+  if Length(Text)>16*1024*1024 then raise EConvertError.Create('Org outline is too large');
+  if Copy(Text,1,3)=#239#187#191 then Delete(Text,1,3);
+  Text:=StringReplace(Text,#13#10,#10,[rfReplaceAll]);
+  Lines:=StringReplace(Text,#13,#10,[rfReplaceAll]).Split([#10]);
+  States:=TStringList.Create; DoneStates:=TStringList.Create;
+  Losses:=TStringList.Create; Description:=TStringList.Create;
+  HeadingRe:=TRegExpr.Create('^(\*+)[ \t]+(.*)$');
+  KeywordRe:=TRegExpr.Create('(?i)^#\+(?:TODO|SEQ_TODO|TYP_TODO):\s*(.*)$');
+  WordRe:=TRegExpr.Create('^(\S+)(?:\s+|$)');
+  PriorityRe:=TRegExpr.Create('^\[#([A-Z0-9])\]\s*');
+  TagRe:=TRegExpr.Create('\s+(:[^\s:]+(?::[^\s:]+)*:)\s*$');
+  CheckRe:=TRegExpr.Create('^(?:[-+]|\d+[.)])\s+\[([ Xx-])\]\s+(.*)$');
+  PlanRe:=TRegExpr.Create('(SCHEDULED|DEADLINE|CLOSED):\s*([<\[][^>\]]*[>\]])');
+  DateRe:=TRegExpr.Create('^[<\[](\d{4}-\d{2}-\d{2})(?:\s+[^\s\d>\]]+)?'+
+    '(?:\s+(\d{1,2}):(\d{2})(?:-\d{1,2}:\d{2})?)?(\s+[^>\]]*)?[>\]]$');
+  DrawerRe:=TRegExpr.Create('^:([A-Za-z_-]+):$');
+  try
+    States.CaseSensitive:=True; DoneStates.CaseSensitive:=True;
+    for Line in Lines do
+    begin
+      if not KeywordRe.Exec(Trim(Line)) then Continue;
+      Rest:=KeywordRe.Match[1];
+      Keywords:=Rest.Split([' ',#9],TStringSplitOptions.ExcludeEmpty);
+      HasSeparator:=False;
+      for Name in Keywords do if Name='|' then HasSeparator:=True;
+      Finished:=False;
+      for J:=0 to High(Keywords) do
+      begin
+        Name:=Keywords[J];
+        if Name='|' then
+        begin
+          Finished:=True;
+          Continue;
+        end;
+        K:=Pos('(',Name);
+        if K>0 then SetLength(Name,K-1);
+        if Name='' then Continue;
+        if Finished or ((not HasSeparator) and (J=High(Keywords))) then DoneStates.Add(Name)
+        else States.Add(Name);
+      end;
+    end;
+    if (States.Count=0) and (DoneStates.Count=0) then
+    begin
+      States.Add('TODO'); DoneStates.Add('DONE');
+    end;
+    SetLength(Headings,Min(Length(Lines),100000));
+    Count:=0; BoardTitle:='Imported Org outline';
+    for I:=0 to High(Lines) do
+    begin
+      if not HeadingRe.Exec(Lines[I]) then
+      begin
+        if Count=0 then
+        begin
+          Line:=Trim(Lines[I]);
+          if AnsiStartsText('#+TITLE:',Line) then
+          begin
+            Name:=Trim(Copy(Line,9,MaxInt));
+            if Name<>'' then BoardTitle:=Name;
+          end
+          else if (Line<>'') and not AnsiStartsStr('#+',Line) then
+            Losses.Add('/line/'+IntToStr(I+1)+': text before the first heading skipped');
+        end;
+        Continue;
+      end;
+      if Count=Length(Headings) then raise EConvertError.Create('Too many Org headings');
+      Headings[Count].Level:=HeadingRe.MatchLen[1]; Headings[Count].Line:=I;
+      Rest:=HeadingRe.Match[2];
+      if WordRe.Exec(Rest) and ((States.IndexOf(WordRe.Match[1])>=0) or
+        (DoneStates.IndexOf(WordRe.Match[1])>=0)) then
+      begin
+        Headings[Count].Done:=DoneStates.IndexOf(WordRe.Match[1])>=0;
+        Delete(Rest,1,WordRe.MatchLen[0]);
+      end;
+      if PriorityRe.Exec(Rest) then
+      begin
+        Headings[Count].Priority:=PriorityRe.Match[1];
+        Delete(Rest,1,PriorityRe.MatchLen[0]);
+      end;
+      if TagRe.Exec(Rest) then
+      begin
+        Headings[Count].TagText:=TagRe.Match[1];
+        SetLength(Rest,TagRe.MatchPos[0]-1);
+      end;
+      Headings[Count].Title:=Trim(Rest);
+      Inc(Count);
+    end;
+    if Count=0 then raise EConvertError.Create('Org outline has no headings');
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create(['title',BoardTitle]); Result.Add('board',Board);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+      Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+      ListLevel:=0; CardLevel:=0; GroupLevel:=0;
+      for I:=0 to Count-1 do
+      begin
+        BodyEnd:=Length(Lines);
+        if I+1<Count then BodyEnd:=Headings[I+1].Line;
+        Name:=Headings[I].Title;
+        if (ListLevel=0) or (Headings[I].Level<=ListLevel) then
+        begin
+          ListLevel:=Headings[I].Level; CardLevel:=0;
+          if Name='' then Name:='Imported';
+          ListId:='list-'+IntToStr(Lists.Count);
+          Lists.Add(TJSONObject.Create(['_id',ListId,'title',Name,'sort',Lists.Count]));
+          for J:=Headings[I].Line+1 to BodyEnd-1 do
+            if (Trim(Lines[J])<>'') and not DrawerRe.Exec(Trim(Lines[J])) then
+            begin
+              Losses.Add('/line/'+IntToStr(J+1)+': text under list heading skipped');
+              Break;
+            end;
+          Continue;
+        end;
+        if (CardLevel=0) or (Headings[I].Level<=CardLevel) then
+        begin
+          CardLevel:=Headings[I].Level; GroupLevel:=0; LooseId:=''; Drawer:='';
+          if Name='' then Name:='Imported heading';
+          CardId:='card-'+IntToStr(Cards.Count);
+          Card:=TJSONObject.Create(['_id',CardId,'title',Name,'listId',ListId,'sort',Cards.Count]);
+          Cards.Add(Card);
+          Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+          if Headings[I].Priority<>'' then AddLabel('priority:'+Headings[I].Priority);
+          for Name in Headings[I].TagText.Split([':'],TStringSplitOptions.ExcludeEmpty) do AddLabel(Name);
+          if Headings[I].Done then AddLabel('done');
+          Description.Clear;
+          for J:=Headings[I].Line+1 to BodyEnd-1 do
+          begin
+            Line:=Trim(Lines[J]);
+            if Drawer<>'' then
+            begin
+              if SameText(Line,':END:') then Drawer:=''
+              else if (Drawer='PROPERTIES') and AnsiStartsText(':CREATED:',Line) then
+                AddDate('createdAt',Trim(Copy(Line,10,MaxInt)),J+1);
+              Continue;
+            end;
+            if DrawerRe.Exec(Line) then
+            begin
+              Drawer:=UpperCase(DrawerRe.Match[1]);
+              Continue;
+            end;
+            if (Description.Count=0) and (LooseId='') and PlanRe.Exec(Line) and (PlanRe.MatchPos[0]=1) then
+            begin
+              repeat
+                case PlanRe.Match[1] of
+                  'SCHEDULED': Field:='startAt';
+                  'DEADLINE': Field:='dueAt';
+                  else Field:='endAt';
+                end;
+                AddDate(Field,PlanRe.Match[2],J+1);
+              until not PlanRe.ExecNext;
+              Continue;
+            end;
+            if CheckRe.Exec(Line) then
+            begin
+              AddLooseItem(Trim(CheckRe.Match[2]),SameText(CheckRe.Match[1],'x'));
+              Continue;
+            end;
+            if (Line='') and (Description.Count=0) then Continue;
+            Line:=Lines[J]; Indent:=0;
+            while (Indent<3) and (Indent<Length(Line)) and (Line[Indent+1]=' ') do Inc(Indent);
+            Description.Add(Copy(Line,Indent+1,MaxInt));
+          end;
+          while (Description.Count>0) and (Description[Description.Count-1]='') do
+            Description.Delete(Description.Count-1);
+          Rest:='';
+          for J:=0 to Description.Count-1 do
+          begin
+            if J>0 then Rest:=Rest+#10;
+            Rest:=Rest+Description[J];
+          end;
+          Card.Add('description',Rest);
+          Continue;
+        end;
+        if (GroupLevel>0) and (Headings[I].Level<=GroupLevel) then GroupLevel:=0;
+        if GroupLevel>0 then AddItem(GroupId,Name,Headings[I].Done)
+        else if (I+1<Count) and (Headings[I+1].Level>Headings[I].Level) then
+        begin
+          GroupLevel:=Headings[I].Level;
+          GroupId:=AddChecklist(IfThen(Name='','Checklist',Name));
+        end
+        else AddLooseItem(Name,Headings[I].Done);
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except
+      Result.Free;
+      raise;
+    end;
+  finally
+    DrawerRe.Free; DateRe.Free; PlanRe.Free; CheckRe.Free; TagRe.Free;
+    PriorityRe.Free; WordRe.Free; KeywordRe.Free; HeadingRe.Free;
+    Description.Free; Losses.Free; DoneStates.Free; States.Free;
+  end;
+end;
+
 function TaskwarriorImport(const Source:TJSONData):TJSONObject;
 var Document,Entry,Notes,Note:TJSONData; Tasks,Lists,Cards,Labels,Comments,Tags,Dependencies:TJSONArray;
   Task,Board,Card,Comment:TJSONObject;
@@ -7188,7 +7449,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7999,6 +8260,7 @@ begin
             else if SourceFormat='opml' then Body:=OpmlImport(Value)
             else if SourceFormat='todotxt' then Body:=TodoTxtImport(Value)
             else if SourceFormat='taskwarrior' then Body:=TaskwarriorImport(Value)
+            else if SourceFormat='orgmode' then Body:=OrgModeImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

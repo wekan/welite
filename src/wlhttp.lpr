@@ -948,6 +948,7 @@ begin
   HTTPRouter.RegisterRoute('/import/opml', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/todotxt', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/taskwarrior', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/orgmode', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

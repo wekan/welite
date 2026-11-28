@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Org outlines import headings as lists and cards, retaining task state,
+  priorities, tags, planning dates, notes and checklists. Import instructions
+  use WeKan’s translations and the Hawaiian instructions pass the shared audit.
+
 - Import forms display the format instructions from WeKan’s translation
   catalogs. The shared Playwright audit verifies 17 of those forms in Hawaiian.
 
