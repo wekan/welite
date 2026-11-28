@@ -6646,6 +6646,327 @@ end;
 
 type EExternalArchiveMissingData=class(EConvertError);
 
+function TaigaImport(const Source:TJSONData):TJSONObject;
+const CollectionNames:array[0..3] of string=('epics','user_stories','tasks','issues');
+  Prefixes:array[0..3] of string=('epic:','story:','task:','issue:');
+  LaneNames:array[0..3] of string=('Epics','Default','Default','Issues');
+  AttributeNames:array[0..3] of string=('epiccustomattributes','userstorycustomattributes','taskcustomattributes','issuecustomattributes');
+var Dump,Board,Authors,Task,Card,Entry,Comment,Attrs,Flow:TJSONObject;
+  Lists,Lanes,Cards,Labels,Definitions,Comments,Sprints,Fields,Tags,People:TJSONArray;
+  Stories,Entries,Part,Value:TJSONData; Losses:TStringList; EpicParents,StoryLists,ArchivedStatuses:TJSONObject;
+  Kind,I,J,N,Total:Integer; Id,Ref,Name,Stage,Lane,Color,Text,Author,Parent,Path,Sprint,FieldKind:string;
+  Points,Numeric:Double;
+
+  function ReadText(Obj:TJSONObject; const Key:string):string;
+  var Data:TJSONData;
+  begin
+    Result:='';
+    Data:=Obj.Find(Key);
+    if (Data<>nil) and (Data.JSONType in [jtString,jtNumber]) then Result:=Trim(Data.AsString);
+  end;
+
+  function DateText(Obj:TJSONObject; const Field:string):string;
+  var At:TDateTime; Text:string; P:Integer;
+  begin
+    Result:=''; Text:=ReadText(Obj,Field);
+    if Text='' then Exit;
+    P:=Length(Text)-4;
+    if (P>10) and (Text[P] in ['+','-']) then Insert(':',Text,P+3);
+    if TryISO8601ToDate(Text,At,True) then
+      Result:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',At)
+    else Losses.Add(Path+'/'+Field+': invalid date');
+  end;
+
+  procedure DateTo(Dest,Source:TJSONObject; const Key,Original:string);
+  var Text:string;
+  begin
+    Text:=DateText(Source,Original);
+    if Text<>'' then Dest.Add(Key,Text);
+  end;
+
+  function FindNamed(Table:TJSONArray; const Id:string):TJSONObject;
+  var K:Integer;
+  begin
+    for K:=0 to Table.Count-1 do
+      if Table.Objects[K].Get('_id','')=Id then Exit(Table.Objects[K]);
+    Result:=nil;
+  end;
+
+  procedure AddNamed(Table:TJSONArray; const Id,Key,Caption,Kind:string);
+  var Item:TJSONObject;
+  begin
+    if FindNamed(Table,Id)<>nil then Exit;
+    Item:=TJSONObject.Create(['_id',Id,Key,Caption,'sort',Table.Count]);
+    if Kind<>'' then Item.Add('type',Kind);
+    if Table=Labels then Item.Add('color','blue');
+    Table.Add(Item);
+  end;
+
+  function NearLabelColor(const Value:string):string;
+  var C:LongInt; Raw,Other:string; SourceRgb,Rgb,Dist,Best,I,J,Shift:Integer;
+  begin
+    Result:='blue'; Raw:=NormalizeHex(Value);
+    if not TryStrToInt('$'+Copy(Raw,2,6),C) then Exit;
+    SourceRgb:=C; Best:=MaxInt;
+    for I:=Low(LABEL_COLORS) to High(LABEL_COLORS) do
+    begin
+      Other:=LABEL_COLORS[I].Hex;
+      Rgb:=StrToInt('$'+Copy(Other,2,6)); Dist:=0;
+      for J:=0 to 2 do
+      begin
+        Shift:=J*8;
+        Inc(Dist,Sqr(((SourceRgb shr Shift) and 255)-((Rgb shr Shift) and 255)));
+      end;
+      if Dist<Best then
+      begin Best:=Dist; Result:=LABEL_COLORS[I].Name; end;
+    end;
+  end;
+
+  procedure AddTag(const Caption:string);
+  var N:Integer; Data,Pair:TJSONData; Item:TJSONObject;
+  begin
+    if Caption='' then Exit;
+    for N:=0 to Tags.Count-1 do if Tags.Strings[N]=Caption then Exit;
+    Tags.Add(Caption);
+    if FindNamed(Labels,Caption)<>nil then Exit;
+    AddNamed(Labels,Caption,'name',Caption,'');
+    Item:=Labels.Objects[Labels.Count-1];
+    Data:=Dump.Find('tags_colors');
+    if Data is TJSONArray then
+      for N:=0 to Data.Count-1 do
+      begin
+        Pair:=Data.Items[N];
+        if not (Pair is TJSONArray) or (Pair.Count<2) or (Pair.Items[0].AsString<>Caption) then Continue;
+        if Pair.Items[1] is TJSONString then Item.Strings['color']:=NearLabelColor(Pair.Items[1].AsString);
+        Break;
+      end;
+  end;
+
+  procedure AddField(const Caption,Kind:string; Value:TJSONData);
+  var Item:TJSONObject;
+  begin
+    AddNamed(Definitions,Caption,'name',Caption,Kind);
+    Item:=TJSONObject.Create(['_id',Caption]); Fields.Add(Item); Item.Add('value',Value);
+  end;
+
+  function RoleComputable(const Role:string):Boolean;
+  var Roles:TJSONData; K:Integer; Entry:TJSONObject;
+  begin
+    Result:=True; Roles:=Dump.Find('roles');
+    if not (Roles is TJSONArray) then Exit;
+    for K:=0 to Roles.Count-1 do
+      if Roles.Items[K] is TJSONObject then
+      begin
+        Entry:=TJSONObject(Roles.Items[K]);
+        if Entry.Get('name','')=Role then Exit(Entry.Get('computable',True));
+      end;
+  end;
+
+begin
+  if not (Source is TJSONObject) or not (TJSONObject(Source).Find('user_stories') is TJSONArray) then
+    raise EConvertError.Create('Invalid Taiga project dump');
+  Dump:=TJSONObject(Source);
+  Total:=0;
+  for Name in CollectionNames do
+  begin
+    Entries:=Dump.Find(Name);
+    if Entries is TJSONArray then Inc(Total,Entries.Count);
+  end;
+  if Total>50000 then raise EConvertError.Create('Too many Taiga items');
+  Losses:=TStringList.Create; EpicParents:=TJSONObject.Create;
+  StoryLists:=TJSONObject.Create; ArchivedStatuses:=TJSONObject.Create;
+  Result:=TJSONObject.Create;
+  try
+    try
+      Name:=ReadText(Dump,'name'); if Name='' then Name:='Imported Taiga';
+      Board:=TJSONObject.Create(['title',Name,'description',Dump.Get('description','')]); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      Sprints:=TJSONArray.Create; Board.Add('taigaSprints',Sprints);
+      Entries:=Dump.Find('milestones');
+      if Entries is TJSONArray then
+        for I:=0 to Entries.Count-1 do
+        begin
+          if not (Entries.Items[I] is TJSONObject) then Continue;
+          Entry:=TJSONObject(Entries.Items[I]); Name:=ReadText(Entry,'name');
+          if (Name='') or Entry.Get('closed',False) then Continue;
+          Path:='/milestones/'+IntToStr(I);
+          Comment:=TJSONObject.Create(['name',Name,'state','planned']); Sprints.Add(Comment);
+          DateTo(Comment,Entry,'plannedStart','estimated_start'); DateTo(Comment,Entry,'plannedEnd','estimated_finish');
+        end;
+      AddNamed(Lanes,'Default','title','Default','');
+      Entries:=Dump.Find('swimlanes');
+      if Entries is TJSONArray then
+        for I:=0 to Entries.Count-1 do if Entries.Items[I] is TJSONObject then
+        begin
+          Name:=ReadText(TJSONObject(Entries.Items[I]),'name');
+          if Name<>'' then AddNamed(Lanes,Name,'title',Name,'');
+        end;
+      Entries:=Dump.Find('us_statuses');
+      if Entries is TJSONArray then
+        for I:=0 to Entries.Count-1 do
+          if Entries.Items[I] is TJSONObject then
+          begin
+            Entry:=TJSONObject(Entries.Items[I]); Name:=ReadText(Entry,'name');
+            if Name='' then Continue;
+            AddNamed(Lists,Name,'title',Name,'');
+            if Entry.Get('is_archived',False) and (ArchivedStatuses.Find(Name)=nil) then ArchivedStatuses.Add(Name,True);
+          end;
+      for Kind:=Low(CollectionNames) to High(CollectionNames) do
+      begin
+        Entries:=Dump.Find(CollectionNames[Kind]);
+        if not (Entries is TJSONArray) then Continue;
+        for I:=0 to Entries.Count-1 do
+        begin
+          if not (Entries.Items[I] is TJSONObject) then Continue;
+          Task:=TJSONObject(Entries.Items[I]); Path:='/'+CollectionNames[Kind]+'/'+IntToStr(I);
+          Name:=ReadText(Task,'subject'); if Name='' then Continue;
+          Ref:=ReadText(Task,'ref'); if Ref='' then Ref:='row-'+IntToStr(I);
+          Id:=Prefixes[Kind]+Ref;
+          Stage:=ReadText(Task,'status'); if Stage='' then Stage:='No status';
+          Lane:=LaneNames[Kind];
+          Parent:='';
+          if Kind=1 then
+          begin
+            Text:=ReadText(Task,'swimlane'); if Text<>'' then Lane:=Text;
+            Parent:=EpicParents.Get(Ref,'');
+            if StoryLists.Find(Ref)=nil then StoryLists.Add(Ref,Stage);
+          end;
+          if Kind=2 then
+          begin
+            Text:=ReadText(Task,'user_story');
+            if Text<>'' then
+            begin Parent:='story:'+Text; Stage:=StoryLists.Get(Text,Stage); end;
+          end;
+          AddNamed(Lists,Stage,'title',Stage,''); AddNamed(Lanes,Lane,'title',Lane,'');
+          Card:=TJSONObject.Create(['_id',Id,'title',Name,'listId',Stage,'swimlaneId',Lane,
+            'description',Task.Get('description',''),'requestedBy',ReadText(Task,'owner'),'sort',Cards.Count,
+            'archived',ArchivedStatuses.Get(Stage,False)]);
+          Cards.Add(Card);
+          if Parent<>'' then Card.Add('parentId',Parent);
+          Sprint:=ReadText(Task,'milestone'); if Sprint<>'' then Card.Add('taigaSprint',Sprint);
+          if Task.Get('is_blocked',False) then
+          begin
+            Text:=ReadText(Task,'blocked_note');
+            Flow:=TJSONObject.Create(['blocked',True,'blockedReason',Text]); Card.Add('taigaFlow',Flow);
+          end;
+          Color:=ResolveColor(ReadText(Task,'color')); if Color<>'' then Card.Add('color',Color);
+          DateTo(Card,Task,'dueAt','due_date'); DateTo(Card,Task,'createdAt','created_date');
+          DateTo(Card,Task,'modifiedAt','modified_date');
+          if Kind=1 then DateTo(Card,Task,'endAt','finish_date')
+          else DateTo(Card,Task,'endAt','finished_date');
+          if Kind=0 then
+          begin
+            Stories:=Task.Find('related_user_stories');
+            if Stories is TJSONArray then
+              for J:=0 to Stories.Count-1 do
+                if Stories.Items[J] is TJSONObject then
+                begin
+                  Entry:=TJSONObject(Stories.Items[J]);
+                  Text:=ReadText(Entry,'source_project_slug');
+                  if (Text<>'') and (Text<>ReadText(Dump,'slug')) then
+                  begin Losses.Add(Path+'/related_user_stories: external story skipped'); Continue; end;
+                  Text:=ReadText(Entry,'user_story');
+                  if (Text<>'') and (EpicParents.Find(Text)=nil) then EpicParents.Add(Text,Id);
+                end;
+          end;
+          People:=TJSONArray.Create; Card.Add('assignees',People);
+          Author:=ImportAuthorIdentity(Authors,ReadText(Task,'assigned_to'));
+          if Author<>'' then People.Add(Author);
+          Part:=Task.Find('assigned_users');
+          if Part is TJSONArray then
+            for J:=0 to Part.Count-1 do
+              if Part.Items[J] is TJSONString then
+              begin
+                Text:=Part.Items[J].AsString;
+                if Text=ReadText(Task,'assigned_to') then Continue;
+                Author:=ImportAuthorIdentity(Authors,Text);
+                if Author<>'' then People.Add(Author);
+              end;
+          Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+          Part:=Task.Find('tags');
+          if Part is TJSONArray then
+            for J:=0 to Part.Count-1 do
+            begin
+              Value:=Part.Items[J];
+              if Value is TJSONString then AddTag(Value.AsString)
+              else if (Value is TJSONArray) and (Value.Count>0) and (Value.Items[0] is TJSONString) then AddTag(Value.Items[0].AsString);
+            end;
+          if Kind=3 then
+            for Text in ['type','severity','priority'] do
+            begin Name:=ReadText(Task,Text); if Name<>'' then AddTag(Text+':'+Name); end;
+          Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+          if Kind=2 then
+          begin
+            Text:=ReadText(Task,'status');
+            if Text<>'' then AddField('Task status','text',TJSONString.Create(Text));
+          end;
+          Points:=0; Part:=Task.Find('role_points');
+          if Part is TJSONArray then
+            for J:=0 to Part.Count-1 do
+              if Part.Items[J] is TJSONObject then
+              begin
+                Entry:=TJSONObject(Part.Items[J]); Text:=ReadText(Entry,'points');
+                if RoleComputable(ReadText(Entry,'role')) and TryStrToFloat(Text,Numeric) and
+                  not IsNan(Numeric) and not IsInfinite(Numeric) then Points:=Points+Numeric;
+              end;
+          if Points>0 then AddField('Story points','number',TJSONFloatNumber.Create(Points));
+          Part:=Task.Find('custom_attributes_values');
+          if Part is TJSONObject then
+          begin
+            Attrs:=TJSONObject(Part);
+            for J:=0 to Attrs.Count-1 do
+            begin
+              Name:=Attrs.Names[J]; Value:=Attrs.Items[J];
+              FieldKind:='';
+              Part:=Dump.Find(AttributeNames[Kind]);
+              if Part is TJSONArray then
+                for N:=0 to Part.Count-1 do
+                  if (Part.Items[N] is TJSONObject) and (ReadText(TJSONObject(Part.Items[N]),'name')=Name) then
+                  begin FieldKind:=ReadText(TJSONObject(Part.Items[N]),'type'); Break; end;
+              if (Value is TJSONNumber) or ((FieldKind='number') and (Value is TJSONString) and
+                TryStrToFloat(Value.AsString,Numeric) and not IsNan(Numeric) and not IsInfinite(Numeric)) then
+              begin
+                if Value is TJSONNumber then Numeric:=Value.AsFloat;
+                AddField(Name,'number',TJSONFloatNumber.Create(Numeric));
+              end
+              else if Value is TJSONBoolean then AddField(Name,'checkbox',Value.Clone)
+              else if Value is TJSONString then AddField(Name,'text',Value.Clone);
+            end;
+          end;
+          Part:=Task.Find('history');
+          if Part is TJSONArray then
+            for J:=0 to Part.Count-1 do
+            begin
+              if not (Part.Items[J] is TJSONObject) then Continue;
+              Entry:=TJSONObject(Part.Items[J]); Text:=ReadText(Entry,'comment');
+              if (Text='') or Entry.Get('is_hidden',False) or (ReadText(Entry,'delete_comment_date')<>'') then Continue;
+              Comment:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Text]);
+              Comments.Add(Comment);
+              Value:=Entry.Find('user'); Name:='';
+              if Value is TJSONArray then
+              begin
+                if Value.Count>0 then Name:=Value.Items[0].AsString;
+                if (Value.Count>1) and (Value.Items[1] is TJSONString) and (Value.Items[1].AsString<>'') then Name:=Value.Items[1].AsString;
+              end;
+              Author:=ImportAuthorIdentity(Authors,Name);
+              if Author<>'' then Comment.Add('userId',Author);
+              DateTo(Comment,Entry,'createdAt','created_at');
+            end;
+          Part:=Task.Find('attachments');
+          if (Part is TJSONArray) and (Part.Count>0) then Losses.Add(Path+'/attachments: embedded files skipped');
+        end;
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except Result.Free; raise; end;
+  finally ArchivedStatuses.Free; StoryLists.Free; EpicParents.Free; Losses.Free; end;
+end;
+
 function PlaneImport(const Source:TJSONData):TJSONObject;
 var Files,Issues,Lists,Lanes,Cards,Labels,Definitions,Fields,Tags,People,Comments,Links,Dependencies:TJSONArray;
   Board,Authors,Issue,Card,Entry,Comment:TJSONObject;
@@ -9260,7 +9581,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='excel') or (FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner') or (FormatName='vikunja') or (FormatName='notion') or (FormatName='plane');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner') or (FormatName='vikunja') or (FormatName='notion') or (FormatName='plane') or (FormatName='taiga');
 end;
 
 const ImportRecoveryType='import-completed-with-warnings';
@@ -9330,7 +9651,7 @@ procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail,ListWipSql:string;
-  Body,Input,Row,Reply,SourceDocument,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
+  Body,Input,Row,Reply,SourceDocument,MemberMap,CardCreations,ImportedListLanes,TaigaSprints:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
@@ -9430,6 +9751,56 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
           ') WHERE id='+QuotedStr(Id)+' AND boardId='+Board+'; ';
     finally Extra.Free;Selected.Free;end;
   end;
+  procedure ImportTaigaSprints;
+  var Source,DateValue:TJSONData; Entry,Doc:TJSONObject; K:Integer; Name,Id,Key:string; At:TDateTime;
+  begin
+    if SourceFormat<>'taiga' then Exit;
+    Source:=Input.Find('taigaSprints');
+    if not (Source is TJSONArray) or (Source.Count=0) then Exit;
+    if not IsShared(T.Db) then
+      Sql:=Sql+'CREATE TABLE IF NOT EXISTS _wl_scrum_sprints('+
+        'id TEXT PRIMARY KEY,boardId TEXT NOT NULL,document TEXT NOT NULL CHECK(json_valid(document))); ';
+    for K:=0 to Source.Count-1 do
+    begin
+      Entry:=TJSONObject(Source.Items[K]);
+      Name:=Text(Entry,'name');
+      if (Name='') or (TaigaSprints.Find(Name)<>nil) then Continue;
+      Id:=NewId; TaigaSprints.Add(Name,Id);
+      Doc:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'name',Name,'state','planned','revision',1,
+        'incarnation',NewId,'createdBy',Actor,'updatedBy',Actor,'createdAt',DateTimeToUnix(Now,False)*1000,
+        'updatedAt',DateTimeToUnix(Now,False)*1000]);
+      try
+        for Key in ['plannedStart','plannedEnd'] do
+        begin
+          DateValue:=Entry.Find(Key);
+          if (DateValue is TJSONString) and TryISO8601ToDate(DateValue.AsString,At,True) then
+            Doc.Add(Key,DateTimeToUnix(At,True)*1000);
+        end;
+        if IsShared(T.Db) then
+          Sql:=Sql+InsertDocSql(T.Db,'scrumSprints',Doc,
+            '{"createdAt":"date","updatedAt":"date","plannedStart":"date","plannedEnd":"date","revision":"int"}')
+        else Sql:=Sql+'INSERT INTO _wl_scrum_sprints(id,boardId,document) VALUES('+
+          QuotedStr(Id)+','+Board+','+QuotedStr(Doc.AsJSON)+'); ';
+      finally Doc.Free; end;
+    end;
+  end;
+
+  procedure ImportTaigaCard(Entry:TJSONObject; const Id:string);
+  var Delta:TJSONObject; Field:TJSONData; Sprint:string;
+  begin
+    if SourceFormat<>'taiga' then Exit;
+    Delta:=TJSONObject.Create;
+    try
+      Field:=Entry.Find('taigaFlow');
+      if Field is TJSONObject then Delta.Add('flow',Field.Clone);
+      Sprint:=TaigaSprints.Get(Text(Entry,'taigaSprint'),'');
+      if Sprint<>'' then Delta.Add('scrum',TJSONObject.Create(['sprintId',Sprint]));
+      if Delta.Count>0 then
+        Sql:=Sql+'UPDATE cards SET extra_json=json_patch(extra_json,'+QuotedStr(Delta.AsJSON)+
+          ') WHERE id='+QuotedStr(Id)+' AND boardId='+Board+'; ';
+    finally Delta.Free; end;
+  end;
+
   procedure ImportCardDecorations(Entry:TJSONObject;const Id:string);
   var Extra:TJSONObject; Field:TJSONData; Key,Sets:string;
   begin
@@ -10063,7 +10434,7 @@ begin
     end;
   end;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
-  MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedListLanes:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
+  TaigaSprints:=TJSONObject.Create;MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedListLanes:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
   for I:=0 to High(Maps) do Maps[I]:=nil;
   try
     try
@@ -10120,6 +10491,7 @@ begin
             else if SourceFormat='vikunja' then Body:=VikunjaImport(Value)
             else if SourceFormat='notion' then Body:=NotionImport(Value)
             else if SourceFormat='plane' then Body:=PlaneImport(Value)
+            else if SourceFormat='taiga' then Body:=TaigaImport(Value)
             else if SourceFormat='csv' then Body:=CsvMappedBoard(Value,nil)
             else if SourceFormat='wekan' then
             begin
@@ -10218,6 +10590,7 @@ begin
       end;
       ImportDefinitions;
       ImportLabels;
+      ImportTaigaSprints;
       DefaultLane:='';DefaultList:='';
       if TargetCard <> '' then
       begin
@@ -10355,6 +10728,7 @@ begin
         ImportParentLinks(Row,CardId);
         ImportCardPeople(Row,CardId);
         ImportCardDecorations(Row,CardId);
+        ImportTaigaCard(Row,CardId);
         ImportCardVoting(Row,CardId);
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);
@@ -10420,7 +10794,7 @@ begin
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally
     if not Committed then for I:=0 to Files.Count-1 do DeleteFile(Files[I]);
-    ImportedMembers.Free;ImportedListLanes.Free;CardCreations.Free;MemberMap.Free;Files.Free;
+    ImportedMembers.Free;TaigaSprints.Free;ImportedListLanes.Free;CardCreations.Free;MemberMap.Free;Files.Free;
     for I:=0 to High(Maps) do Maps[I].Free;
     Body.Free;
   end;

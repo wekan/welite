@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Taiga project dumps import stories, tasks, epics and issues, with comments,
+  custom fields, relationships, blocked status and planned sprints. Hawaiian
+  import instructions are verified for all 22 HTML5 formats in the audit.
+
 - Plane imports project exports as cards, with projects as swimlanes and
   states as lists. Dates, people, labels, issue relationships, comments and
   custom fields are mapped, and ZIPs may hold exports from multiple projects.

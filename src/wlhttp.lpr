@@ -957,6 +957,7 @@ begin
   HTTPRouter.RegisterRoute('/import/vikunja', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/notion', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/plane', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/taiga', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);
