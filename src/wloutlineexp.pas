@@ -379,7 +379,7 @@ function OrgModeBoard(Board: TJSONObject): string;
 var Lines, ListNames, LabelNames, ListTitles: TStringList;
   Spaces, ClosedList, PropertySeparators: TRegExpr;
   Lists, Cards, CardLabels, Checklists, Items, Fields, Values, Options: TJSONArray;
-  Card, Checklist, Item, Field, Entry, Option, Settings: TJSONObject;
+  Card, Checklist, Item, Field, Entry, Settings: TJSONObject;
   Value: TJSONData;
   ListTitle, Title, Tag, Tags, Priority, State, Plan, Stamp, Repeater, Description, Line, Name, FieldText: string;
   I, J, K, N, L, FirstItem, PropertyStart: Integer;
@@ -389,6 +389,19 @@ var Lines, ListNames, LabelNames, ListTitles: TStringList;
   begin
     Result := Trim(Spaces.Replace(Text, ' '));
     if Result = '' then Result := Fallback;
+  end;
+
+  function OrgFieldValue(Data: TJSONData; Choices: TJSONArray): string;
+  var Index: Integer; Choice: TJSONObject;
+  begin
+    if Data.JSONType = jtBoolean then Exit(Data.AsJSON);
+    Result := Data.AsString;
+    if (Choices = nil) or (Data.JSONType <> jtString) then Exit;
+    for Index := 0 to Choices.Count - 1 do
+    begin
+      Choice := Choices.Objects[Index];
+      if Choice.Get('_id','') = Result then Exit(Choice.Get('name',''));
+    end;
   end;
 
   procedure AddPlan(const Kind, Date: string);
@@ -487,27 +500,30 @@ begin
           begin
             Entry := Values.Objects[K];
             Value := Entry.Find('value');
-            if (Value = nil) or (Value.JSONType in [jtNull, jtArray, jtObject]) then Continue;
+            if (Value = nil) or (Value.JSONType in [jtNull, jtObject]) then Continue;
             for N := 0 to Fields.Count - 1 do
             begin
               Field := Fields.Objects[N];
               if Field.Get('_id','') <> Entry.Get('_id','') then Continue;
               Name := PropertySeparators.Replace(Trim(Field.Get('name','')), '_');
               if (Name = '') or SameText(Name, 'CREATED') or SameText(Name, 'ID') or SameText(Name, 'CUSTOM_ID') then Break;
-              FieldText := Value.AsString;
               Settings := Field.Get('settings', TJSONObject(nil));
               Options := nil;
               if Settings <> nil then Options := Settings.Get('dropdownItems', TJSONArray(nil));
-              if (Field.Get('type','') = 'dropdown') and (Options <> nil) then
-                for L := 0 to Options.Count - 1 do
+              if Field.Get('type','') = 'dropdownMultiSelect' then
+              begin
+                if not (Value is TJSONArray) then Break;
+                FieldText := '';
+                for L := 0 to Value.Count - 1 do
                 begin
-                  Option := Options.Objects[L];
-                  if Option.Get('_id','') = FieldText then
-                  begin
-                    FieldText := Option.Get('name','');
-                    Break;
-                  end;
+                  if L > 0 then FieldText := FieldText + ', ';
+                  FieldText := FieldText + OrgFieldValue(Value.Items[L], Options);
                 end;
+              end else
+              begin
+                if Value is TJSONArray then Break;
+                FieldText := OrgFieldValue(Value, Options);
+              end;
               FieldText := OneLine(FieldText);
               if FieldText <> '' then Lines.Add('   :' + Name + ': ' + FieldText);
               Break;

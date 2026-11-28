@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Org mode exports write selected custom fields as properties, resolving
+  multiselect option names and preserving zero and false. The shared export
+  audit covers administrator access to protected fields.
+
 - Export boards as Org mode outlines with planning dates, repeating deadlines,
   labels, notes and checklist headings. The shared Chromium audit covers field
   selection and private board access.
