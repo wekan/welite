@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Trello JSON and ZIP imports restore number, checkbox, date and text
+  custom values, plus dropdown definitions and selections. The shared
+  Chromium test verifies the values against the imported board.
+
 - Trello ZIP export includes the selected card attachments with ID-prefixed
   filenames. Same-named files remain separate, and the Trello import reads
   back those files and legacy ZIPs. Chromium verifies the bytes after reimport.

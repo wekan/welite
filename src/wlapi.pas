@@ -5687,22 +5687,65 @@ begin
 end;
 
 function TrelloImport(const Source: TJSONData): TJSONObject;
-var Input, Board, Entry, Card, Check, Item, Owner, ActionData, Authors: TJSONObject;
-  Lists,Cards,Labels,Checks,Items,Comments,Attachments: TJSONArray;
-  SourceLists,SourceCards,Data,Child,Value: TJSONData;
-  I,J: Integer; Id,CardId,Name,Color: string;
+var Input, Board, Entry, Card, Check, Item, Owner, ActionData, Authors, FieldKinds, Settings, Display, Field, ValuesByKind, Choice: TJSONObject;
+  Lists,Cards,Labels,Checks,Items,Comments,Attachments,Definitions,Values,Options: TJSONArray;
+  SourceLists,SourceCards,Data,Child,Value,OptionData: TJSONData;
+  I,J: Integer; Id,CardId,Name,Color,Kind: string; Front: Boolean;
   function Obj(Row: TJSONObject; const Key: string): TJSONObject;
   var Field: TJSONData;
   begin
     Field:=Row.Find(Key);
     if Field is TJSONObject then Result:=TJSONObject(Field) else Result:=nil;
   end;
+  function TypedValue(Row: TJSONObject; const Kind: string): TJSONData;
+  var Raw: TJSONData; Fields: TJSONObject; Number: Double; Format: TFormatSettings;
+    At: TDateTime; Option: string;
+  begin
+    Result:=nil;
+    if Kind='dropdown' then
+    begin
+      Option:=Row.Get('idValue','');
+      if Option<>'' then Result:=TJSONString.Create(Option);
+      Exit;
+    end;
+    Fields:=Obj(Row,'value');
+    if Fields=nil then Exit;
+    case Kind of
+      'checkbox':
+        begin
+          Raw:=Fields.Find('checked');
+          if Raw is TJSONBoolean then Result:=Raw.Clone
+          else if (Raw is TJSONString) and ((Raw.AsString='true') or (Raw.AsString='false')) then
+            Result:=TJSONBoolean.Create(Raw.AsString='true');
+        end;
+      'number':
+        begin
+          Raw:=Fields.Find('number');
+          Format:=DefaultFormatSettings;
+          Format.DecimalSeparator:='.';
+          if (Raw<>nil) and (Raw.JSONType in [jtString,jtNumber]) and
+            TryStrToFloat(Raw.AsString,Number,Format) and not IsNan(Number) and not IsInfinite(Number) then
+            Result:=TJSONFloatNumber.Create(Number);
+        end;
+      'date':
+        if TryISO8601ToDate(Fields.Get('date',''), At, True) then
+          Result:=TJSONString.Create(FormatDateTime('yyyy-mm-dd"T"hh":"nn":"ss"."zzz"Z"', At));
+      'text':
+        begin
+          Raw:=Fields.Find('text');
+          if Raw is TJSONString then Result:=Raw.Clone;
+        end;
+    end;
+  end;
+
 begin
   if not (Source is TJSONObject) then raise EConvertError.Create('Invalid Trello export');
   Input:=TJSONObject(Source); SourceLists:=Input.Find('lists'); SourceCards:=Input.Find('cards');
   if not (SourceLists is TJSONArray) or not (SourceCards is TJSONArray) or (Trim(Input.Get('name',''))='') then
     raise EConvertError.Create('Invalid Trello board');
   Result:=TJSONObject.Create;
+  FieldKinds:=TJSONObject.Create;
+  try
   try
     Board:=TJSONObject.Create(['title',Input.Get('name',''),'description',Input.Get('desc','')]); Result.Add('board',Board);
     Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
@@ -5726,6 +5769,38 @@ begin
       if Color='' then Color:='blue';
       Labels.Add(TJSONObject.Create(['_id',Entry.Get('id',''),'name',Entry.Get('name',''),'color',Color]));
     end;
+    Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+    Data:=Input.Find('customFields');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+    begin
+      if not (Data.Items[I] is TJSONObject) then Continue;
+      Entry:=TJSONObject(Data.Items[I]); Id:=Entry.Get('id',''); Name:=Entry.Get('name','');
+      if (Id='') or (Trim(Name)='') or (FieldKinds.Find(Id)<>nil) then Continue;
+      Kind:=Entry.Get('type','');
+      if Kind='list' then Kind:='dropdown';
+      if (Kind<>'number') and (Kind<>'checkbox') and (Kind<>'date') and (Kind<>'text') and
+        (Kind<>'dropdown') then Continue;
+      FieldKinds.Add(Id,Kind);
+      Display:=Obj(Entry,'display');
+      Front:=(Display<>nil) and Display.Get('cardFront',False);
+      Settings:=TJSONObject.Create;
+      Definitions.Add(TJSONObject.Create(['_id',Id,'name',Name,'type',Kind,'settings',Settings,
+        'showOnCard',Front,'showLabelOnMiniCard',Front,'automaticallyOnCard',True,'sort',Entry.Get('pos',Double(I))]));
+      if Kind='dropdown' then
+      begin
+        Options:=TJSONArray.Create; Settings.Add('dropdownItems',Options);
+        Child:=Entry.Find('options');
+        if Child is TJSONArray then for J:=0 to Child.Count-1 do
+        begin
+          OptionData:=Child.Items[J];
+          if not (OptionData is TJSONObject) then Continue;
+          Choice:=TJSONObject(OptionData);
+          Field:=Obj(Choice,'value');
+          if (Field<>nil) and (Choice.Get('id','')<>'') then
+            Options.Add(TJSONObject.Create(['_id',Choice.Get('id',''),'name',Field.Get('text','')]));
+        end;
+      end;
+    end;
     for I:=0 to SourceCards.Count-1 do
     begin
       Entry:=TJSONArray(SourceCards).Objects[I]; CardId:=Entry.Get('id','');
@@ -5737,6 +5812,25 @@ begin
       if Entry.Get('start','')<>'' then Card.Add('startAt',Entry.Get('start',''));
       Data:=Entry.Find('idLabels');
       if Data is TJSONArray then Card.Add('labelIds',Data.Clone);
+      Data:=Entry.Find('customFieldItems');
+      if Data is TJSONArray then
+      begin
+        Values:=TJSONArray.Create; Card.Add('customFields',Values);
+        ValuesByKind:=TJSONObject.Create;
+        try
+          for J:=0 to Data.Count-1 do
+          begin
+            if not (Data.Items[J] is TJSONObject) then Continue;
+            Item:=TJSONObject(Data.Items[J]); Id:=Item.Get('idCustomField','');
+            Kind:=FieldKinds.Get(Id,'');
+            if (Kind='') or (ValuesByKind.Find(Id)<>nil) then Continue;
+            Value:=TypedValue(Item,Kind);
+            if Value=nil then Continue;
+            ValuesByKind.Add(Id,True);
+            Values.Add(TJSONObject.Create(['_id',Id,'value',Value]));
+          end;
+        finally ValuesByKind.Free; end;
+      end;
       Data:=Entry.Find('attachments');
       if Data is TJSONArray then for J:=0 to Data.Count-1 do
       begin
@@ -5776,6 +5870,7 @@ begin
       if Entry.Get('date','')<>'' then Item.Add('createdAt',Entry.Get('date',''));
     end;
   except Result.Free; raise; end;
+  finally FieldKinds.Free; end;
 end;
 
 procedure ImportEnglishDate(Row: TJSONObject; const Key, Value: string);
