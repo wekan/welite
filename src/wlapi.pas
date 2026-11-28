@@ -6598,6 +6598,172 @@ begin
   finally Workbook.Free; SheetNames.Free; end;
 end;
 
+function TodoistImport(const Source:TJSONData):TJSONObject;
+var Csv:TCSVDocument; Board,Card,Authors,Comment:TJSONObject;
+  Lists,Cards,Labels,Checks,Items,Comments,Tags:TJSONArray;
+  LabelRe,DateRe,PersonRe:TRegExpr; Losses:TStringList;
+  I,Priority:Integer;
+  Input,Kind,Content,Title,Stage,CardId,CheckId,Name,Due,Deadline,TimeZone:string;
+
+  function Column(const Header:string):Integer;
+  var C:Integer;
+  begin
+    for C:=0 to Csv.ColCount[0]-1 do
+      if SameText(Trim(Csv.Cells[C,0]),Header) then Exit(C);
+    Result:=-1;
+  end;
+
+  function Cell(const Header:string):string;
+  var C:Integer;
+  begin
+    Result:=''; C:=Column(Header);
+    if (C>=0) and (C<Csv.ColCount[I]) then Result:=Trim(Csv.Cells[C,I]);
+  end;
+
+  procedure Report(const Detail:string);
+  begin
+    Losses.Add('/row/'+IntToStr(I+1)+': '+Detail);
+  end;
+
+  procedure EnsureList;
+  var N:Integer;
+  begin
+    for N:=0 to Lists.Count-1 do if Lists.Objects[N].Get('_id','')=Stage then Exit;
+    Lists.Add(TJSONObject.Create(['_id',Stage,'title',Stage,'sort',Lists.Count]));
+  end;
+
+  procedure AddLabel(const LabelName:string);
+  var N:Integer;
+  begin
+    for N:=0 to Tags.Count-1 do if Tags.Strings[N]=LabelName then Exit;
+    Tags.Add(LabelName);
+    for N:=0 to Labels.Count-1 do if Labels.Objects[N].Get('_id','')=LabelName then Exit;
+    Labels.Add(TJSONObject.Create(['_id',LabelName,'name',LabelName,'color','blue']));
+  end;
+
+  function Person(const Field:string):string;
+  begin
+    Result:=Cell(Field);
+    if PersonRe.Exec(Result) then SetLength(Result,PersonRe.MatchPos[0]-1);
+  end;
+
+  function ReadDate(const Field:string):string;
+  var Value:string; Stamp:TDateTime; Hour,Minute:Integer;
+  begin
+    Result:=''; Value:=Cell(Field);
+    if Value='' then Exit;
+    if DateRe.Exec(Value) and TryISO8601ToDate(DateRe.Match[1],Stamp,True) then
+    begin
+      if DateRe.Match[2]='' then Exit(DateRe.Match[1]);
+      Hour:=StrToInt(DateRe.Match[2]); Minute:=StrToInt(DateRe.Match[3]);
+      if (Hour<24) and (Minute<60) and ((TimeZone='') or SameText(TimeZone,'UTC') or
+        SameText(TimeZone,'GMT') or SameText(TimeZone,'Etc/UTC')) then
+        Exit(DateRe.Match[1]+'T'+DateRe.Match[2]+':'+DateRe.Match[3]+':00Z');
+    end;
+    Report(Field+' is not an unambiguous calendar date');
+  end;
+
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing Todoist CSV');
+  Input:=Source.AsString;
+  if Copy(Input,1,3)=#239#187#191 then Delete(Input,1,3);
+  Csv:=TCSVDocument.Create; Losses:=TStringList.Create;
+  LabelRe:=TRegExpr.Create('(^|\s)@([^\s@]+)');
+  DateRe:=TRegExpr.Create('^(\d{4}-\d\d-\d\d)(?:[ T](\d\d):(\d\d))?$');
+  PersonRe:=TRegExpr.Create('\s*\(\d+\)$');
+  try
+    Csv.CSVText:=Input;
+    if (Csv.RowCount=0) or (Csv.RowCount>20000) or (Column('TYPE')<0) or (Column('CONTENT')<0) then
+      raise EConvertError.Create('Invalid Todoist CSV');
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create(['title','Imported Todoist']); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+      Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      CardId:=''; Stage:='';
+      for I:=1 to Csv.RowCount-1 do
+      begin
+        Kind:=LowerCase(Cell('TYPE')); Content:=Cell('CONTENT');
+        case Kind of
+          'meta': Continue;
+          'section':
+            begin
+              Stage:=Content;
+              if Stage='' then Stage:='No section';
+              EnsureList;
+              CardId:='';
+              Continue;
+            end;
+          'note':
+            begin
+              if CardId='' then Report('note without a task skipped')
+              else if Content<>'' then
+              begin
+                Comment:=TJSONObject.Create(['_id','note-'+IntToStr(I),'cardId',CardId,'text',Content]);
+                Comments.Add(Comment);
+                Name:=ImportAuthorIdentity(Authors,Person('AUTHOR'));
+                if Name<>'' then Comment.Add('userId',Name);
+              end;
+              Continue;
+            end;
+          'task': ;
+          else
+            begin
+              if (Kind<>'') or (Content<>'') then Report('unknown Todoist row type skipped');
+              Continue;
+            end;
+        end;
+        Title:=Trim(LabelRe.Replace(Content,'$1',True));
+        if Title='' then Title:='Imported task';
+        if StrToIntDef(Cell('INDENT'),1)>1 then
+        begin
+          if CardId='' then Report('subtask without a task skipped')
+          else
+          begin
+            if CheckId='' then
+            begin
+              CheckId:=CardId+':subtasks';
+              Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',CardId,'title','Sub-tasks','sort',0]));
+            end;
+            Items.Add(TJSONObject.Create(['_id','item-'+IntToStr(I),'checklistId',CheckId,
+              'title',Title,'isFinished',False,'sort',Items.Count]));
+          end;
+          Continue;
+        end;
+        if Stage='' then begin Stage:='No section'; EnsureList; end;
+        CardId:='card-'+IntToStr(I); CheckId:='';
+        Card:=TJSONObject.Create(['_id',CardId,'title',Title,'listId',Stage,
+          'description',Cell('DESCRIPTION'),'sort',Cards.Count]);
+        Cards.Add(Card);
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        Priority:=StrToIntDef(Cell('PRIORITY'),0);
+        if (Priority>=1) and (Priority<=3) then AddLabel('p'+IntToStr(Priority));
+        if LabelRe.Exec(Content) then
+          repeat AddLabel(LabelRe.Match[2]) until not LabelRe.ExecNext;
+        Name:=ImportAuthorIdentity(Authors,Person('RESPONSIBLE'));
+        if Name<>'' then Card.Add('members',TJSONArray.Create([Name]));
+        TimeZone:=Cell('TIMEZONE');
+        Due:=ReadDate('DATE'); Deadline:=ReadDate('DEADLINE');
+        if Deadline<>'' then
+        begin
+          if Due<>'' then Card.Add('startAt',Due);
+          Due:=Deadline;
+        end;
+        if Due<>'' then Card.Add('dueAt',Due);
+        if Cell('DURATION')<>'' then Report('duration skipped');
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except Result.Free; raise; end;
+  finally
+    PersonRe.Free; DateRe.Free; LabelRe.Free; Losses.Free; Csv.Free;
+  end;
+end;
+
 function FocalboardImport(const Source:TJSONData):TJSONObject;
 var Rows,Lists,Cards,Labels,Checks,Items,Comments,Defs,Tags,Values:TJSONArray;
   Board,InputBoard,BoardFields,Row,Block,Fields,Props,PropertyDef,Group,Card:TJSONObject;
@@ -7778,7 +7944,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -8591,6 +8757,7 @@ begin
             else if SourceFormat='taskwarrior' then Body:=TaskwarriorImport(Value)
             else if SourceFormat='orgmode' then Body:=OrgModeImport(Value)
             else if SourceFormat='focalboard' then Body:=FocalboardImport(Value)
+            else if SourceFormat='todoist' then Body:=TodoistImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

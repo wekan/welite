@@ -2356,5 +2356,6 @@
   "import-board-instruction-businessmap": "在 Businessmap（原 Kanbanize）中，開啟 Advanced Search，選擇 Configure results 以選擇欄，下載 Excel 檔案，然後選擇該 .xlsx 檔案。系統依英文欄名讀取（Title, Column, Lane, Owner, Deadline ...）：如果帳號使用其他語言，請先將標題列改為英文。Column 會成為清單，Lane 會成為泳道；擁有者、標籤、顏色、日期、留言和父項目連結保留原有位置，Priority、Size、Type 和其他欄會成為自訂欄位。",
   "import-board-instruction-redmine": "在 Redmine 中，開啟專案的 Issues，在清單底部選擇 Also available in: CSV，選擇欄（All columns，包含 Description）並匯出，然後貼上 CSV。Redmine 使用你的語言命名欄，因此請在匯出前將 My account 中的語言設為英語。每個狀態會成為清單，議題會成為卡片，並保留作為標籤的追蹤類型、承辦人、作者、日期、父任務和相關議題；優先順序、類別、目標版本、預估時間、% Done 和自訂欄位會成為自訂欄位。",
   "import-board-instruction-orgmode": "貼上 Emacs、Orgzly 或 Beorg 產生的 Org mode 檔案。最上層標題會成為清單，第二層標題會成為卡片。TODO 和 DONE、優先順序、標籤、SCHEDULED、DEADLINE 和 CLOSED 會保留，核取方塊和更深層的標題會成為待辦清單。",
-  "import-board-instruction-focalboard": "解壓縮 .boardarchive 檔案並貼上看板的 board.jsonl 內容，可以包含或省略版本行。看板檢視的分組屬性轉換為列表，其他選擇屬性轉換為標籤，文字和核取方塊區塊轉換為描述和檢查清單，留言會保留。圖片和附件不會匯入。"
+  "import-board-instruction-focalboard": "解壓縮 .boardarchive 檔案並貼上看板的 board.jsonl 內容，可以包含或省略版本行。看板檢視的分組屬性轉換為列表，其他選擇屬性轉換為標籤，文字和核取方塊區塊轉換為描述和檢查清單，留言會保留。圖片和附件不會匯入。",
+  "import-board-instruction-todoist": "In Todoist, open the project menu and choose Export as a template, then paste the CSV file. Sections become lists, tasks become cards, sub-tasks become a checklist, notes become comments, and @labels and priorities p1 to p3 become labels."
 }

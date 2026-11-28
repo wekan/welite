@@ -847,7 +847,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
         })).then(function (input) { return callAsync('importBoard', { files: input }, {}, form.dataset.source); });
       }
       var text = form.querySelector('textarea').value;
-      return callAsync('importBoard', ['markdown', 'pivotal', 'redmine', 'clickup', 'ticktick', 'linear', 'quire', 'obsidian', 'meistertask', 'opml', 'todotxt', 'taskwarrior', 'orgmode', 'focalboard'].includes(form.dataset.source) ? text : JSON.parse(text), {}, form.dataset.source, options);
+      return callAsync('importBoard', ['markdown', 'pivotal', 'redmine', 'clickup', 'ticktick', 'linear', 'quire', 'obsidian', 'meistertask', 'opml', 'todotxt', 'taskwarrior', 'orgmode', 'focalboard', 'todoist'].includes(form.dataset.source) ? text : JSON.parse(text), {}, form.dataset.source, options);
     }).then(function (board) {
       if (Array.isArray(board.files)) {
         var results = form.parentElement.querySelector('.js-import-many-results');

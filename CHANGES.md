@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Todoist project CSV imports sections, task descriptions, labels, priority
+  and calendar dates. Subtasks become checklist items and notes become comments.
+
 - Focalboard board.jsonl imports lists, labels, dates, custom fields, card
   descriptions, checklists and comments. The report identifies unsupported
   records and content blocks.
