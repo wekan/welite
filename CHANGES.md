@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Redmine issues CSV imports statuses, trackers, parent tasks, dates,
+  priorities, estimates and issue relations. Reciprocal relations are imported once.
+
 - Pivotal Tracker stories CSV imports workflow states, labels, dates,
   requesters, named comments and task completion.
 

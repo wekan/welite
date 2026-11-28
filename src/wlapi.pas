@@ -5617,10 +5617,119 @@ begin
   finally Csv.Free; end;
 end;
 
+function RedmineImport(const Source: TJSONData): TJSONObject;
+var Csv:TCSVDocument; Board,Card,Field:TJSONObject; Lists,Cards,Labels,Defs,Fields,Tags,Dependencies:TJSONArray;
+  Seen:TStringList; I,J,Y,M,D:Integer; Id,Title,Status,Tracker,Text,Target,Kind,Inverse,Prefix,Raw:string;
+  Parts:TStringArray; Day:TDateTime; Hours:Double; Decimal:TFormatSettings;
+  function Cell(const Name:string):string;
+  var K:Integer;
+  begin
+    Result:='';
+    for K:=0 to Csv.ColCount[0]-1 do if SameText(Trim(Csv.Cells[K,0]),Name) then Exit(Trim(Csv.Cells[K,I]));
+  end;
+  procedure Named(Rows:TJSONArray;const Key,TitleField,Name,Kind:string);
+  var K:Integer; Added:TJSONObject;
+  begin
+    for K:=0 to Rows.Count-1 do if Rows.Objects[K].Get('_id','')=Key then Exit;
+    Added:=TJSONObject.Create(['_id',Key,TitleField,Name,'sort',Rows.Count]);
+    if Kind<>'' then Added.Add('type',Kind);
+    Rows.Add(Added);
+  end;
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Invalid Redmine CSV');
+  Raw:=Source.AsString;
+  if Copy(Raw,1,3)=#$EF#$BB#$BF then Delete(Raw,1,3);
+  Csv:=TCSVDocument.Create; Seen:=TStringList.Create;
+  Result:=TJSONObject.Create;
+  try
+    try
+      J:=Pos(#10,Raw);
+      if J=0 then J:=Length(Raw)+1;
+      if Pos(';',Copy(Raw,1,J-1))>0 then Csv.Delimiter:=';';
+      Csv.CSVText:=Raw;
+      I:=0;
+      if (Csv.RowCount=0) or not SameText(Cell('Subject'),'Subject') or not SameText(Cell('Status'),'Status') then
+        raise EConvertError.Create('Missing Redmine CSV columns');
+      Seen.CaseSensitive:=True; Seen.Sorted:=True; Seen.Duplicates:=dupIgnore;
+      Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.';
+      Board:=TJSONObject.Create(['title','Redmine issues']); Result.Add('board',Board);
+      Result.Add('importedAuthors',TJSONObject.Create);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Defs:=TJSONArray.Create; Board.Add('customFields',Defs);
+      for I:=1 to Csv.RowCount-1 do
+      begin
+        Title:=Cell('Subject'); if Title='' then Continue;
+        Id:=Cell('#'); if Id='' then Id:=Cell('Id');
+        if Id='' then raise EConvertError.Create('Missing Redmine issue ID');
+        Status:=Cell('Status'); if Status='' then Status:='Issues';
+        Named(Lists,Status,'title',Status,'');
+        Card:=TJSONObject.Create(['_id',Id,'listId',Status,'title',Title,
+          'description',Cell('Description'),'sort',I]);
+        Cards.Add(Card);
+        Text:=Cell('Parent task');
+        if AnsiStartsStr('#',Text) then Delete(Text,1,1);
+        if (Text<>'') and (Text<>Id) then Card.Add('parentId',Text);
+        Text:=Cell('Due date');
+        Parts:=Text.Split(['/']);
+        if Length(Parts)=3 then
+        begin
+          M:=StrToIntDef(Parts[0],0); D:=StrToIntDef(Parts[1],0); Y:=StrToIntDef(Parts[2],0);
+          if (Y>0) and (Y<=9999) and (M>0) and (M<=12) and (D>0) and (D<=31) and TryEncodeDate(Y,M,D,Day) then
+            Card.Add('dueAt',FormatDateTime('yyyy-mm-dd',Day));
+        end
+        else if (Length(Text)>=10) and (Text[5]='-') and (Text[8]='-') then Card.Add('dueAt',Text);
+        Tracker:=Cell('Tracker');
+        if Tracker<>'' then
+        begin
+          Named(Labels,Tracker,'name',Tracker,'');
+          Tags:=TJSONArray.Create([Tracker]); Card.Add('labelIds',Tags);
+        end;
+        Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+        Text:=Cell('Priority');
+        if Text<>'' then
+        begin
+          Named(Defs,'priority','name','Priority','text');
+          Fields.Add(TJSONObject.Create(['_id','priority','value',Text]));
+        end;
+        Text:=StringReplace(Cell('Estimated time'),',','.',[rfReplaceAll]);
+        if TryStrToFloat(Text,Hours,Decimal) and (Hours>=0) and not IsInfinite(Hours) then
+        begin
+          Named(Defs,'estimated','name','Estimated time','number');
+          Field:=TJSONObject.Create(['_id','estimated','value',Hours]); Fields.Add(Field);
+        end;
+        Dependencies:=TJSONArray.Create; Card.Add('cardDependencies',Dependencies);
+        for Text in Cell('Related issues').Split([',',#10]) do
+        begin
+          J:=Pos('#',Text); if J=0 then Continue;
+          Prefix:=LowerCase(Trim(Copy(Text,1,J-1)));
+          Target:=Copy(Text,J+1,MaxInt);
+          J:=1; while (J<=Length(Target)) and (Target[J] in ['0'..'9']) do Inc(J);
+          SetLength(Target,J-1);
+          if (Target='') or (Target=Id) then Continue;
+          case Prefix of
+            'blocks': begin Kind:='blocks'; Inverse:='is-blocked-by'; end;
+            'blocked by': begin Kind:='is-blocked-by'; Inverse:='blocks'; end;
+            'duplicates': begin Kind:='duplicates'; Inverse:='is-duplicated-by'; end;
+            'duplicated by': begin Kind:='is-duplicated-by'; Inverse:='duplicates'; end;
+            'relates to','precedes','follows','copied from','copied to':
+              begin Kind:='related-to'; Inverse:=Kind; end;
+            else Continue;
+          end;
+          if (Seen.IndexOf(Id+'>'+Target+':'+Kind)>=0) or (Seen.IndexOf(Target+'>'+Id+':'+Inverse)>=0) then Continue;
+          Seen.Add(Id+'>'+Target+':'+Kind);
+          Dependencies.Add(TJSONObject.Create(['cardId',Target,'type',Kind]));
+        end;
+      end;
+    except Result.Free; raise; end;
+  finally Seen.Free; Csv.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6416,6 +6525,7 @@ begin
             else if SourceFormat='markdown' then Body:=MarkdownBoardImport(Value)
             else if SourceFormat='trello' then Body:=TrelloImport(Value)
             else if SourceFormat='pivotal' then Body:=PivotalImport(Value)
+            else if SourceFormat='redmine' then Body:=RedmineImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
