@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Her çalışma sayfası ayrı bir pano olur:",
   "csv-mapping-skipped-sheets": "İçe aktarılmayan çalışma sayfaları:",
   "csv-mapping-title-required": "Kart başlıklarını içeren sütunu seçin.",
-  "csv-mapping-list-required": "Tüm kartların ekleneceği listenin adını yazın veya listeyi içeren sütunu seçin."
+  "csv-mapping-list-required": "Tüm kartların ekleneceği listenin adını yazın veya listeyi içeren sütunu seçin.",
+  "import-board-instruction-planner": "Microsoft Planner'da planın menüsünü açıp Export plan to Excel seçeneğini seçin, ardından bu .xlsx dosyasını seçin. Kovalar listelere, görevler ise atanan kişiler, tarihler, etiketler, kontrol listesi ve açıklamalarıyla birlikte kartlara dönüşür; Progress, Priority ve Completed By özel alanlara dönüşür."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Waraqaan tokkoon tokkoon isaa gabatee mataa isaa ta'a:",
   "csv-mapping-skipped-sheets": "Waraqaawwan hin galfamne:",
   "csv-mapping-title-required": "Tarjaa maqaawwan kaardii qabu filadhu.",
-  "csv-mapping-list-required": "Maqaa tarree kaardiin hundi itti galu barreessi, ykn tarjaa tarree qabu filadhu."
+  "csv-mapping-list-required": "Maqaa tarree kaardiin hundi itti galu barreessi, ykn tarjaa tarree qabu filadhu.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

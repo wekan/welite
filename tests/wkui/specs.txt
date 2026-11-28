@@ -568,3 +568,4 @@ import-export-format-audit.e2e.js: CSV: a mapping whose columns are not in the f
 import-export-format-audit.e2e.js: excel: multiline Unicode text survives real file or text import
 import-export-format-audit.e2e.js: excel: empty imports fail without creating a board
 import-export-format-audit.e2e.js: Excel: a WeKan export workbook in Finnish with a sheet per board imports as several boards
+import-export-format-audit.e2e.js: Microsoft Planner: an exported plan imports through the page

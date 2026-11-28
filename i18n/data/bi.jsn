@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Evri sit i kam bod blong hem wan:",
   "csv-mapping-skipped-sheets": "Ol sit we oli no karem i kam:",
   "csv-mapping-title-required": "Jusum kolum we i holem nem blong ol kad.",
-  "csv-mapping-list-required": "Raetem nem blong lis we evri kad i go long hem, o jusum kolum we i holem lis."
+  "csv-mapping-list-required": "Raetem nem blong lis we evri kad i go long hem, o jusum kolum we i holem lis.",
+  "import-board-instruction-planner": "Long Microsoft Planner, openem menyu blong plan mo jusum Export plan to Excel, afta jusum fael .xlsx ia. Ol bakit oli kam ol lis mo ol wok oli kam ol kad, wetem ol man we oli givim wok long olgeta, ol deit, ol mak, jeklis mo diskripsen; Progress, Priority mo Completed By oli kam ol spesel fil."
 }

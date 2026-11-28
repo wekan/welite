@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Chaque feuille devient un tableau distinct :",
   "csv-mapping-skipped-sheets": "Feuilles qui ne sont pas importées :",
   "csv-mapping-title-required": "Choisissez la colonne qui contient les titres des cartes.",
-  "csv-mapping-list-required": "Saisissez le nom de la liste dans laquelle placer toutes les cartes, ou choisissez la colonne qui contient la liste."
+  "csv-mapping-list-required": "Saisissez le nom de la liste dans laquelle placer toutes les cartes, ou choisissez la colonne qui contient la liste.",
+  "import-board-instruction-planner": "Dans Microsoft Planner, ouvrez le menu du plan et choisissez Export plan to Excel, puis sélectionnez ce fichier .xlsx. Les compartiments deviennent des listes et les tâches deviennent des cartes, avec leurs personnes affectées, dates, étiquettes, listes de contrôle et descriptions ; Progress, Priority et Completed By deviennent des champs personnalisés."
 }

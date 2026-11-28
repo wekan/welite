@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "それぞれの しーとを べつべつの ぼーどに します:",
   "csv-mapping-skipped-sheets": "いんぽーとしない しーと:",
   "csv-mapping-title-required": "かーどめいが はいっている れつを えらんでください。",
-  "csv-mapping-list-required": "すべての かーどを いれる りすとの なまえを にゅうりょくするか、りすとが はいっている れつを えらんでください。"
+  "csv-mapping-list-required": "すべての かーどを いれる りすとの なまえを にゅうりょくするか、りすとが はいっている れつを えらんでください。",
+  "import-board-instruction-planner": "Microsoft Planner で ぷらんの めにゅうを ひらき、Export plan to Excel を えらんで、できた .xlsx ふぁいるを えらびます。ばけっとは りすとに、たすくは たんとうしゃ、ひづけ、らべる、ちぇっくりすと、せつめいを ふくむ かあどに なります。Progress、Priority、Completed By は かすたむふぃいるどに なります。"
 }

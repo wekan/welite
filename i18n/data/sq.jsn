@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Çdo fletë bëhet tabelë më vete:",
   "csv-mapping-skipped-sheets": "Fletët që nuk importohen:",
   "csv-mapping-title-required": "Zgjidhni kolonën që përmban titujt e kartave.",
-  "csv-mapping-list-required": "Shkruani emrin e listës ku do të vendosen të gjitha kartat, ose zgjidhni kolonën që përmban listën."
+  "csv-mapping-list-required": "Shkruani emrin e listës ku do të vendosen të gjitha kartat, ose zgjidhni kolonën që përmban listën.",
+  "import-board-instruction-planner": "Në Microsoft Planner, hapni menynë e planit dhe zgjidhni Export plan to Excel, pastaj zgjidhni atë skedar .xlsx. Grupet bëhen lista dhe detyrat bëhen karta, me personat e caktuar, datat, etiketat, listën e kontrollit dhe përshkrimin; Progress, Priority dhe Completed By bëhen fusha të personalizuara."
 }

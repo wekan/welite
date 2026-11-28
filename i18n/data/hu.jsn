@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Minden munkalapból külön tábla lesz:",
   "csv-mapping-skipped-sheets": "Nem importált munkalapok:",
   "csv-mapping-title-required": "Válassza ki a kártyák címét tartalmazó oszlopot.",
-  "csv-mapping-list-required": "Adja meg annak a listának a nevét, amelybe minden kártya kerül, vagy válassza ki a listát megadó oszlopot."
+  "csv-mapping-list-required": "Adja meg annak a listának a nevét, amelybe minden kártya kerül, vagy válassza ki a listát megadó oszlopot.",
+  "import-board-instruction-planner": "A Microsoft Plannerben nyissa meg a terv menüjét, válassza az Export plan to Excel lehetőséget, majd jelölje ki az így kapott .xlsx fájlt. A gyűjtőkből listák, a feladatokból kártyák lesznek a hozzárendelt személyekkel, dátumokkal, címkékkel, ellenőrzőlistával és leírással; a Progress, Priority és Completed By egyéni mezővé válik."
 }

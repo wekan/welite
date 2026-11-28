@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Ар бир барак өз тактасы болот:",
   "csv-mapping-skipped-sheets": "Импорттолбогон барактар:",
   "csv-mapping-title-required": "Карточкалардын аталыштарын камтыган мамычаны тандаңыз.",
-  "csv-mapping-list-required": "Бардык карточкалар кире турган тизменин атын териңиз, же тизмени камтыган мамычаны тандаңыз."
+  "csv-mapping-list-required": "Бардык карточкалар кире турган тизменин атын териңиз, же тизмени камтыган мамычаны тандаңыз.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

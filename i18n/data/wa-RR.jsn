@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Kada sheet magigin iya kalugaringon nga pisara:",
   "csv-mapping-skipped-sheets": "Mga sheet nga diri ig-iimport:",
   "csv-mapping-title-required": "Pilia an kolum nga mayda han mga titulo han kard.",
-  "csv-mapping-list-required": "I-type an ngaran han lista nga kakadtoan han kada kard, o pilia an kolum nga mayda han lista."
+  "csv-mapping-list-required": "I-type an ngaran han lista nga kakadtoan han kada kard, o pilia an kolum nga mayda han lista.",
+  "import-board-instruction-planner": "Ha Microsoft Planner, ablihi an plano, pilia an ⋯ nga menu ha kilid han ngaran, dayon Export as Excel (ha klasiko nga Planner: Export plan to Excel), ngan pilia ito nga .xlsx nga file. An mga bucket nagigin mga listahan ngan an mga buruhaton nagigin mga card, upod an ira mga gin-asignaran, mga petsa, mga label, checklist ngan paglaragway; an Progress, Priority ngan Completed By nagigin mga custom field."
 }

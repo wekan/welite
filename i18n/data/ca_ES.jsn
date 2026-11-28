@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Cada full es converteix en un tauler propi:",
   "csv-mapping-skipped-sheets": "Fulls que no s’importen:",
   "csv-mapping-title-required": "Trieu la columna que conté els títols de les fitxes.",
-  "csv-mapping-list-required": "Escriviu el nom de la llista on aniran totes les fitxes o trieu la columna que conté la llista."
+  "csv-mapping-list-required": "Escriviu el nom de la llista on aniran totes les fitxes o trieu la columna que conté la llista.",
+  "import-board-instruction-planner": "A Microsoft Planner, obriu el menú del pla i trieu Export plan to Excel; després seleccioneu aquest fitxer .xlsx. Els grups esdevenen llistes i les tasques esdevenen fitxes, amb les persones assignades, dates, etiquetes, llista de comprovació i descripció; Progress, Priority i Completed By esdevenen camps personalitzats."
 }

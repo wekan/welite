@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Igast töölehest saab eraldi tahvel:",
   "csv-mapping-skipped-sheets": "Töölehed, mida ei impordita:",
   "csv-mapping-title-required": "Vali veerg, mis sisaldab kaartide pealkirju.",
-  "csv-mapping-list-required": "Sisesta selle loetelu nimi, kuhu kõik kaardid lisatakse, või vali loetelu sisaldav veerg."
+  "csv-mapping-list-required": "Sisesta selle loetelu nimi, kuhu kõik kaardid lisatakse, või vali loetelu sisaldav veerg.",
+  "import-board-instruction-planner": "Avage rakenduses Microsoft Planner plaani menüü ja valige Export plan to Excel, seejärel valige see .xlsx-fail. Rühmad muutuvad loeteludeks ja ülesanded kaartideks koos vastutajate, kuupäevade, siltide, kontrollnimekirja ja kirjeldusega; Progress, Priority ja Completed By muutuvad kohandatud väljadeks."
 }

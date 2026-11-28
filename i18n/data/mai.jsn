@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "प्रत्येक शीट अपन पट्ट बनैत अछि:",
   "csv-mapping-skipped-sheets": "शीट जे आयात नहि होइत अछि:",
   "csv-mapping-title-required": "ओ स्तंभ चुनू जाहि मे कार्डक शीर्षक अछि।",
-  "csv-mapping-list-required": "ओहि सूचीक नाम लिखू जाहि मे सभ कार्ड जाइत अछि, वा ओ स्तंभ चुनू जाहि मे सूची अछि।"
+  "csv-mapping-list-required": "ओहि सूचीक नाम लिखू जाहि मे सभ कार्ड जाइत अछि, वा ओ स्तंभ चुनू जाहि मे सूची अछि।",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

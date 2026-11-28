@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Ogni fojo el deventa un quadro sò:",
   "csv-mapping-skipped-sheets": "Foji che no i vien inportà:",
   "csv-mapping-title-required": "Sielgi ła cołona che ła tien i tìtołi de łe schede.",
-  "csv-mapping-list-required": "Scrivi el nome de ła lista indove che va tute łe schede, o sielgi ła cołona che ła tien ła lista."
+  "csv-mapping-list-required": "Scrivi el nome de ła lista indove che va tute łe schede, o sielgi ła cołona che ła tien ła lista.",
+  "import-board-instruction-planner": "In Microsoft Planner, verzi el pian, sielzi el menù ⋯ rente al so nome, po Export as Excel (inte'l Planner clàsego: Export plan to Excel), e sielzi quel file .xlsx. I bucket i deventa liste e i conpiti i deventa schede, co i so asegnatari, date, etichete, lista de controło e descrision; Progress, Priority e Completed By i deventa canpi personałizà."
 }

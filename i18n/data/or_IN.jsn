@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "ପ୍ରତ୍ୟେକ ସିଟ୍ ନିଜର ବୋର୍ଡ ହୁଏ:",
   "csv-mapping-skipped-sheets": "ଆମଦାନି ହେଉନଥିବା ସିଟ୍:",
   "csv-mapping-title-required": "କାର୍ଡ ଆଖ୍ୟା ଧାରଣ କରୁଥିବା ସ୍ତମ୍ଭ ବାଛନ୍ତୁ।",
-  "csv-mapping-list-required": "ସମସ୍ତ କାର୍ଡ ଯାଉଥିବା ତାଲିକାର ନାମ ଟାଇପ୍ କରନ୍ତୁ, କିମ୍ବା ତାଲିକା ଧାରଣ କରୁଥିବା ସ୍ତମ୍ଭ ବାଛନ୍ତୁ।"
+  "csv-mapping-list-required": "ସମସ୍ତ କାର୍ଡ ଯାଉଥିବା ତାଲିକାର ନାମ ଟାଇପ୍ କରନ୍ତୁ, କିମ୍ବା ତାଲିକା ଧାରଣ କରୁଥିବା ସ୍ତମ୍ଭ ବାଛନ୍ତୁ।",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

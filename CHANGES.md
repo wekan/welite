@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Microsoft Planner workbooks import task buckets, dates, assignments,
+  labels, checklists and progress fields. The report explains ambiguous
+  dates and checklist totals that do not identify which items are complete.
+
 - Excel import uses localized WeKan export headers and creates one board per
   eligible worksheet in a single transaction. The preview lists skipped
   sheets, and the import preserves cached formula results and mapped dates.

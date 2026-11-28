@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Kila lahajedwali linakuwa bodi yake:",
   "csv-mapping-skipped-sheets": "Malahajedwali yasiyoagizwa:",
   "csv-mapping-title-required": "Chagua safu wima yenye vichwa vya kadi.",
-  "csv-mapping-list-required": "Andika jina la orodha ambayo kadi zote zitaingia, au chagua safu wima yenye orodha."
+  "csv-mapping-list-required": "Andika jina la orodha ambayo kadi zote zitaingia, au chagua safu wima yenye orodha.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Tluka rin'wana na rin'wana ri va bodo ya rona:",
   "csv-mapping-skipped-sheets": "Matluka lama nga nghenisiwiki:",
   "csv-mapping-title-required": "Hlawula khalomu leyi khomaka tinhloko-mhaka ta makhadi.",
-  "csv-mapping-list-required": "Tsala vito ra nxaxamelo lowu makhadi hinkwawo ma yaka eka wona, kumbe u hlawula khalomu leyi khomaka nxaxamelo."
+  "csv-mapping-list-required": "Tsala vito ra nxaxamelo lowu makhadi hinkwawo ma yaka eka wona, kumbe u hlawula khalomu leyi khomaka nxaxamelo.",
+  "import-board-instruction-planner": "Eka Microsoft Planner, pfula pulani, hlawula menyu ya ⋯ etlhelo ka vito ra yona, kutani Export as Excel (eka Planner ya khale: Export plan to Excel), u hlawula fayili yoleyo ya .xlsx. Swibakiti swi va minxaxamelo naswona mintirho yi va tikhadi, swin'we na lava nyikiweke ntirho, masiku, swikombiso, nxaxamelo wo kambela na nhlamuselo; Progress, Priority na Completed By swi va masimu yo hlawuleka."
 }

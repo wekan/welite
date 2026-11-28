@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Ishidi ngalinye liba yibhodi lalo:",
   "csv-mapping-skipped-sheets": "Amashidi angeke angeniswe:",
   "csv-mapping-title-required": "Khetha ikholomu enezihloko zamakhadi.",
-  "csv-mapping-list-required": "Thayipha igama lohlu wonke amakhadi azofakwa kulo, noma ukhethe ikholomu enohlu."
+  "csv-mapping-list-required": "Thayipha igama lohlu wonke amakhadi azofakwa kulo, noma ukhethe ikholomu enohlu.",
+  "import-board-instruction-planner": "Ku-Microsoft Planner, vula imenyu yohlelo bese ukhetha Export plan to Excel, bese ukhetha lelo fayela le-.xlsx. Amaqoqo aba izinhlu nemisebenzi iba amakhadi, nabantu ababelwe yona, izinsuku, amalebula, uhlu lokuhlola nencazelo; Progress, Priority no-Completed By kuba izinkambu zangokwezifiso."
 }

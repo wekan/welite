@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Buli lupapula lufuuka olubaawo lwalwo:",
   "csv-mapping-skipped-sheets": "Empapula ezitayingizibwa:",
   "csv-mapping-title-required": "Londa empagi erimu amannya ga kaadi.",
-  "csv-mapping-list-required": "Wandiika erinnya ly'olukalala buli kaadi mw'egenda, oba londa empagi erimu olukalala."
+  "csv-mapping-list-required": "Wandiika erinnya ly'olukalala buli kaadi mw'egenda, oba londa empagi erimu olukalala.",
+  "import-board-instruction-planner": "Mu Microsoft Planner, ggulawo enteekateeka, londa menyu ya ⋯ okumpi n'erinnya lyayo, oluvannyuma Export as Excel (mu Planner enkadde: Export plan to Excel), era londa fayiro eyo eya .xlsx. Ebibbo bifuuka enkalala n'emirimu gifuuka amakaadi, wamu n'abaweereddwa omulimu, ennaku, obubonero, olukalala lw'okukebera n'ennyonyola; Progress, Priority ne Completed By bifuuka ebifo eby'obwannannyini."
 }

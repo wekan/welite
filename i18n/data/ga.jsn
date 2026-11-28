@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Déantar clár ar leith de gach bileog:",
   "csv-mapping-skipped-sheets": "Bileoga nach n-iompórtáiltear:",
   "csv-mapping-title-required": "Roghnaigh an colún ina bhfuil teidil na gcártaí.",
-  "csv-mapping-list-required": "Clóscríobh ainm an liosta a rachaidh gach cárta isteach ann, nó roghnaigh an colún ina bhfuil an liosta."
+  "csv-mapping-list-required": "Clóscríobh ainm an liosta a rachaidh gach cárta isteach ann, nó roghnaigh an colún ina bhfuil an liosta.",
+  "import-board-instruction-planner": "In Microsoft Planner, oscail an plean, roghnaigh an roghchlár ⋯ in aice lena ainm, ansin Export as Excel (sa leagan clasaiceach de Planner: Export plan to Excel), agus roghnaigh an comhad .xlsx sin. Déantar liostaí de bhuicéid agus cártaí de thascanna, lena sannaithe, dátaí, lipéid, seicliosta agus cur síos; déantar réimsí saincheaptha de Progress, Priority agus Completed By."
 }

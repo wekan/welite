@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Cada fuella se torna un tablero propio:",
   "csv-mapping-skipped-sheets": "Fuellas que no s'importan:",
   "csv-mapping-title-required": "Tría a columna que tiene os titols d'as tarchetas.",
-  "csv-mapping-list-required": "Escribe o nombre d'a lista an que van todas as tarchetas, u tría a columna que tiene a lista."
+  "csv-mapping-list-required": "Escribe o nombre d'a lista an que van todas as tarchetas, u tría a columna que tiene a lista.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

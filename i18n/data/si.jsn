@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "සෑම පත්‍රයක්ම තමන්ගේම පුවරුවක් බවට පත් වේ:",
   "csv-mapping-skipped-sheets": "ආයාත නොකෙරෙන පත්‍ර:",
   "csv-mapping-title-required": "කාඩ්පත් සිරැසි අඩංගු තීරුව තෝරන්න.",
-  "csv-mapping-list-required": "සියලු කාඩ්පත් යන ලැයිස්තුවේ නම ටයිප් කරන්න, නැතහොත් ලැයිස්තුව අඩංගු තීරුව තෝරන්න."
+  "csv-mapping-list-required": "සියලු කාඩ්පත් යන ලැයිස්තුවේ නම ටයිප් කරන්න, නැතහොත් ලැයිස්තුව අඩංගු තීරුව තෝරන්න.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

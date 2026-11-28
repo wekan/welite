@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Iphepha ngalinye liba yibhodi yalo:",
   "csv-mapping-skipped-sheets": "Amaphepha angangeniswayo:",
   "csv-mapping-title-required": "Khetha ikholamu enezihloko zamakhadi.",
-  "csv-mapping-list-required": "Chwetheza igama loluhlu aza kufakwa kulo onke amakhadi, okanye ukhethe ikholamu enoluhlu."
+  "csv-mapping-list-required": "Chwetheza igama loluhlu aza kufakwa kulo onke amakhadi, okanye ukhethe ikholamu enoluhlu.",
+  "import-board-instruction-planner": "Kwi-Microsoft Planner, vula imenyu yesicwangciso uze ukhethe Export plan to Excel, emva koko ukhethe loo fayile ye-.xlsx. Amaqela aba zizintlu kwaye imisebenzi iba ngamakhadi, kunye nababelweyo, imihla, iileyibhile, uluhlu lokuhlola nenkcazo; Progress, Priority kunye Completed By ziba ziinkalo ezenzelwe wena."
 }

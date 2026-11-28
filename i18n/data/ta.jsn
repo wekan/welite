@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "ஒவ்வொரு தாளும் தனித்தனி பலகையாகும்:",
   "csv-mapping-skipped-sheets": "இறக்குமதி செய்யப்படாத தாள்கள்:",
   "csv-mapping-title-required": "அட்டைகளின் தலைப்புகளைக் கொண்ட நெடுவரிசையைத் தேர்ந்தெடுக்கவும்.",
-  "csv-mapping-list-required": "அனைத்து அட்டைகளும் செல்ல வேண்டிய பட்டியலின் பெயரை உள்ளிடவும், அல்லது பட்டியலைக் கொண்ட நெடுவரிசையைத் தேர்ந்தெடுக்கவும்."
+  "csv-mapping-list-required": "அனைத்து அட்டைகளும் செல்ல வேண்டிய பட்டியலின் பெயரை உள்ளிடவும், அல்லது பட்டியலைக் கொண்ட நெடுவரிசையைத் தேர்ந்தெடுக்கவும்.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

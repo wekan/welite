@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "هره پاڼه خپله تخته کېږي:",
   "csv-mapping-skipped-sheets": "هغه پاڼې چې نه دننه کېږي:",
   "csv-mapping-title-required": "هغه ستنه وټاکئ چې د کارت سرلیکونه لري.",
-  "csv-mapping-list-required": "د هغه لړليک نوم ولیکئ چې هر کارت پکې ځي، یا هغه ستنه وټاکئ چې لړليک لري."
+  "csv-mapping-list-required": "د هغه لړليک نوم ولیکئ چې هر کارت پکې ځي، یا هغه ستنه وټاکئ چې لړليک لري.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

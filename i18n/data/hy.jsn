@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Յուրաքանչյուր թերթ դառնում է իր սեփական տախտակը՝",
   "csv-mapping-skipped-sheets": "Թերթեր, որոնք չեն ներմուծվում՝",
   "csv-mapping-title-required": "Ընտրեք քարտերի անվանումները պարունակող սյունակը։",
-  "csv-mapping-list-required": "Մուտքագրեք այն ցուցակի անունը, որտեղ կգնա յուրաքանչյուր քարտ, կամ ընտրեք ցուցակը պարունակող սյունակը։"
+  "csv-mapping-list-required": "Մուտքագրեք այն ցուցակի անունը, որտեղ կգնա յուրաքանչյուր քարտ, կամ ընտրեք ցուցակը պարունակող սյունակը։",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

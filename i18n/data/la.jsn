@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Quodque folium fit tabula propria:",
   "csv-mapping-skipped-sheets": "Folia quae non importantur:",
   "csv-mapping-title-required": "Elige columnam quae titulos chartarum continet.",
-  "csv-mapping-list-required": "Scribe nomen indicis in quem omnes chartae ponuntur, aut elige columnam quae indicem continet."
+  "csv-mapping-list-required": "Scribe nomen indicis in quem omnes chartae ponuntur, aut elige columnam quae indicem continet.",
+  "import-board-instruction-planner": "In Microsoft Planner, aperi consilium, elige indicem ⋯ iuxta nomen eius, deinde Export as Excel (in Planner classico: Export plan to Excel), et elige illum fasciculum .xlsx. Receptacula fiunt indices et munera fiunt chartae, cum delegatis, diebus, titulis, indice probationis et descriptione; Progress, Priority et Completed By fiunt campi proprii."
 }

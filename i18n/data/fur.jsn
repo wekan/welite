@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Ogni sfuei al devente une taule sô:",
   "csv-mapping-skipped-sheets": "Sfueis che no vegnin impuartâts:",
   "csv-mapping-title-required": "Sielç la colone che e ten i titui des cjartis.",
-  "csv-mapping-list-required": "Scrîf il non de liste dulà che a van dutis lis cjartis, o sielç la colone che e ten la liste."
+  "csv-mapping-list-required": "Scrîf il non de liste dulà che a van dutis lis cjartis, o sielç la colone che e ten la liste.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

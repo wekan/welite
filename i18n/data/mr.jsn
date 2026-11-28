@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "प्रत्येक शीटचा स्वतंत्र फलक होतो:",
   "csv-mapping-skipped-sheets": "आयात न होणारी शीट:",
   "csv-mapping-title-required": "कार्डची शीर्षके असलेला स्तंभ निवडा.",
-  "csv-mapping-list-required": "सर्व कार्डे ज्या यादीत ठेवायची आहेत तिचे नाव लिहा, किंवा यादी असलेला स्तंभ निवडा."
+  "csv-mapping-list-required": "सर्व कार्डे ज्या यादीत ठेवायची आहेत तिचे नाव लिहा, किंवा यादी असलेला स्तंभ निवडा.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

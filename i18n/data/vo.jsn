@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Bled alik vedon tab lönik:",
   "csv-mapping-skipped-sheets": "Bleds, kels no panüveigons:",
   "csv-mapping-title-required": "Välolös paditi, kel labon tiädis kadas.",
-  "csv-mapping-list-required": "Penolös nemi liseda, ini kel kad alik golon, u välolös paditi, kel labon lisedi."
+  "csv-mapping-list-required": "Penolös nemi liseda, ini kel kad alik golon, u välolös paditi, kel labon lisedi.",
+  "import-board-instruction-planner": "In Microsoft Planner, maifükolös plani, välolös lisedi välas ⋯ nilü nem onik, täno Export as Excel (in Planner bäldik: Export plan to Excel), e välolös nünedi .xlsx at. Buckets vedons liseds e vobots vedons kads, ko gebans pejonidüköl, däts, ninädapenäds, kontrolalised e bepenam onsik; Progress, Priority e Completed By vedons fels lönik."
 }

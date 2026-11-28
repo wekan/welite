@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "每個工作表都會成為獨立的看板：",
   "csv-mapping-skipped-sheets": "不會匯入的工作表：",
   "csv-mapping-title-required": "選擇包含卡片標題的欄。",
-  "csv-mapping-list-required": "輸入所有卡片都要放入的清單名稱，或選擇包含清單的欄。"
+  "csv-mapping-list-required": "輸入所有卡片都要放入的清單名稱，或選擇包含清單的欄。",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

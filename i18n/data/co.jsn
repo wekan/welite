@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Ogni fogliu diventa una tavula distinta:",
   "csv-mapping-skipped-sheets": "Fogli chì ùn sò micca impurtati:",
   "csv-mapping-title-required": "Sceglite a culonna chì cuntene i tituli di e carte.",
-  "csv-mapping-list-required": "Scrivite u nome di a lista induve anderanu tutte e carte, o sceglite a culonna chì cuntene a lista."
+  "csv-mapping-list-required": "Scrivite u nome di a lista induve anderanu tutte e carte, o sceglite a culonna chì cuntene a lista.",
+  "import-board-instruction-planner": "In Microsoft Planner, aprite u pianu, sceglite u menù ⋯ accantu à u so nome, po Export as Excel (in Planner classicu: Export plan to Excel), è sceglite stu schedariu .xlsx. I gruppi diventanu liste è i compiti diventanu carte, cù e so persone assignate, date, etichette, lista di cuntrollu è discrizzione; Progress, Priority è Completed By diventanu campi persunalizati."
 }

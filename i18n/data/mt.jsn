@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Kull folja ssir bord għaliha:",
   "csv-mapping-skipped-sheets": "Folji li ma jiġux importati:",
   "csv-mapping-title-required": "Agħżel il-kolonna li fiha t-titli tal-karti.",
-  "csv-mapping-list-required": "Ittajpja l-isem tal-lista li fiha tidħol kull karta, jew agħżel il-kolonna li fiha l-lista."
+  "csv-mapping-list-required": "Ittajpja l-isem tal-lista li fiha tidħol kull karta, jew agħżel il-kolonna li fiha l-lista.",
+  "import-board-instruction-planner": "F’Microsoft Planner, iftaħ il-pjan, agħżel il-menu ⋯ ħdejn ismu, imbagħad Export as Excel (fil-Planner klassiku: Export plan to Excel), u agħżel dak il-fajl .xlsx. Il-Buckets isiru listi u l-kompiti jsiru karti, bl-assenjati, id-dati, it-tikketti, il-lista ta’ verifika u d-deskrizzjoni tagħhom; Progress, Priority u Completed By isiru oqsma personalizzati."
 }

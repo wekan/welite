@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "각 시트가 별도의 보드가 됩니다:",
   "csv-mapping-skipped-sheets": "가져오지 않는 시트:",
   "csv-mapping-title-required": "카드 제목이 들어 있는 열을 선택하세요.",
-  "csv-mapping-list-required": "모든 카드를 넣을 목록 이름을 입력하거나 목록이 들어 있는 열을 선택하세요."
+  "csv-mapping-list-required": "모든 카드를 넣을 목록 이름을 입력하거나 목록이 들어 있는 열을 선택하세요.",
+  "import-board-instruction-planner": "Microsoft Planner에서 계획 메뉴를 열고 Export plan to Excel을 선택한 다음, 내보낸 .xlsx 파일을 선택하세요. 버킷은 목록으로, 작업은 담당자, 날짜, 라벨, 체크리스트, 설명이 포함된 카드로 변환됩니다. Progress, Priority, Completed By는 사용자 지정 필드가 됩니다."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "თითოეული ფურცელი ცალკე დაფად იქცევა:",
   "csv-mapping-skipped-sheets": "ფურცლები, რომლებიც არ შემოდის:",
   "csv-mapping-title-required": "აირჩიეთ სვეტი, რომელიც ბარათების სათაურებს შეიცავს.",
-  "csv-mapping-list-required": "აკრიფეთ იმ სიის სახელი, რომელშიც ყველა ბარათი მოხვდება, ან აირჩიეთ სიის სვეტი."
+  "csv-mapping-list-required": "აკრიფეთ იმ სიის სახელი, რომელშიც ყველა ბარათი მოხვდება, ან აირჩიეთ სიის სვეტი.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

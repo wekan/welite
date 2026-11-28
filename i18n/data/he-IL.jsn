@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "כל גיליון הופך ללוח נפרד:",
   "csv-mapping-skipped-sheets": "גיליונות שאינם מיובאים:",
   "csv-mapping-title-required": "בחרו את העמודה שמכילה את כותרות הכרטיסים.",
-  "csv-mapping-list-required": "הקלידו את שם הרשימה שאליה יועברו כל הכרטיסים, או בחרו את העמודה שמכילה את הרשימה."
+  "csv-mapping-list-required": "הקלידו את שם הרשימה שאליה יועברו כל הכרטיסים, או בחרו את העמודה שמכילה את הרשימה.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

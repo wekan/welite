@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Každý list se stane samostatným tablem:",
   "csv-mapping-skipped-sheets": "Listy, které se neimportují:",
   "csv-mapping-title-required": "Vyberte sloupec s názvy karet.",
-  "csv-mapping-list-required": "Zadejte název seznamu pro všechny karty nebo vyberte sloupec obsahující seznam."
+  "csv-mapping-list-required": "Zadejte název seznamu pro všechny karty nebo vyberte sloupec obsahující seznam.",
+  "import-board-instruction-planner": "V Microsoft Planner otevřete nabídku plánu a zvolte Export plan to Excel. Poté vyberte tento soubor .xlsx. Skupiny se převedou na seznamy a úkoly na karty s přiřazenými osobami, daty, štítky, kontrolním seznamem a popisem; Progress, Priority a Completed By se převedou na vlastní pole."
 }

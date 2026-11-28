@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Elke werkblad word sy eie raad:",
   "csv-mapping-skipped-sheets": "Werkblaaie wat nie ingevoer word nie:",
   "csv-mapping-title-required": "Kies die kolom wat die kaarttitels bevat.",
-  "csv-mapping-list-required": "Tik die naam van die lys waarin elke kaart geplaas word, of kies die kolom wat die lys bevat."
+  "csv-mapping-list-required": "Tik die naam van die lys waarin elke kaart geplaas word, of kies die kolom wat die lys bevat.",
+  "import-board-instruction-planner": "Maak in Microsoft Planner die plan se kieslys oop en kies Export plan to Excel; kies dan daardie .xlsx-lêer. Groepe word lyste en take word kaarte, met hul toegewysde persone, datums, etikette, kontrolelys en beskrywing; Progress, Priority en Completed By word pasgemaakte velde."
 }

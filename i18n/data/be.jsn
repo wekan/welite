@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Кожны аркуш становіцца асобнай дошкай:",
   "csv-mapping-skipped-sheets": "Аркушы, якія не імпартуюцца:",
   "csv-mapping-title-required": "Выберыце слупок з назвамі картак.",
-  "csv-mapping-list-required": "Увядзіце назву спіса, у які трапяць усе карткі, або выберыце слупок, які змяшчае спіс."
+  "csv-mapping-list-required": "Увядзіце назву спіса, у які трапяць усе карткі, або выберыце слупок, які змяшчае спіс.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

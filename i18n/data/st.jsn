@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Leqephe ka leng le fetoha boto ya lona:",
   "csv-mapping-skipped-sheets": "Maqephe a sa kenngweng:",
   "csv-mapping-title-required": "Kgetha kholomo e nang le dihlooho tsa dikarete.",
-  "csv-mapping-list-required": "Ngola lebitso la lenane leo dikarete tsohle di yang ho lona, kapa kgetha kholomo e nang le lenane."
+  "csv-mapping-list-required": "Ngola lebitso la lenane leo dikarete tsohle di yang ho lona, kapa kgetha kholomo e nang le lenane.",
+  "import-board-instruction-planner": "Ho Microsoft Planner, bula moralo, kgetha lenane la ⋯ pela lebitso la wona, ebe Export as Excel (ho Planner ya kgale: Export plan to Excel), mme o kgethe faele eo ya .xlsx. Dihlopha di fetoha manane mme mesebetsi e fetoha dikarete, ka batho ba e abetsweng, matsatsi, dileibole, lenane la tlhahlobo le tlhaloso; Progress, Priority le Completed By di fetoha dikarolo tse ikgethileng."
 }

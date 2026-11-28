@@ -6618,6 +6618,180 @@ begin
   finally Workbook.Free; end;
 end;
 
+function PlannerImport(const Source:TJSONData):TJSONObject;
+const DateInputs:array[0..3] of string=('Created Date','Start Date','Due Date','Completed Date');
+  DateTargets:array[0..3] of string=('createdAt','startAt','dueAt','endAt');
+var Workbook,Sheet,Header,Row,Lists,Cards,Definitions,Fields,Labels,Tags,Checks,Items,People,Members:TJSONArray;
+  Names,Losses:TStringList; Board,Card,Authors:TJSONObject; DateFormat:TRegExpr;
+  I,J,K,HeaderAt,SheetIndex,First,Second,Year:Integer;
+  Title,Name,Bucket,Id,CheckId,Text,Path,Author:string;
+  DayFirst,MonthFirst,Ambiguous,Date1904:Boolean; Decimal:TFormatSettings;
+
+  function Cell(const Key:string):string;
+  var Col:Integer;
+  begin
+    Result:='';
+    for Col:=0 to Header.Count-1 do
+      if (Trim(Header.Strings[Col])=Key) and (Col<Row.Count) then Exit(Trim(Row.Strings[Col]));
+  end;
+
+  function NumericDate(const Value:string):Boolean;
+  begin
+    Result:=DateFormat.Exec(Value) and (DateFormat.Match[2]=DateFormat.Match[4]);
+    if not Result then Exit;
+    First:=StrToInt(DateFormat.Match[1]);
+    Second:=StrToInt(DateFormat.Match[3]);
+    Year:=StrToInt(DateFormat.Match[5]);
+  end;
+
+  procedure AddDate(const Field,Value:string);
+  var Stamp:TDateTime; Serial:Double; Month,Day:Integer;
+  begin
+    if Value='' then Exit;
+    if (Length(Value)>=10) and (Value[5]='-') and (Value[8]='-') and
+      TryISO8601ToDate(Value,Stamp,True) then
+    begin Card.Add(Field,Value); Exit; end;
+    if NumericDate(Value) then
+    begin
+      Month:=First; Day:=Second;
+      if DayFirst and not MonthFirst then
+      begin Month:=Second; Day:=First; end;
+      if (Year>0) and TryEncodeDate(Year,Month,Day,Stamp) then
+      begin Card.Add(Field,FormatDateTime('yyyy-mm-dd',Stamp)); Exit; end;
+    end
+    else if TryStrToFloat(Value,Serial,Decimal) and (Serial>=0) and (Serial<2958466) then
+    begin
+      if Date1904 then Stamp:=EncodeDate(1904,1,1)+Serial
+      else if Serial<60 then Stamp:=EncodeDate(1899,12,31)+Serial
+      else Stamp:=EncodeDate(1899,12,30)+Serial;
+      if Stamp<EncodeDate(9999,12,31)+1 then
+      begin Card.Add(Field,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',Stamp)); Exit; end;
+    end;
+    Losses.Add(Path+'/'+Field+': invalid Planner date');
+  end;
+
+  procedure AddNamed(Rows:TJSONArray; const TitleKey,Caption:string);
+  var N:Integer; Entry:TJSONObject;
+  begin
+    for N:=0 to Rows.Count-1 do if Rows.Objects[N].Get('_id','')=Caption then Exit;
+    Entry:=TJSONObject.Create(['_id',Caption,TitleKey,Caption,'sort',Rows.Count]);
+    if Rows=Labels then Entry.Add('color','blue');
+    if Rows=Definitions then Entry.Add('type','text');
+    Rows.Add(Entry);
+  end;
+
+  procedure AddField(const Key:string);
+  var Value:string;
+  begin
+    Value:=Cell(Key);
+    if Value='' then Exit;
+    if ((Key='Progress') and (Value<>'Not started') and (Value<>'In progress') and (Value<>'Completed')) or
+       ((Key='Priority') and (Value<>'Urgent') and (Value<>'Important') and (Value<>'Medium') and (Value<>'Low')) then
+    begin Losses.Add(Path+'/'+Key+': unknown Planner value'); Exit; end;
+    AddNamed(Definitions,'name',Key);
+    Fields.Add(TJSONObject.Create(['_id',Key,'value',Value]));
+  end;
+
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing Planner workbook');
+  Names:=TStringList.Create; Losses:=TStringList.Create; Workbook:=nil;
+  DateFormat:=TRegExpr.Create('^([0-9]{1,2})([/.-])([0-9]{1,2})([/.-])([0-9]{4})$');
+  try
+    Workbook:=ReadWorkbookRows(DecodeStringBase64(Source.AsString,True),Names,@Date1904);
+    SheetIndex:=Names.IndexOf('Tasks');
+    if (SheetIndex<0) or (SheetIndex>=Workbook.Count) then SheetIndex:=0;
+    Sheet:=Workbook.Arrays[SheetIndex];
+    if (Sheet.Count=0) or (Sheet.Count>20000) then raise EConvertError.Create('Invalid Planner worksheet');
+    Title:='Imported Microsoft Planner'; HeaderAt:=-1;
+    for I:=0 to Sheet.Count-1 do
+    begin
+      Header:=Sheet.Arrays[I]; Row:=Header;
+      if (Cell('Task Name')='Task Name') and (Cell('Bucket Name')='Bucket Name') then
+      begin HeaderAt:=I; Break; end;
+      if (Row.Count>=2) and (Trim(Row.Strings[0])='Plan name') and (Trim(Row.Strings[1])<>'') then
+        Title:=Trim(Row.Strings[1]);
+    end;
+    if HeaderAt<0 then raise EConvertError.Create('Missing Planner Task Name and Bucket Name columns');
+    DayFirst:=False; MonthFirst:=False; Ambiguous:=False;
+    for I:=HeaderAt+1 to Sheet.Count-1 do
+    begin
+      Row:=Sheet.Arrays[I];
+      for Text in DateInputs do
+        if NumericDate(Cell(Text)) then
+        begin
+          if (DateFormat.Match[2]='.') or (First>12) then DayFirst:=True
+          else if Second>12 then MonthFirst:=True
+          else if First<>Second then Ambiguous:=True;
+        end;
+    end;
+    if DayFirst and MonthFirst then Losses.Add('/dates: mixed day/month and month/day; read as month/day')
+    else if Ambiguous and not (DayFirst or MonthFirst) then Losses.Add('/dates: ambiguous; read as month/day');
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+      Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+      for I:=HeaderAt+1 to Sheet.Count-1 do
+      begin
+        Row:=Sheet.Arrays[I]; Name:=Cell('Task Name'); Path:='/row/'+IntToStr(I+1);
+        if Name='' then
+        begin
+          for J:=0 to Row.Count-1 do if Trim(Row.Strings[J])<>'' then
+          begin Losses.Add(Path+': task without a name skipped'); Break; end;
+          Continue;
+        end;
+        Bucket:=Cell('Bucket Name'); if Bucket='' then Bucket:='No bucket';
+        AddNamed(Lists,'title',Bucket);
+        Id:='task-'+IntToStr(I);
+        Card:=TJSONObject.Create(['_id',Id,'title',Name,'listId',Bucket,'description',Cell('Description'),
+          'requestedBy',Cell('Created By'),'sort',I]);
+        Cards.Add(Card);
+        for J:=Low(DateInputs) to High(DateInputs) do AddDate(DateTargets[J],Cell(DateInputs[J]));
+        Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+        AddField('Progress'); AddField('Priority'); AddField('Completed By');
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for Text in Cell('Labels').Split([';'],TStringSplitOptions.ExcludeEmpty) do
+        begin
+          Name:=Trim(Text); if Name='' then Continue;
+          AddNamed(Labels,'name',Name); Tags.Add(Name);
+        end;
+        People:=TJSONArray.Create; Card.Add('assignees',People);
+        Members:=TJSONArray.Create; Card.Add('members',Members);
+        for Text in Cell('Assigned To').Split([';'],TStringSplitOptions.ExcludeEmpty) do
+        begin
+          Author:=ImportAuthorIdentity(Authors,Trim(Text));
+          if Author='' then Continue;
+          if Members.Count=0 then Members.Add(Author) else People.Add(Author);
+        end;
+        CheckId:=''; K:=0;
+        for Text in Cell('Checklist Items').Split([';'],TStringSplitOptions.ExcludeEmpty) do
+        begin
+          Name:=Trim(Text); if Name='' then Continue;
+          if CheckId='' then
+          begin
+            CheckId:=Id+':checklist';
+            Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',Id,'title','Checklist','sort',0]));
+          end;
+          Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(K),'checklistId',CheckId,
+            'title',Name,'isFinished',False,'sort',K]));
+          Inc(K);
+        end;
+        Text:=Cell('Completed Checklist Items'); J:=Pos('/',Text);
+        if (K>0) and (J>0) and (StrToIntDef(Trim(Copy(Text,1,J-1)),0)>0) then
+          Losses.Add(Path+'/Completed Checklist Items: total is known but individual completed items are not identified');
+        Text:=Cell('Is Recurring');
+        if SameText(Text,'yes') or SameText(Text,'true') then Losses.Add(Path+'/Is Recurring: imported once');
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except Result.Free; raise; end;
+  finally DateFormat.Free; Workbook.Free; Losses.Free; Names.Free; end;
+end;
+
 function TeamworkImport(const Source:TJSONData):TJSONObject;
 var Workbook,Sheet,Header,Row,Lists,Cards,Definitions,Fields,Labels,Tags:TJSONArray;
   SheetNames:TStringList; Board,Card:TJSONObject; Ancestors:array of string;
@@ -8071,7 +8245,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='excel') or (FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner');
 end;
 
 const ImportRecoveryType='import-completed-with-warnings';
@@ -8927,6 +9101,7 @@ begin
             else if SourceFormat='orgmode' then Body:=OrgModeImport(Value)
             else if SourceFormat='focalboard' then Body:=FocalboardImport(Value)
             else if SourceFormat='todoist' then Body:=TodoistImport(Value)
+            else if SourceFormat='planner' then Body:=PlannerImport(Value)
             else if SourceFormat='csv' then Body:=CsvMappedBoard(Value,nil)
             else if SourceFormat='wekan' then
             begin

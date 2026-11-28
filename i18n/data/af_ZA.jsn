@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Elke werkblad word sy eie raad:",
   "csv-mapping-skipped-sheets": "Werkblaaie wat nie ingevoer word nie:",
   "csv-mapping-title-required": "Kies die kolom wat die kaarttitels bevat.",
-  "csv-mapping-list-required": "Tik die naam van die lys waarin elke kaart geplaas word, of kies die kolom wat die lys bevat."
+  "csv-mapping-list-required": "Tik die naam van die lys waarin elke kaart geplaas word, of kies die kolom wat die lys bevat.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

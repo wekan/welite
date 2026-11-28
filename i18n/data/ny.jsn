@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Tsamba lililonse limakhala bolodi lake:",
   "csv-mapping-skipped-sheets": "Masamba omwe salowetsedwa:",
   "csv-mapping-title-required": "Sankhani mzati womwe uli ndi mitu ya makhadi.",
-  "csv-mapping-list-required": "Lembani dzina la mndandanda womwe khadi lililonse limalowamo, kapena sankhani mzati womwe uli ndi mndandanda."
+  "csv-mapping-list-required": "Lembani dzina la mndandanda womwe khadi lililonse limalowamo, kapena sankhani mzati womwe uli ndi mndandanda.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

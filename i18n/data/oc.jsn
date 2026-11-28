@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Cada fuèlh ven son pròpri tablèu :",
   "csv-mapping-skipped-sheets": "Fuèlhs que son pas importats :",
   "csv-mapping-title-required": "Causissètz la colomna que conten los títols de las cartas.",
-  "csv-mapping-list-required": "Picatz lo nom de la lista ont va cada carta, o causissètz la colomna que conten la lista."
+  "csv-mapping-list-required": "Picatz lo nom de la lista ont va cada carta, o causissètz la colomna que conten la lista.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

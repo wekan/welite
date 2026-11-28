@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Ang bawat sheet ay magiging sariling pisara:",
   "csv-mapping-skipped-sheets": "Mga sheet na hindi ini-import:",
   "csv-mapping-title-required": "Piliin ang column na naglalaman ng mga pamagat ng kard.",
-  "csv-mapping-list-required": "I-type ang pangalan ng listahan na paglalagyan ng bawat kard, o piliin ang column na naglalaman ng listahan."
+  "csv-mapping-list-required": "I-type ang pangalan ng listahan na paglalagyan ng bawat kard, o piliin ang column na naglalaman ng listahan.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

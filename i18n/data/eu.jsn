@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Orri bakoitza bere arbel bihurtzen da:",
   "csv-mapping-skipped-sheets": "Inportatzen ez diren orriak:",
   "csv-mapping-title-required": "Aukeratu txartelen izenburuak dituen zutabea.",
-  "csv-mapping-list-required": "Idatzi txartel guztiak jasoko dituen zerrendaren izena, edo aukeratu zerrenda jasotzen duen zutabea."
+  "csv-mapping-list-required": "Idatzi txartel guztiak jasoko dituen zerrendaren izena, edo aukeratu zerrenda jasotzen duen zutabea.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

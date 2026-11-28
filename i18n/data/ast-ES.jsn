@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Cada fueya conviértese nel so propiu tableru:",
   "csv-mapping-skipped-sheets": "Fueyes que nun s'importen:",
   "csv-mapping-title-required": "Escueyi la columna que tien los títulos de les tarxetes.",
-  "csv-mapping-list-required": "Escribi'l nome de la llista na que van toles tarxetes, o escueyi la columna que tien la llista."
+  "csv-mapping-list-required": "Escribi'l nome de la llista na que van toles tarxetes, o escueyi la columna que tien la llista.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

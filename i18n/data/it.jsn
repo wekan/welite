@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Ogni foglio diventa una bacheca separata:",
   "csv-mapping-skipped-sheets": "Fogli che non vengono importati:",
   "csv-mapping-title-required": "Scegli la colonna che contiene i titoli delle schede.",
-  "csv-mapping-list-required": "Digita il nome della lista in cui inserire tutte le schede, oppure scegli la colonna che contiene la lista."
+  "csv-mapping-list-required": "Digita il nome della lista in cui inserire tutte le schede, oppure scegli la colonna che contiene la lista.",
+  "import-board-instruction-planner": "In Microsoft Planner, apri il menu del piano e scegli Export plan to Excel, quindi seleziona il file .xlsx. I contenitori diventano liste e le attività diventano schede, con assegnatari, date, etichette, checklist e descrizioni; Progress, Priority e Completed By diventano campi personalizzati."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Benn-benn xët dafay nekk tablo bu moom:",
   "csv-mapping-skipped-sheets": "Xët yi duñu dugal:",
   "csv-mapping-title-required": "Tànnal kolon bi yor turu karta yi.",
-  "csv-mapping-list-required": "Bindal turu limu bi karta yépp di dugg, walla tànnal kolon bi yor limu bi."
+  "csv-mapping-list-required": "Bindal turu limu bi karta yépp di dugg, walla tànnal kolon bi yor limu bi.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

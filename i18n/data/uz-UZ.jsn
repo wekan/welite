@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Har bir varaq alohida taxtaga aylanadi:",
   "csv-mapping-skipped-sheets": "Import qilinmaydigan varaqlar:",
   "csv-mapping-title-required": "Karta sarlavhalari joylashgan ustunni tanlang.",
-  "csv-mapping-list-required": "Barcha kartalar joylashtiriladigan roʻyxat nomini kiriting yoki roʻyxat joylashgan ustunni tanlang."
+  "csv-mapping-list-required": "Barcha kartalar joylashtiriladigan roʻyxat nomini kiriting yoki roʻyxat joylashgan ustunni tanlang.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

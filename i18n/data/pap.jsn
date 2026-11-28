@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Kada blachi ta bira su mes tabla:",
   "csv-mapping-skipped-sheets": "Blachinan ku no ta wordu importá:",
   "csv-mapping-title-required": "Skohe e kolòm ku tin e títulonan di karchi.",
-  "csv-mapping-list-required": "Skirbi e nòmber di e lista den kua tur karchi ta bai, òf skohe e kolòm ku tin e lista."
+  "csv-mapping-list-required": "Skirbi e nòmber di e lista den kua tur karchi ta bai, òf skohe e kolòm ku tin e lista.",
+  "import-board-instruction-planner": "Den Microsoft Planner, habri e menú di e plan i skohe Export plan to Excel, despues skohe e fail .xlsx ei. Gruponan ta bira listanan i tareanan ta bira karchinan, ku nan responsabelnan, fechanan, etikètanan, lista di kontrol i deskripshon; Progress, Priority i Completed By ta bira kamponan personalisá."
 }

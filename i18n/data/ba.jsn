@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Һәр бит үҙ тактаһына әйләнә:",
   "csv-mapping-skipped-sheets": "Импортланмаған биттәр:",
   "csv-mapping-title-required": "Карточка исемдәрен үҙ эсенә алған бағананы һайлағыҙ.",
-  "csv-mapping-list-required": "Бөтә карточкалар инә торған исемлектең исемен яҙығыҙ, йәки исемлекте үҙ эсенә алған бағананы һайлағыҙ."
+  "csv-mapping-list-required": "Бөтә карточкалар инә торған исемлектең исемен яҙығыҙ, йәки исемлекте үҙ эсенә алған бағананы һайлағыҙ.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

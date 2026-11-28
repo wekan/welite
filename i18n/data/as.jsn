@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "প্ৰতিখন শ্বীট নিজৰ ফলক হয়:",
   "csv-mapping-skipped-sheets": "আমদানি নোহোৱা শ্বীটসমূহ:",
   "csv-mapping-title-required": "কাৰ্ডৰ শিৰোনামসমূহ ধাৰণ কৰা স্তম্ভটো বাছক।",
-  "csv-mapping-list-required": "প্ৰতিখন কাৰ্ড যোৱা তালিকাৰ নাম লিখক, বা তালিকা ধাৰণ কৰা স্তম্ভটো বাছক।"
+  "csv-mapping-list-required": "প্ৰতিখন কাৰ্ড যোৱা তালিকাৰ নাম লিখক, বা তালিকা ধাৰণ কৰা স্তম্ভটো বাছক।",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

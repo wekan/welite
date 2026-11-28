@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "各シートを個別のボードにします:",
   "csv-mapping-skipped-sheets": "インポートしないシート:",
   "csv-mapping-title-required": "カード名が入っている列を選択してください。",
-  "csv-mapping-list-required": "すべてのカードを入れるリストの名前を入力するか、リストが入っている列を選択してください。"
+  "csv-mapping-list-required": "すべてのカードを入れるリストの名前を入力するか、リストが入っている列を選択してください。",
+  "import-board-instruction-planner": "Microsoft Planner でプランのメニューを開き、Export plan to Excel を選択して、出力された .xlsx ファイルを選びます。バケットはリストに、タスクは担当者、日付、ラベル、チェックリスト、説明を含むカードに変換されます。Progress、Priority、Completed By はカスタムフィールドになります。"
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "દરેક શીટનું પોતાનું અલગ બોર્ડ બને છે:",
   "csv-mapping-skipped-sheets": "આયાત ન થતી શીટો:",
   "csv-mapping-title-required": "કાર્ડનાં શીર્ષકો ધરાવતી કૉલમ પસંદ કરો.",
-  "csv-mapping-list-required": "બધા કાર્ડ જે યાદીમાં જશે તેનું નામ લખો, અથવા યાદી ધરાવતી કૉલમ પસંદ કરો."
+  "csv-mapping-list-required": "બધા કાર્ડ જે યાદીમાં જશે તેનું નામ લખો, અથવા યાદી ધરાવતી કૉલમ પસંદ કરો.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

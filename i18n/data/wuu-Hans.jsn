@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "每张工作表各自变成一块看板：",
   "csv-mapping-skipped-sheets": "勿导入个工作表：",
   "csv-mapping-title-required": "请选择有卡片标题个列。",
-  "csv-mapping-list-required": "请输入全部卡片要放进去个列表名，或者选有列表个列。"
+  "csv-mapping-list-required": "请输入全部卡片要放进去个列表名，或者选有列表个列。",
+  "import-board-instruction-planner": "勒 Microsoft Planner 里向打开计划菜单，选 Export plan to Excel，再选搿只 .xlsx 文件。分组（Bucket）变成列表，任务变成卡片，带上负责人、日期、标签、清单搭描述；Progress、Priority 搭 Completed By 变成自定义字段。"
 }

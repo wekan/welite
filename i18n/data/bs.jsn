@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Svaki radni list postaje zasebna tabla:",
   "csv-mapping-skipped-sheets": "Radni listovi koji se ne uvoze:",
   "csv-mapping-title-required": "Odaberite kolonu koja sadrži naslove kartica.",
-  "csv-mapping-list-required": "Upišite naziv liste u koju idu sve kartice ili odaberite kolonu koja sadrži listu."
+  "csv-mapping-list-required": "Upišite naziv liste u koju idu sve kartice ili odaberite kolonu koja sadrži listu.",
+  "import-board-instruction-planner": "U Microsoft Planneru otvorite meni plana i odaberite Export plan to Excel, a zatim odaberite dobijenu .xlsx datoteku. Grupe postaju liste, a zadaci kartice s dodijeljenim osobama, datumima, oznakama, kontrolnom listom i opisom; Progress, Priority i Completed By postaju prilagođena polja."
 }

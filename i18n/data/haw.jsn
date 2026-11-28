@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Lilo kēlā me kēia pepa i papa nona iho:",
   "csv-mapping-skipped-sheets": "Nā pepa ʻaʻole e hoʻokomo ʻia:",
   "csv-mapping-title-required": "Koho i ke kolamu e paʻa ana nā poʻo inoa kāleka.",
-  "csv-mapping-list-required": "Kikokiko i ka inoa o ka papa inoa no nā kāleka a pau, a i ʻole e koho i ke kolamu e paʻa ana ka papa inoa."
+  "csv-mapping-list-required": "Kikokiko i ka inoa o ka papa inoa no nā kāleka a pau, a i ʻole e koho i ke kolamu e paʻa ana ka papa inoa.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

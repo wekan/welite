@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "សន្លឹកនីមួយៗក្លាយជាក្តារផ្ទាល់ខ្លួន៖",
   "csv-mapping-skipped-sheets": "សន្លឹកដែលមិនត្រូវបាននាំចូល៖",
   "csv-mapping-title-required": "ជ្រើសជួរឈរដែលផ្ទុកចំណងជើងកាត។",
-  "csv-mapping-list-required": "វាយឈ្មោះបញ្ជីដែលកាតទាំងអស់ចូលទៅ ឬជ្រើសជួរឈរដែលផ្ទុកបញ្ជី។"
+  "csv-mapping-list-required": "វាយឈ្មោះបញ្ជីដែលកាតទាំងអស់ចូលទៅ ឬជ្រើសជួរឈរដែលផ្ទុកបញ្ជី។",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

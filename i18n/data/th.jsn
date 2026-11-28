@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "แต่ละชีตจะกลายเป็นบอร์ดแยกกัน:",
   "csv-mapping-skipped-sheets": "ชีตที่ไม่นำเข้า:",
   "csv-mapping-title-required": "เลือกคอลัมน์ที่มีชื่อการ์ด",
-  "csv-mapping-list-required": "พิมพ์ชื่อรายการที่จะใช้เก็บการ์ดทั้งหมด หรือเลือกคอลัมน์ที่มีรายการ"
+  "csv-mapping-list-required": "พิมพ์ชื่อรายการที่จะใช้เก็บการ์ดทั้งหมด หรือเลือกคอลัมน์ที่มีรายการ",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

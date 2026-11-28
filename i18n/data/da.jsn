@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Hvert regneark bliver en selvstændig tavle:",
   "csv-mapping-skipped-sheets": "Regneark, der ikke importeres:",
   "csv-mapping-title-required": "Vælg den kolonne, der indeholder kortenes titler.",
-  "csv-mapping-list-required": "Skriv navnet på listen, som alle kort skal placeres på, eller vælg den kolonne, der indeholder listen."
+  "csv-mapping-list-required": "Skriv navnet på listen, som alle kort skal placeres på, eller vælg den kolonne, der indeholder listen.",
+  "import-board-instruction-planner": "Åbn planens menu i Microsoft Planner, og vælg Export plan to Excel. Vælg derefter den .xlsx-fil. Buckets bliver til lister, og opgaver bliver til kort med deres tildelte personer, datoer, etiketter, tjekliste og beskrivelse; Progress, Priority og Completed By bliver til brugerdefinerede felter."
 }

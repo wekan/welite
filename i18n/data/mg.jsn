@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Lasa solaitra misaraka ny takelaka tsirairay:",
   "csv-mapping-skipped-sheets": "Takelaka tsy ampidirina:",
   "csv-mapping-title-required": "Fidio ny tsanganana misy ny lohatenin’ny karatra.",
-  "csv-mapping-list-required": "Soraty ny anaran’ny lisitra handraisana ny karatra rehetra, na fidio ny tsanganana misy ny lisitra."
+  "csv-mapping-list-required": "Soraty ny anaran’ny lisitra handraisana ny karatra rehetra, na fidio ny tsanganana misy ny lisitra.",
+  "import-board-instruction-planner": "Ao amin’ny Microsoft Planner, sokafy ny drafitra, fidio ny menio ⋯ eo akaikin’ny anarany, avy eo Export as Excel (ao amin’ny Planner mahazatra: Export plan to Excel), ary fidio ilay rakitra .xlsx. Lasa lisitra ny vondrona ary lasa karatra ny asa, miaraka amin’ny olona voatendry, daty, marika, lisitra fanamarinana ary famaritana; lasa saha manokana ny Progress, Priority ary Completed By."
 }

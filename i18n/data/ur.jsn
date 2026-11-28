@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "ہر شیٹ الگ بورڈ بن جاتی ہے:",
   "csv-mapping-skipped-sheets": "درآمد نہ کی جانے والی شیٹس:",
   "csv-mapping-title-required": "کارڈوں کے عنوانات والا کالم منتخب کریں۔",
-  "csv-mapping-list-required": "اس فہرست کا نام لکھیں جس میں تمام کارڈ جائیں گے، یا فہرست والا کالم منتخب کریں۔"
+  "csv-mapping-list-required": "اس فہرست کا نام لکھیں جس میں تمام کارڈ جائیں گے، یا فہرست والا کالم منتخب کریں۔",
+  "import-board-instruction-planner": "Microsoft Planner میں منصوبہ کھولیں، اس کے نام کے ساتھ ⋯ مینو منتخب کریں، پھر Export as Excel (کلاسک Planner میں: Export plan to Excel)، اور وہ .xlsx فائل منتخب کریں۔ Buckets فہرستیں اور کام کارڈز بن جاتے ہیں، ساتھ میں ان کے مقرر کردہ، تاریخیں، لیبل، جانچ فہرست اور تفصیل بھی آتی ہے؛ Progress، Priority اور Completed By حسب ضرورت فیلڈز بن جاتے ہیں۔"
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Kowane takarda yana zama allonsa na kansa:",
   "csv-mapping-skipped-sheets": "Takardun da ba a shigo da su ba:",
   "csv-mapping-title-required": "Zaɓi ginshiƙin da ke ɗauke da taken katuna.",
-  "csv-mapping-list-required": "Rubuta sunan jerin da kowane kati zai shiga, ko zaɓi ginshiƙin da ke ɗauke da jerin."
+  "csv-mapping-list-required": "Rubuta sunan jerin da kowane kati zai shiga, ko zaɓi ginshiƙin da ke ɗauke da jerin.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Mintga fegl daventa ina atgna tabella:",
   "csv-mapping-skipped-sheets": "Fegls che na vegnan betg importads:",
   "csv-mapping-title-required": "Tschernai la colonna che cuntegna ils titels da las cartas.",
-  "csv-mapping-list-required": "Tippai il num da la glista en la quala mintga carta va, u tschernai la colonna che cuntegna la glista."
+  "csv-mapping-list-required": "Tippai il num da la glista en la quala mintga carta va, u tschernai la colonna che cuntegna la glista.",
+  "import-board-instruction-planner": "En Microsoft Planner, avrir il plan, tscherner il menu ⋯ sper ses num, lura Exportar sco Excel (en il Planner classic: Exportar il plan en Excel), e tscherner quella datoteca .xlsx. Ils buckets daventan glistas e las incumbensas daventan cartas, cun lur persunas responsablas, datas, etichettas, glista da controlla e descripziun; Progress, Priority e Completed By daventan champs persunalisads."
 }

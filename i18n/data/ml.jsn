@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "ഓരോ ഷീറ്റും വേറൊരു ബോർഡാകും:",
   "csv-mapping-skipped-sheets": "ഇറക്കുമതി ചെയ്യാത്ത ഷീറ്റുകൾ:",
   "csv-mapping-title-required": "കാർഡ് തലക്കെട്ടുകളുള്ള കോളം തിരഞ്ഞെടുക്കുക.",
-  "csv-mapping-list-required": "എല്ലാ കാർഡുകളും പോകേണ്ട പട്ടികയുടെ പേര് നൽകുക, അല്ലെങ്കിൽ പട്ടികയുള്ള കോളം തിരഞ്ഞെടുക്കുക."
+  "csv-mapping-list-required": "എല്ലാ കാർഡുകളും പോകേണ്ട പട്ടികയുടെ പേര് നൽകുക, അല്ലെങ്കിൽ പട്ടികയുള്ള കോളം തിരഞ്ഞെടുക്കുക.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

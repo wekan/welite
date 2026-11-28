@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "প্রতিটি শিট আলাদা বোর্ড হয়:",
   "csv-mapping-skipped-sheets": "যে শিটগুলো আমদানি হয় না:",
   "csv-mapping-title-required": "কার্ডের শিরোনাম আছে এমন কলাম বেছে নিন।",
-  "csv-mapping-list-required": "সব কার্ড যে তালিকায় যাবে তার নাম লিখুন, অথবা তালিকা আছে এমন কলাম বেছে নিন।"
+  "csv-mapping-list-required": "সব কার্ড যে তালিকায় যাবে তার নাম লিখুন, অথবা তালিকা আছে এমন কলাম বেছে নিন।",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

@@ -2355,5 +2355,6 @@
   "csv-mapping-boards": "ప్రతి షీట్ దాని సొంత బోర్డుగా మారుతుంది:",
   "csv-mapping-skipped-sheets": "దిగుమతి కాని షీట్‌లు:",
   "csv-mapping-title-required": "కార్డ్ శీర్షికలను కలిగి ఉన్న నిలువు వరుసను ఎంచుకోండి.",
-  "csv-mapping-list-required": "ప్రతి కార్డ్ వెళ్ళే జాబితా పేరును టైప్ చేయండి, లేదా జాబితాను కలిగి ఉన్న నిలువు వరుసను ఎంచుకోండి."
+  "csv-mapping-list-required": "ప్రతి కార్డ్ వెళ్ళే జాబితా పేరును టైప్ చేయండి, లేదా జాబితాను కలిగి ఉన్న నిలువు వరుసను ఎంచుకోండి.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "ھەر بىر جەدۋەل ئۆزىنىڭ تاختىسىغا ئايلىنىدۇ:",
   "csv-mapping-skipped-sheets": "ئەكىرىلمەيدىغان جەدۋەللەر:",
   "csv-mapping-title-required": "كارتا ماۋزۇلىرىنى ساقلايدىغان ستوننى تاللاڭ.",
-  "csv-mapping-list-required": "ھەممە كارتا كىرىدىغان تىزىملىكنىڭ ئىسمىنى كىرگۈزۈڭ، ياكى تىزىملىكنى ساقلايدىغان ستوننى تاللاڭ."
+  "csv-mapping-list-required": "ھەممە كارتا كىرىدىغان تىزىملىكنىڭ ئىسمىنى كىرگۈزۈڭ، ياكى تىزىملىكنى ساقلايدىغان ستوننى تاللاڭ.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

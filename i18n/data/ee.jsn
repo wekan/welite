@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Axa ɖesiaɖe zua eya ŋutɔ ƒe kpekpeɖeŋu:",
   "csv-mapping-skipped-sheets": "Axa siwo wometsɔ va eme o:",
   "csv-mapping-title-required": "Tia ƒlo si me kaɖiwo ƒe ŋkɔwo le.",
-  "csv-mapping-list-required": "Ŋlɔ xexlẽdzesi si me kaɖiwo katã ayi la ƒe ŋkɔ, alo tia ƒlo si me xexlẽdzesi la le."
+  "csv-mapping-list-required": "Ŋlɔ xexlẽdzesi si me kaɖiwo katã ayi la ƒe ŋkɔ, alo tia ƒlo si me xexlẽdzesi la le.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Fiecare foaie devine un panou separat:",
   "csv-mapping-skipped-sheets": "Foi care nu sunt importate:",
   "csv-mapping-title-required": "Alegeți coloana care conține titlurile cardurilor.",
-  "csv-mapping-list-required": "Introduceți numele listei în care vor ajunge toate cardurile sau alegeți coloana care conține lista."
+  "csv-mapping-list-required": "Introduceți numele listei în care vor ajunge toate cardurile sau alegeți coloana care conține lista.",
+  "import-board-instruction-planner": "În Microsoft Planner, deschide meniul planului și alege Export plan to Excel, apoi selectează acel fișier .xlsx. Grupurile devin liste, iar sarcinile devin carduri cu persoanele alocate, datele, etichetele, lista de verificare și descrierea; Progress, Priority și Completed By devin câmpuri personalizate."
 }

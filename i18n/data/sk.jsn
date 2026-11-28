@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Každý hárok sa stane samostatnou nástenkou:",
   "csv-mapping-skipped-sheets": "Hárky, ktoré sa neimportujú:",
   "csv-mapping-title-required": "Vyberte stĺpec s názvami kariet.",
-  "csv-mapping-list-required": "Zadajte názov zoznamu pre všetky karty alebo vyberte stĺpec obsahujúci zoznam."
+  "csv-mapping-list-required": "Zadajte názov zoznamu pre všetky karty alebo vyberte stĺpec obsahujúci zoznam.",
+  "import-board-instruction-planner": "V Microsoft Planner otvorte ponuku plánu a vyberte Export plan to Excel. Potom vyberte tento súbor .xlsx. Skupiny sa zmenia na zoznamy a úlohy na karty s priradenými osobami, dátumami, štítkami, kontrolným zoznamom a popisom; Progress, Priority a Completed By sa zmenia na vlastné polia."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "ⴽⵓ ⵜⴰⵙⵏⴰ ⴰⴷ ⵜⴳ ⵜⴰⴼⵍⵡⵉⵜ ⵏⵏⵙ:",
   "csv-mapping-skipped-sheets": "ⵜⵉⵙⵏⵉⵡⵉⵏ ⵏⵏⴰ ⵓⵔ ⵜⵜⵓⵙⴽⵛⴰⵎⵏⵜ:",
   "csv-mapping-title-required": "ⴼⵔⵏ ⵜⴰⴳⵊⴷⵉⵜ ⵏⵏⴰ ⵉⴳⴰⵏ ⵉⵣⵡⵍⴰ ⵏ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ.",
-  "csv-mapping-list-required": "ⴰⵔⵓ ⵉⵙⵎ ⵏ ⵜⵍⴳⴰⵎⵜ ⵏⵏⴰ ⴳ ⵔⴰⴷ ⴽⵛⵎⵏⵜ ⴽⵓⵍⵍⵓ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ, ⵏⵖ ⴼⵔⵏ ⵜⴰⴳⵊⴷⵉⵜ ⵏⵏⴰ ⵉⴳⴰⵏ ⵜⴰⵍⴳⴰⵎⵜ."
+  "csv-mapping-list-required": "ⴰⵔⵓ ⵉⵙⵎ ⵏ ⵜⵍⴳⴰⵎⵜ ⵏⵏⴰ ⴳ ⵔⴰⴷ ⴽⵛⵎⵏⵜ ⴽⵓⵍⵍⵓ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ, ⵏⵖ ⴼⵔⵏ ⵜⴰⴳⵊⴷⵉⵜ ⵏⵏⴰ ⵉⴳⴰⵏ ⵜⴰⵍⴳⴰⵎⵜ.",
+  "import-board-instruction-planner": "ⴳ Microsoft Planner, ⵕⵥⵎ ⴰⵖⴰⵡⴰⵙ, ⴼⵔⵏ ⴰⵎⵓⵖ ⵏ ⋯ ⵜⵉⴳⵎⵉ ⵏ ⵉⵙⵎ ⵏⵏⵙ, ⵙ ⴷⴼⴼⵉⵔ Export as Excel (ⴳ Planner ⴰⴽⴱⵓⵔ: Export plan to Excel), ⴷ ⴼⵔⵏ ⴰⴼⴰⵢⵍⵓ .xlsx ⴰⵏⵏ. Buckets ⴰⴷ ⴳⵏ ⵜⵉⵍⴳⴰⵎⵉⵏ, ⵜⵉⵡⵓⵔⵉⵡⵉⵏ ⴰⴷ ⴳⵏⵜ ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ, ⵙ ⵉⵎⵙⵡⵓⵔⵉⵢⵏ, ⵉⵙⵓⴽⴰⴷ, ⵉⵔⵛⵓⵎⵏ, ⵜⴰⵍⴳⴰⵎⵜ ⵏ ⵜⵎⵏⵥⵉⵜ ⴷ ⵓⴳⵍⴰⵎ ⵏⵏⵙⵏⵜ; Progress, Priority ⴷ Completed By ⴰⴷ ⴳⵏ ⵉⴳⵔⴰⵏ ⵉⵥⵍⵉⵏ."
 }

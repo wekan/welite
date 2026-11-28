@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Hvørt ark verður til sína egnu talvu:",
   "csv-mapping-skipped-sheets": "Ark, sum ikki verða innflutt:",
   "csv-mapping-title-required": "Vel teigin, sum hevur kortheitini.",
-  "csv-mapping-list-required": "Skriva navnið á listanum, sum øll kort fara í, ella vel teigin, sum hevur listan."
+  "csv-mapping-list-required": "Skriva navnið á listanum, sum øll kort fara í, ella vel teigin, sum hevur listan.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

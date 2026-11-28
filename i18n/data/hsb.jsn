@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Kóžda tabela budźe swójska tafla:",
   "csv-mapping-skipped-sheets": "Tabele, kotrež so njeimportuja:",
   "csv-mapping-title-required": "Wubjerće stołp, kotryž wobsahuje titule kartow.",
-  "csv-mapping-list-required": "Zapodajće mjeno lisćiny, do kotrejež kóžda karta póńdźe, abo wubjerće stołp, kotryž lisćinu wobsahuje."
+  "csv-mapping-list-required": "Zapodajće mjeno lisćiny, do kotrejež kóžda karta póńdźe, abo wubjerće stołp, kotryž lisćinu wobsahuje.",
+  "import-board-instruction-planner": "W Microsoft Planner wočińće plan, wubjerće meni ⋯ pódla jeho mjena, potom Export as Excel (w klasiskim Planner: Export plan to Excel), a wubjerće tutu dataju .xlsx. Buckets so lisćiny a nadawki so karty stanu, z jich zamołwitymi, datumami, etiketami, kontrolnej lisćinu a wopisanjom; Progress, Priority a Completed By so swójske pola stanu."
 }

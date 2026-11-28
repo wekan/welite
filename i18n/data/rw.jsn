@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Buri rupapuro ruba ikibaho cyarwo:",
   "csv-mapping-skipped-sheets": "Impapuro zitinjizwa:",
   "csv-mapping-title-required": "Hitamo inkingi irimo imitwe y'amakarita.",
-  "csv-mapping-list-required": "Andika izina ry'urutonde buri karita ijyamo, cyangwa uhitemo inkingi irimo urutonde."
+  "csv-mapping-list-required": "Andika izina ry'urutonde buri karita ijyamo, cyangwa uhitemo inkingi irimo urutonde.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

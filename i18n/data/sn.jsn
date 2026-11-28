@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Peji rega rega rinova bhodhi raro:",
   "csv-mapping-skipped-sheets": "Mapeji asingapinzwi:",
   "csv-mapping-title-required": "Sarudza koramu ine misoro yemakadhi.",
-  "csv-mapping-list-required": "Nyora zita rerondedzero inopinda makadhi ese, kana sarudza koramu ine rondedzero."
+  "csv-mapping-list-required": "Nyora zita rerondedzero inopinda makadhi ese, kana sarudza koramu ine rondedzero.",
+  "import-board-instruction-planner": "MuMicrosoft Planner, vhura chirongwa, sarudza menyu ye ⋯ parutivi pezita racho, wozoti Export as Excel (muPlanner yekare: Export plan to Excel), wosarudza faira iro re.xlsx. MaBucket anova marondedzero uye mabasa anova makadhi, nevakapihwa basa, mazuva, mareberu, rondedzero yekuongorora netsanangudzo zvawo; Progress, Priority neCompleted By zvinova ndima dzakagadzirwa."
 }

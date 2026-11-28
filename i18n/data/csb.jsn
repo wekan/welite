@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Kòżdi arkùsz stôwô sã swòją tôflą:",
   "csv-mapping-skipped-sheets": "Arkùsze, chtërné nie są impòrtowóné:",
   "csv-mapping-title-required": "Wëbierzë kòlumnã, chtërna trzimô title kôrtów.",
-  "csv-mapping-list-required": "Napiszë miono lëstë, do chtërny jidze kòżdô kôrta, abò wëbierzë kòlumnã, chtërna trzimô lëstã."
+  "csv-mapping-list-required": "Napiszë miono lëstë, do chtërny jidze kòżdô kôrta, abò wëbierzë kòlumnã, chtërna trzimô lëstã.",
+  "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields."
 }

@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Varje kalkylblad blir en egen tavla:",
   "csv-mapping-skipped-sheets": "Kalkylblad som inte importeras:",
   "csv-mapping-title-required": "Välj den kolumn som innehåller kortens titlar.",
-  "csv-mapping-list-required": "Skriv namnet på listan som alla kort ska hamna i, eller välj den kolumn som innehåller listan."
+  "csv-mapping-list-required": "Skriv namnet på listan som alla kort ska hamna i, eller välj den kolumn som innehåller listan.",
+  "import-board-instruction-planner": "Öppna planens meny i Microsoft Planner och välj Export plan to Excel. Välj sedan den .xlsx-filen. Buckets blir listor och uppgifter blir kort med sina tilldelade personer, datum, etiketter, checklista och beskrivning; Progress, Priority och Completed By blir anpassade fält."
 }

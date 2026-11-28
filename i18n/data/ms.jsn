@@ -2368,5 +2368,6 @@
   "csv-mapping-boards": "Setiap helaian menjadi papan tersendiri:",
   "csv-mapping-skipped-sheets": "Helaian yang tidak diimport:",
   "csv-mapping-title-required": "Pilih lajur yang mengandungi tajuk kad.",
-  "csv-mapping-list-required": "Taip nama senarai yang akan menempatkan semua kad, atau pilih lajur yang mengandungi senarai."
+  "csv-mapping-list-required": "Taip nama senarai yang akan menempatkan semua kad, atau pilih lajur yang mengandungi senarai.",
+  "import-board-instruction-planner": "Dalam Microsoft Planner, buka menu pelan dan pilih Export plan to Excel, kemudian pilih fail .xlsx tersebut. Baldi menjadi senarai dan tugasan menjadi kad berserta penerima tugasan, tarikh, label, senarai semak dan keterangannya; Progress, Priority dan Completed By menjadi medan tersuai."
 }
