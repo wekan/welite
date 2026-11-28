@@ -440,7 +440,7 @@ begin
   SendJson(aResponse, Format('{"error":%d,"reason":%s}', [Code, AnsiQuotedStr(Reason, '"')]), Code);
 end;
 
-function ApiBodyValid(Request:TRequest):Boolean;
+function ApiBodyValid(Request:TRequest; AllowArray: Boolean):Boolean;
 var D:TJSONData;
 begin
   Result:=True;
@@ -448,18 +448,18 @@ begin
     (Pos('application/json',LowerCase(Request.ContentType))<>1) then Exit;
   D:=nil;
   try
-    try D:=GetJSON(Request.Content); Result:=D is TJSONObject; except Result:=False; end;
+    try D:=GetJSON(Request.Content); Result:=(D is TJSONObject) or (AllowArray and (D is TJSONArray)); except Result:=False; end;
   finally D.Free; end;
 end;
 
 // Resolve the tenant for an API request, or send a JSON error. Static, no web session needed.
-function ApiTenant(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant): Boolean;
+function ApiTenant(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant; AllowArray: Boolean = False): Boolean;
 begin
   if not DecodeApiPath(aRequest) then
   begin Result:=False;SendError(aResponse,400,'Invalid encoded route identifier');Exit;end;
   Result := ResolveTenant(aRequest, T) and TenantOpen(T);
   if not Result then SendError(aResponse,404,'Unknown domain')
-  else if not ApiBodyValid(aRequest) then
+  else if not ApiBodyValid(aRequest,AllowArray) then
   begin Result:=False; SendError(aResponse,400,'Expected a valid JSON object'); end;
 end;
 
@@ -4453,6 +4453,112 @@ begin
   except Result.Free; raise; end;
 end;
 
+function IssueImport(const Source: TJSONData; const FormatName: string): TJSONObject;
+var Issues, Lists, Cards, Labels, Comments, Tags: TJSONArray; Board, Authors, Issue, Card, Note: TJSONObject;
+  Data, Value: TJSONData; I,J,K: Integer; Id, Name, LabelId, Author, Due, Description, Url: string;
+  GitLab, Closed: Boolean;
+  function AuthorName(Value: TJSONData): string;
+  begin
+    Result:='';
+    if Value is TJSONObject then with TJSONObject(Value) do
+      Result:=Get('login',Get('username',Get('name','')));
+  end;
+  function LabelFor(const Name: string): string;
+  var L: Integer;
+  begin
+    for L:=0 to Labels.Count-1 do if Labels.Objects[L].Get('name','')=Name then Exit(Labels.Objects[L].Get('_id',''));
+    Result:='label-'+IntToStr(Labels.Count);
+    Labels.Add(TJSONObject.Create(['_id',Result,'name',Name,'color','blue']));
+  end;
+begin
+  Data:=Source;
+  if Data is TJSONObject then Data:=TJSONObject(Data).Find('issues');
+  if not (Data is TJSONArray) then raise EConvertError.Create('Invalid issue export');
+  Issues:=TJSONArray(Data);
+  GitLab:=FormatName='gitlab';
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title',FormatName+' issues']); Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Lists.Add(TJSONObject.Create(['_id','open','title','Open','sort',0]));
+    Lists.Add(TJSONObject.Create(['_id','closed','title','Closed','sort',1]));
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    for I:=0 to Issues.Count-1 do
+    begin
+      if not (Issues.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid issue row');
+      Issue:=Issues.Objects[I];
+      Value:=Issue.Find('id');
+      if Value=nil then Value:=Issue.Find('number');
+      if Value=nil then Value:=Issue.Find('iid');
+      if (Value=nil) or not (Value.JSONType in [jtString,jtNumber]) or (Trim(Issue.Get('title',''))='') then
+        raise EConvertError.Create('Invalid issue identity');
+      if (Issue.Find('pull_request')<>nil) then Continue;
+      Id:=Value.AsString;
+      Closed:=Issue.Get('state','')='closed';
+      if GitLab then
+      begin
+        Description:=Issue.Get('description','');
+        Url:=Issue.Get('web_url','');
+        Data:=Issue.Find('author');
+      end
+      else
+      begin
+        Description:=Issue.Get('body','');
+        Url:=Issue.Get('html_url','');
+        Data:=Issue.Find('user');
+      end;
+      if Url<>'' then Description:=Description+LineEnding+LineEnding+Url;
+      Card:=TJSONObject.Create(['_id',Id,'title',Issue.Get('title',''),'description',Description,
+        'listId',IfThen(Closed,'closed','open'),'dueComplete',Closed,'sort',I]);
+      Cards.Add(Card);
+      Author:=ImportAuthorIdentity(Authors,AuthorName(Data));
+      if Author<>'' then Card.Add('userId',Author);
+      Due:=Issue.Get('due_date','');
+      Value:=Issue.Find('milestone');
+      if (Due='') and (Value is TJSONObject) then
+        Due:=TJSONObject(Value).Get('due_on',TJSONObject(Value).Get('due_date',''));
+      if Due<>'' then Card.Add('dueAt',Due);
+      if Issue.Get('created_at','')<>'' then Card.Add('createdAt',Issue.Get('created_at',''));
+      if Issue.Get('closed_at','')<>'' then Card.Add('endAt',Issue.Get('closed_at',''));
+      Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+      Data:=Issue.Find('labels');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        Value:=Data.Items[J];
+        if Value is TJSONObject then Name:=TJSONObject(Value).Get('name','')
+        else if Value is TJSONString then Name:=Value.AsString else Continue;
+        if Name='' then Continue;
+        LabelId:=LabelFor(Name);
+        Tags.Add(LabelId);
+      end;
+      Data:=Issue.Find('notes');
+      if not (Data is TJSONArray) then Data:=Issue.Find('comments_data');
+      if not (Data is TJSONArray) then Data:=Issue.Find('comments');
+      if Data is TJSONArray then for K:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[K] is TJSONObject) then Continue;
+        Note:=TJSONObject(Data.Items[K]);
+        if Note.Get('system',False) or (Note.Get('body','')='') then Continue;
+        Value:=Note.Find('author');
+        if Value=nil then Value:=Note.Find('user');
+        Author:=ImportAuthorIdentity(Authors,AuthorName(Value));
+        Value:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(K),'cardId',Id,'text',Note.Get('body',''),'userId',Author]);
+        Comments.Add(Value);
+        if Note.Get('created_at','')<>'' then TJSONObject(Value).Add('createdAt',Note.Get('created_at',''));
+      end;
+    end;
+  except Result.Free; raise; end;
+end;
+
+function ExternalImportSupported(const FormatName: string): Boolean;
+begin
+  Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo');
+end;
+
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
@@ -5150,11 +5256,11 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   end;
 begin
   if MethodActor<>'' then T:=Tenant
-  else if not ApiTenant(aRequest,aResponse,T) then Exit;
+  else if not ApiTenant(aRequest,aResponse,T,aRequest.QueryFields.Values['source']<>'') then Exit;
   IsZip := SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip');
   SourceFormat := aRequest.QueryFields.Values['source'];
   if MethodActor<>'' then SourceFormat:=MethodFormat;
-  if (SourceFormat<>'') and (((SourceFormat<>'kanboard') and (SourceFormat<>'deck')) or IsZip) then
+  if (SourceFormat<>'') and (not ExternalImportSupported(SourceFormat) or IsZip) then
   begin SendError(aResponse,400,'Invalid import source'); Exit; end;
   if MethodActor<>'' then Actor:=MethodActor
   else if (IsZip or (SourceFormat<>'')) and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
@@ -5197,10 +5303,20 @@ begin
         if IsZip then Body:=ReadBoardZip(aRequest.Content)
         else if SourceFormat<>'' then
         begin
-          SourceDocument:=ExactObject(IfThen(MethodActor<>'',MethodBody,aRequest.Content));
+          SourceDocument:=ExactObject('{"payload":'+IfThen(MethodActor<>'',MethodBody,aRequest.Content)+'}');
           try
-            if SourceFormat='deck' then Body:=DeckImport(SourceDocument)
-            else Body:=KanboardImport(SourceDocument);
+            Value:=SourceDocument.Find('payload');
+            if SourceFormat='deck' then
+            begin
+              if not (Value is TJSONObject) then raise EConvertError.Create('Invalid Deck export');
+              Body:=DeckImport(TJSONObject(Value));
+            end
+            else if SourceFormat='kanboard' then
+            begin
+              if not (Value is TJSONObject) then raise EConvertError.Create('Invalid Kanboard export');
+              Body:=KanboardImport(TJSONObject(Value));
+            end
+            else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end
         else Body:=ExactObject(aRequest.Content);
@@ -5474,10 +5590,10 @@ end;
 
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
 begin
-  if not (Args is TJSONArray) or (Args.Count<>3) or not (Args.Items[0] is TJSONObject) or
+  if not (Args is TJSONArray) or (Args.Count<>3) or not (Args.Items[0].JSONType in [jtObject,jtArray]) or
     not (Args.Items[1] is TJSONObject) or (Args.Items[2].JSONType<>jtString) then
   begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
-  if (Args.Items[2].AsString<>'kanboard') and (Args.Items[2].AsString<>'deck') then
+  if not ExternalImportSupported(Args.Items[2].AsString) then
   begin SendJson(aResponse,'{"error":"invalid-import-format","reason":"Unknown import source"}',400); Exit; end;
   if Args.Items[1].Count<>0 then
   begin SendJson(aResponse,'{"error":"invalid-member-mapping","reason":"External import member mapping is unavailable"}',400); Exit; end;

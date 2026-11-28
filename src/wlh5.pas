@@ -1119,7 +1119,7 @@ begin
     '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
     '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
     E(Words.Text('import', 'Import')) + '</button></form>' +
-    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p>', '') + '</template>';
+    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p>', '') + '</template>';
 end;
 
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
@@ -9497,8 +9497,15 @@ begin
   Language:=ViewerLanguage(T.Db,S,Request);
   Words:=TWLTranslator.Create(Language);
   try
-    if Request.PathInfo='/import/deck' then begin Source:='deck'; FormatName:='Nextcloud Deck'; end
-    else begin Source:='kanboard'; FormatName:='Kanboard'; end;
+    Source:=Copy(Request.PathInfo,Length('/import/')+1,MaxInt);
+    case Source of
+      'deck': FormatName:='Nextcloud Deck';
+      'github': FormatName:='GitHub';
+      'gitlab': FormatName:='GitLab';
+      'gitea': FormatName:='Gitea';
+      'forgejo': FormatName:='Forgejo';
+      else FormatName:='Kanboard';
+    end;
     Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +

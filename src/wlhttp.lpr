@@ -918,6 +918,10 @@ begin
   HTTPRouter.RegisterRoute('/api/users/:userId', rmPut, @ApiChangeUser);
   HTTPRouter.RegisterRoute('/api/boards', rmGet, @ApiPublicBoards);
   HTTPRouter.RegisterRoute('/api/boards', rmPost, @ApiCreateBoard);
+  HTTPRouter.RegisterRoute('/import/github', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/gitlab', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/gitea', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/forgejo', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

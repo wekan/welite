@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- GitHub, GitLab, Gitea and Forgejo issue JSON imports preserve issue text,
+  state, due dates, labels, source links and embedded comments.
+
 - Nextcloud Deck JSON imports live cards, stacks, labels, dates, and comments
   with their original author names. Trashed cards and stacks are skipped.
 
