@@ -4329,7 +4329,7 @@ var B, Lanes, Lists, Cards, Card, Reveal, WipCounts: TWLRows; i, j, k: Integer; 
   Selector: TSelectionScope; Writable, CanExport, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   SharedRow, FirstLane, CalendarView, CalendarMode, MultiCalendar, TimeView: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
-  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView, WipPopup, WipBadges: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed, WipExceeded: Boolean;
+  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView, WipPopup, WipBadges: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed, MinicardFolded, WipExceeded: Boolean;
   function WipGroupBadges(const ListId: string; out Exceeded: Boolean): string;
   var Row: TWLRow; Caption: string;
   begin
@@ -4547,16 +4547,23 @@ begin
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');
       for k := 0 to High(Cards) do
+      begin
+        MinicardFolded := ProfileFold(Db, S.UserId, 'collapsedCards', BoardId, Cards[k][0]);
         // A block that opens the card, as Weddy's and WeKan's minicard.
         Canvas := Canvas + '<div class="minicard-wrapper js-minicard" up-href="' +
           HtmlAttr(CardRoute(BoardId, B[0][2], Cards[k][0])) + '" up-follow up-clickable up-target=".board-wrapper" data-card="' +
           HtmlAttr(Cards[k][0]) + '" data-card-id="' + HtmlAttr(Cards[k][0]) + '" data-sort="' + HtmlAttr(Cards[k][2]) +
           '">' + IfThen(Writable, SelectionCheckbox(Words, 'card', Cards[k][0], Cards[k][1]), '') +
           // Card colour, Show on Minicard (WeKan's minicard-<color>).
-          '<div class="minicard' + IfThen(Shows.CardColor and ColorName(Cards[k][9]), ' minicard-' + Cards[k][9], '') + '">' +
+          '<div class="minicard' + IfThen(MinicardFolded, ' minicard-collapsed', '') + IfThen(Shows.CardColor and ColorName(Cards[k][9]), ' minicard-' + Cards[k][9], '') + '">' +
           // WeKan's minicard cover: the card's cover image.
           IfThen(Cards[k][7] <> '', '<div class="minicard-cover"><img src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Cards[k][7])) +
             IfThen(RasterAttachment(Cards[k][16]), '/thumbnail', '') + '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title">' +
+          IfThen(S.UserId <> '', '<a href="#" role="button" class="minicard-collapse-toggle js-collapse-minicard" data-card="' +
+            HtmlAttr(Cards[k][0]) + '" data-collapsed="' + IfThen(MinicardFolded, 'true', '') +
+            '" aria-expanded="' + IfThen(MinicardFolded, 'false', 'true') + '" aria-label="' +
+            HtmlAttr(IfThen(MinicardFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) +
+            '"><i class="fa ' + IfThen(MinicardFolded, 'fa-caret-right', 'fa-caret-down') + '"></i></a>', '') +
           // WeKan's "Mark as complete" on the minicard, when Card Settings shows it there.
           IfThen(Shows.Complete, '<a class="minicard-complete-toggle js-toggle-card-complete" href="#" data-card="' + HtmlAttr(Cards[k][0]) +
             '" data-complete="' + IfThen(Cards[k][8] = '1', 'false', 'true') + '" title="' +
@@ -4566,6 +4573,7 @@ begin
           MarkdownViewer(Cards[k][1], PlainLinks, PlainSource) + '</span></div>' + MinicardBadges(Db, Words, S.UserId, BoardId, Cards[k][0], Writable, Shows,
           [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]],
           [Cards[k][10], Cards[k][11], Cards[k][12], Cards[k][13], Cards[k][14], Cards[k][15]], PlainLinks, PlainSource) + '</div></div>';
+      end;
       Canvas := Canvas + '</div>';
       if Writable then
         Canvas := Canvas + '<template class="js-card-composer-template">' +
@@ -6761,7 +6769,7 @@ begin
     SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
-  if Name = 'setSwimlaneCollapsedState' then
+  if (Name = 'setSwimlaneCollapsedState') or (Name = 'setCardCollapsedState') then
   begin
     // server/models/users.js: [boardId, swimlaneId, collapsed], the user's own
     // profile.collapsedSwimlanes[boardId][swimlaneId]; keys are ids only
@@ -6776,7 +6784,7 @@ begin
       if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 3) and (TJSONArray(Args).Items[0].JSONType = jtString) and
         (TJSONArray(Args).Items[1].JSONType = jtString) and (TJSONArray(Args).Items[2].JSONType = jtBoolean)) then
       begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
-      Code := SetViewProfileFold(T, S.UserId, 'collapsedSwimlanes', TJSONArray(Args).Items[0].AsString,
+      Code := SetViewProfileFold(T, S.UserId, IfThen(Name = 'setCardCollapsedState', 'collapsedCards', 'collapsedSwimlanes'), TJSONArray(Args).Items[0].AsString,
         TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[2].AsBoolean, Error);
     finally
       Args.Free;

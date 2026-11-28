@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Minicards have a personal fold control. Folded cards still work as drag
+  sources and destinations for mixed selections. All 18 shared structural
+  selection browser cases pass in WeLite.
+
 - Swimlanes can move with their lists and cards. Cross-board moves copy
   shared lists for the cards that need them and leave an open lane on the
   source board. The shared Chromium test covers a lane with selected descendants.
