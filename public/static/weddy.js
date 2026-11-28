@@ -1799,6 +1799,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       if (['/export', '/exportExcel', '/exportZip'].some(function (suffix) { return url.pathname.endsWith(suffix); })) selected = fields.concat(documentOnly);
       else if (url.pathname.endsWith('/exportPDF')) selected = fields.concat(documentOnly.filter(function (key) { return key !== 'activities'; }));
       else if (/\/export\/(markdown|opml|orgmode|nullboard|kanri)$/.test(url.pathname)) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists'; }));
+      else if (url.pathname.endsWith('/export/deck')) selected = fields.concat(documentOnly.filter(function (key) { return key === 'comments'; }));
       else if (url.pathname.endsWith('/export/trello')) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists' || key === 'comments'; }));
       else if (url.pathname.endsWith('/export/trellozip')) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists' || key === 'comments' || key === 'attachments'; }));
       url.searchParams.set('fields', selected.join(','));

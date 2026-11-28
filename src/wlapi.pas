@@ -416,7 +416,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,wloutlineexp,wlkanriexp,wltrelloexp,DOM,XMLRead,RegExpr;
+uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,wloutlineexp,wlkanriexp,wltrelloexp,wldeckexp,DOM,XMLRead,RegExpr;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -2884,7 +2884,7 @@ function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TW
 procedure ExcludeBoardArchive(Board: TJSONObject); forward;
 
 function DownloadScopeId(Request: TRequest; const Key: string): string; forward;
-procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string; FilterCreationDate: Boolean = False); forward;
+procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string; FilterCreationDate: Boolean = False; DeckFormat: Boolean = False); forward;
 procedure ScopeBoardExport(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string); forward;
 
 procedure PruneBoardExportUsers(Board: TJSONObject);
@@ -3078,15 +3078,10 @@ begin
 end;
 
 procedure ApiBoardTextExport(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Body, Extension, CreatedAt, ModifiedAt: string; Payload: TJSONObject; Opml, TodoTxt, OrgMode, Nullboard, Kanri, Trello: Boolean;
+var T: TWLTenant; BoardId, UserId, Body, Extension, CreatedAt, ModifiedAt, Format: string; Payload: TJSONObject;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
-  Opml := AnsiEndsStr('/opml', aRequest.PathInfo);
-  TodoTxt := AnsiEndsStr('/todotxt', aRequest.PathInfo);
-  OrgMode := AnsiEndsStr('/orgmode', aRequest.PathInfo);
-  Nullboard := AnsiEndsStr('/nullboard', aRequest.PathInfo);
-  Kanri := AnsiEndsStr('/kanri', aRequest.PathInfo);
-  Trello := AnsiEndsStr('/trello', aRequest.PathInfo);
+  Format := Copy(aRequest.PathInfo, RPos('/', aRequest.PathInfo)+1, MaxInt);
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
     if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
@@ -3094,41 +3089,29 @@ begin
       if Payload.Find('subtaskItems') = nil then Payload.Add('subtaskItems', TJSONArray.Create);
       CreatedAt := Payload.Get('createdAt', '');
       ModifiedAt := Payload.Get('modifiedAt', '');
-      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields'], Opml or TodoTxt or OrgMode);
-      if TodoTxt then Body := TodoTxtBoard(Payload)
-      else if OrgMode then Body := OrgModeBoard(Payload)
-      else if Nullboard then Body := NullboardExport(Payload, CreatedAt)
-      else if Kanri then Body := KanriExport(Payload, CreatedAt, ModifiedAt)
-      else if Trello then Body := TrelloExport(Payload)
-      else Body := OutlineBoard(Payload, Opml);
+      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields'],
+        (Format='opml') or (Format='todotxt') or (Format='orgmode') or (Format='deck'), Format='deck');
+      case Format of
+        'todotxt': Body := TodoTxtBoard(Payload);
+        'orgmode': Body := OrgModeBoard(Payload);
+        'nullboard': Body := NullboardExport(Payload, CreatedAt);
+        'kanri': Body := KanriExport(Payload, CreatedAt, ModifiedAt);
+        'trello': Body := TrelloExport(Payload);
+        'deck': Body := DeckExport(Payload);
+        else Body := OutlineBoard(Payload, Format='opml');
+      end;
     finally Payload.Free; end;
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   aResponse.Code := 200;
-  if Opml then
-  begin
-    aResponse.ContentType := 'text/x-opml; charset=utf-8';
-    Extension := 'opml';
-  end else if OrgMode then
-  begin
-    aResponse.ContentType := 'text/x-org; charset=utf-8';
-    Extension := 'org';
-  end else if Kanri or Trello then
-  begin
-    aResponse.ContentType := 'application/json; charset=utf-8';
-    Extension := 'json';
-  end else if Nullboard then
-  begin
-    aResponse.ContentType := 'application/json; charset=utf-8';
-    Extension := 'nbx';
-  end else if TodoTxt then
-  begin
-    aResponse.ContentType := 'text/plain; charset=utf-8';
-    Extension := 'txt';
-  end else
-  begin
-    aResponse.ContentType := 'text/markdown; charset=utf-8';
-    Extension := 'md';
+  case Format of
+    'opml': begin aResponse.ContentType := 'text/x-opml'; Extension := 'opml'; end;
+    'orgmode': begin aResponse.ContentType := 'text/x-org'; Extension := 'org'; end;
+    'kanri','trello','deck': begin aResponse.ContentType := 'application/json'; Extension := 'json'; end;
+    'nullboard': begin aResponse.ContentType := 'application/json'; Extension := 'nbx'; end;
+    'todotxt': begin aResponse.ContentType := 'text/plain'; Extension := 'txt'; end;
+    else begin aResponse.ContentType := 'text/markdown'; Extension := 'md'; end;
   end;
+  aResponse.ContentType := aResponse.ContentType + '; charset=utf-8';
   aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="board.' + Extension + '"');
   aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
   aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
@@ -3653,7 +3636,7 @@ begin
   finally OtherCards.Free; Output.Free; Payload.Free; end;
 end;
 
-procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string; FilterCreationDate: Boolean);
+procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string; FilterCreationDate: Boolean; DeckFormat: Boolean);
 const Known = '|card-details|board-header|activities|labels|people|board-info|dates|' +
   'description|custom-fields|checklists|subtasks|comments|attachments|voting|poker|stickers|locations|dependencies|sort|scrum|';
 var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
@@ -3685,6 +3668,7 @@ var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
         PreserveCompletion := (PartName = 'dates') and (Selected.IndexOf('subtasks') >= 0) and
           ((CollectionName = 'subtaskItems') or (Card.Get('parentId', '') <> '') or
           ((Parents is TJSONArray) and (Parents.Count > 0)));
+        if DeckFormat and (PartName='dates') and (Card.Get('dueAt','')<>'') then PreserveCompletion:=True;
         for FieldName in Keys do
           if (FieldName <> 'dueComplete') or not PreserveCompletion then Card.Delete(FieldName);
       end;
@@ -3710,6 +3694,7 @@ begin
     RemoveCardFields('description', ['description']);
     RemoveCardFields('custom-fields', ['customFields']);
     RemoveCardFields('labels', ['labelIds']);
+    if DeckFormat then RemoveCardFields('people', ['userId']);
     RemoveCardFields('people', ['members','assignees','requesters','assigners','requestedBy','assignedBy']);
     if FilterCreationDate then RemoveCardFields('dates', ['createdAt']);
     RemoveCardFields('dates', ['modifiedAt','dateLastActivity','receivedAt','startAt','dueAt','endAt',
@@ -4575,12 +4560,13 @@ end;
 
 function DeckImport(const Source: TJSONObject): TJSONObject;
 var Meta, Board, Stack, Entry, Card, Comment, Authors: TJSONObject; Stacks, StackCards, Lists, Cards, Labels,
-  Comments, Tags: TJSONArray; Child, Value: TJSONData; I,J,K, DeletedCards, DeletedStacks, AclCount, AttachmentCount: Integer; CardId,ListId,Name,Author,LabelId, Losses: string;
-  function Identity(Obj: TJSONObject): string;
+  Comments, Tags, Assignees: TJSONArray; Participant:TJSONData; Child, Value: TJSONData; I,J,K, DeletedCards, DeletedStacks, AclCount, AttachmentCount: Integer; CardId,ListId,Name,Author,LabelId, Losses: string;
+  function Identity(Obj: TJSONObject; const Fallback: string): string;
   var Field: TJSONData;
   begin
     Field:=Obj.Find('id');
-    if (Field=nil) or not (Field.JSONType in [jtString,jtNumber]) then
+    if Field=nil then Exit(Fallback);
+    if not (Field.JSONType in [jtString,jtNumber]) then
       raise EConvertError.Create('Invalid Deck identity');
     Result:=Field.AsString;
   end;
@@ -4631,7 +4617,7 @@ begin
     begin
       Stack:=Stacks.Objects[I];
       if Deleted(Stack) then begin Inc(DeletedStacks); Continue; end;
-      ListId:=Identity(Stack);
+      ListId:=Identity(Stack,'deck-list-'+IntToStr(I));
       Lists.Add(TJSONObject.Create(['_id',ListId,'title',Stack.Get('title',''),'sort',StrToIntDef(Stack.Get('order',''),I)]));
       Child:=Stack.Find('cards');
       if not (Child is TJSONArray) then Continue;
@@ -4642,7 +4628,7 @@ begin
         if Deleted(Entry) then begin Inc(DeletedCards); Continue; end;
         Child:=Entry.Find('attachments');
         if Child is TJSONArray then Inc(AttachmentCount,Child.Count);
-        CardId:=Identity(Entry);
+        CardId:=Identity(Entry,'deck-card-'+IntToStr(I)+'-'+IntToStr(J));
         Card:=TJSONObject.Create(['_id',CardId,'listId',ListId,'title',Entry.Get('title',''),
           'description',Entry.Get('description',''),'sort',StrToIntDef(Entry.Get('order',''),J),'archived',Entry.Get('archived',False)]);
         Cards.Add(Card);
@@ -4660,6 +4646,20 @@ begin
           Name:=TJSONObject(Child).Get('displayname',TJSONObject(Child).Get('uid',''));
           Author:=ImportAuthorIdentity(Authors,Name);
           if Author<>'' then Card.Add('userId',Author);
+        end;
+        Child:=Entry.Find('assignedUsers');
+        if Child is TJSONArray then
+        begin
+          Assignees:=TJSONArray.Create; Card.Add('assignees',Assignees);
+          for K:=0 to Child.Count-1 do
+          begin
+            if not (Child.Items[K] is TJSONObject) then Continue;
+            Participant:=TJSONObject(Child.Items[K]).Find('participant');
+            if not (Participant is TJSONObject) then Continue;
+            Name:=TJSONObject(Participant).Get('displayname',TJSONObject(Participant).Get('uid',''));
+            Author:=ImportAuthorIdentity(Authors,Name);
+            if Author<>'' then Assignees.Add(Author);
+          end;
         end;
         Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
         Child:=Entry.Find('labels');

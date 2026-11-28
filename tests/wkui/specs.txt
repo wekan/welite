@@ -597,3 +597,4 @@ import-export-format-audit.e2e.js: Trello ZIP imports multiple boards without mi
 import-export-format-audit.e2e.js: Trello import resolves existing usernames and keeps unmatched people inactive
 import-export-format-audit.e2e.js: Trello ZIP member mapping overrides a username without granting board access
 import-export-format-audit.e2e.js: Trello JSON member mapping overrides a username without granting board access
+import-export-format-audit.e2e.js: Deck export separates same-named stacks and preserves completed cards

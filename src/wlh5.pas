@@ -2846,6 +2846,7 @@ begin
     '/export/orgmode?fields=">Org mode (.org)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/nullboard?fields=">Nullboard (.nbx)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/kanri?fields=">Kanri (.json)</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/export/deck?fields=">Nextcloud Deck (.json)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/trello?fields=">Trello (.json)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/trellozip?fields=">Trello (.zip)</a></li><li><a download href="' + Base +
     '/export/planner?download=1">Microsoft Planner (.xlsx)</a></li><li><a download href="' + Base +

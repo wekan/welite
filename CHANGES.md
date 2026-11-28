@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export a board as Nextcloud Deck JSON. The shared Chromium audit verifies
+  field selection, private board access, and reimport of same-named lists
+  and completed cards without a due date.
+
 - Trello member overrides travel with the import form, removing the 8 KiB
   header limit. The shared Chromium audit imports a ZIP with 180 overrides
   and verifies that the mapped user receives no board access.
