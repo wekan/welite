@@ -811,7 +811,9 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     submit.disabled = true;
     warning.hidden = true;
     Promise.resolve().then(function () {
-      return callAsync('importBoard', JSON.parse(form.querySelector('textarea').value), {}, form.dataset.source);
+      var split = form.querySelector('.js-import-split-value');
+      var options = split && split.value ? { splitBy: split.value } : {};
+      return callAsync('importBoard', JSON.parse(form.querySelector('textarea').value), {}, form.dataset.source, options);
     }).then(function (board) {
       if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
       var href = '/b/' + encodeURIComponent(board._id) + '/board';

@@ -5312,6 +5312,57 @@ begin
   except Result.Free; raise; end;
 end;
 
+function KanriProjectImport(const Source: TJSONData): TJSONObject;
+const Sections: array[0..4] of string = ('lists','cards','labels','checklists','checklistItems');
+var Projects, Data, Value: TJSONData; Board, Converted, Project, Row: TJSONObject; Lanes, Rows, Tags: TJSONArray;
+  I,J,K,N: Integer; Prefix, Section, Key: string;
+begin
+  Projects:=nil;
+  if Source is TJSONObject then Projects:=TJSONObject(Source).Find('boards');
+  if Projects=nil then Exit(KanriImport(Source));
+  if not (Projects is TJSONArray) or (Projects.Count=0) then raise EConvertError.Create('Invalid Kanri backup');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title','Kanri backup']); Result.Add('board',Board);
+    Result.Add('importedAuthors',TJSONObject.Create);
+    Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+    for Section in Sections do Board.Add(Section,TJSONArray.Create);
+    for I:=0 to Projects.Count-1 do
+    begin
+      Converted:=KanriImport(Projects.Items[I]);
+      try
+        Project:=Converted.Objects['board']; Prefix:='project-'+IntToStr(I)+':';
+        Lanes.Add(TJSONObject.Create(['_id',Prefix,'title',Project.Get('title',''),'sort',I]));
+        for J:=0 to High(Sections) do
+        begin
+          Section:=Sections[J];
+          Data:=Project.Find(Section);
+          Rows:=Board.Arrays[Section];
+          for K:=0 to Data.Count-1 do
+          begin
+            Row:=TJSONObject(Data.Items[K].Clone); Rows.Add(Row);
+            for Key in ['_id','cardId','listId','checklistId'] do
+            begin
+              Value:=Row.Find(Key);
+              if Value<>nil then
+              begin
+                Value.AsString:=Prefix+Value.AsString;
+              end;
+            end;
+            if (Section='lists') or (Section='cards') then Row.Add('swimlaneId',Prefix);
+            Value:=Row.Find('labelIds');
+            if Value is TJSONArray then
+            begin
+              Tags:=TJSONArray(Value);
+              for N:=0 to Tags.Count-1 do Tags.Items[N].AsString:=Prefix+Tags.Items[N].AsString;
+            end;
+          end;
+        end;
+      finally Converted.Free; end;
+    end;
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
@@ -5340,7 +5391,7 @@ begin
     else Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1]]));
 end;
 
-procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
+procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail:string;
@@ -6101,7 +6152,7 @@ begin
             else if SourceFormat='openproject' then Body:=OpenProjectImport(Value)
             else if SourceFormat='zenkit' then Body:=ZenkitImport(Value)
             else if SourceFormat='jira' then Body:=JiraImport(Value)
-            else if SourceFormat='kanri' then Body:=KanriImport(Value)
+            else if SourceFormat='kanri' then Body:=KanriProjectImport(Value)
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end
@@ -6331,8 +6382,15 @@ begin
       ImportCardChildren;
       ImportAttachments;
       for I:=3 to 5 do ImportWorkflow(I);
-      if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+RegistryGuard+
-        ' AND '+Guard+' AND '+Permission+' THEN 1 ELSE json(''Board import policy changed'') END; '+Sql+'COMMIT;') then
+      Sql:='SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+RegistryGuard+
+        ' AND '+Guard+' AND '+Permission+' THEN 1 ELSE json(''Board import policy changed'') END; '+Sql;
+      if BatchSql<>nil then
+      begin
+        BatchSql.Add(Sql);
+        BatchIds.Add(BoardId);
+        Exit;
+      end;
+      if not T.Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then
         raise Exception.Create('Board import failed');
       Committed:=True;
     except
@@ -6387,14 +6445,51 @@ begin
 end;
 
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
+var Projects, Options: TJSONData; BatchSql: TStringList; Ids: TJSONArray; Reply: TJSONObject; I: Integer;
 begin
-  if not (Args is TJSONArray) or (Args.Count<>3) or not (Args.Items[0].JSONType in [jtObject,jtArray]) or
+  if not (Args is TJSONArray) or ((Args.Count<>3) and (Args.Count<>4)) or not (Args.Items[0].JSONType in [jtObject,jtArray]) or
     not (Args.Items[1] is TJSONObject) or (Args.Items[2].JSONType<>jtString) then
   begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
   if not ExternalImportSupported(Args.Items[2].AsString) then
   begin SendJson(aResponse,'{"error":"invalid-import-format","reason":"Unknown import source"}',400); Exit; end;
   if Args.Items[1].Count<>0 then
   begin SendJson(aResponse,'{"error":"invalid-member-mapping","reason":"External import member mapping is unavailable"}',400); Exit; end;
+  if Args.Count=4 then
+  begin
+    Options:=Args.Items[3];
+    if not (Options is TJSONObject) then
+    begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
+    if (Args.Items[2].AsString='kanri') and (Args.Items[0] is TJSONObject) and
+      (TJSONObject(Options).Get('splitBy','')='swimlane') then
+    begin
+      Projects:=TJSONObject(Args.Items[0]).Find('boards');
+      if Projects<>nil then
+      begin
+        if not (Projects is TJSONArray) or (Projects.Count=0) then
+        begin SendJson(aResponse,'{"error":"invalid-import-format","reason":"Invalid Kanri backup"}',400); Exit; end;
+        BatchSql:=TStringList.Create; Ids:=TJSONArray.Create;
+        try
+          for I:=0 to Projects.Count-1 do
+          begin
+            ImportBoardRequest(aRequest,aResponse,Tenant,Actor,Projects.Items[I].AsJSON,'kanri',BatchSql,Ids);
+            if Ids.Count<>I+1 then Exit;
+          end;
+          if not Tenant.Db.Exec('BEGIN IMMEDIATE; '+BatchSql.Text+'COMMIT;') then
+          begin
+            Tenant.Db.Exec('ROLLBACK;');
+            SendError(aResponse,500,'Could not import Kanri boards');
+            Exit;
+          end;
+          Reply:=TJSONObject.Create(['_id',Ids.Strings[0],'boardId',Ids.Strings[0]]);
+          try
+            Reply.Add('boardIds',Ids.Clone);
+            SendJson(aResponse,'{"result":'+Reply.AsJSON+'}');
+          finally Reply.Free; end;
+        finally Ids.Free; BatchSql.Free; end;
+        Exit;
+      end;
+    end;
+  end;
   ImportBoardRequest(aRequest,aResponse,Tenant,Actor,Args.Items[0].AsJSON,Args.Items[2].AsString);
 end;
 

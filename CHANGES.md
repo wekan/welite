@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Kanri backups import as one board with a swimlane per project or as
+  separate boards. The split import commits all boards together.
+
 - A single Kanri JSON board imports with columns, card colors, descriptions,
   due dates, tags and checklist task states.
 

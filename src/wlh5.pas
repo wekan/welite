@@ -9556,6 +9556,9 @@ begin
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
       '<label for="import-textarea">' + E(FormatName) + ' JSON</label><textarea id="import-textarea" required></textarea>' +
+      IfThen(Source='kanri','<button type="button" class="js-import-split-toggle"><span class="materialCheckBox"></span> '+
+        E(Words.Text('import-one-board-per-project','One board per project'))+
+        '</button><input type="hidden" class="js-import-split-value">','')+
       '<p class="warning" role="alert" hidden>'+E(Words.Text('import-scoped-failed','Import failed'))+'</p>' +
       '<button class="primary js-import-without-mapping" type="submit">'+E(Words.Text('import','Import'))+'</button></form><section class="js-import-report" hidden><h2>'+
       E(Words.Text('import-report-heading','Import report'))+'</h2><ul></ul><a class="js-open-imported-board">'+
